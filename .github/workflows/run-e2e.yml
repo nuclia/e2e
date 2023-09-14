@@ -39,7 +39,7 @@ jobs:
           if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
       - name: Discord notification
         uses: cl8dep/action-discord@0.1
-        if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_APPLICATION }}
           message: |
