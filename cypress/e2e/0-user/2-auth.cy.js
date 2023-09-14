@@ -11,16 +11,16 @@ describe('User Login', () => {
 
   it('should redirect to kb selection page after login', () => {
     cy.visit('/');
-    cy.get(`[formcontrolname="email"] input`).type(user.email);
-    cy.get(`[data-cy="password"] input[type="password"]`).type(user.password);
+    cy.get(`[formcontrolname="email"] input`).type(user.email,{ log: false });
+    cy.get(`[data-cy="password"] input[type="password"]`).type(user.password,{ log: false });
     cy.get(`button[type='submit']`).click();
     cy.location('pathname').should('equal', '/select/testing');
   });
 
   it('should allow a visitor to login and logout', () => {
     cy.visit('/');
-    cy.get(`[formcontrolname="email"] input`).type(user.email);
-    cy.get(`[data-cy="password"] input[type="password"]`).type(`${user.password}{enter}`);
+    cy.get(`[formcontrolname="email"] input`).type(user.email,{ log: false });
+    cy.get(`[data-cy="password"] input[type="password"]`).type(`${user.password}{enter}`,{ log: false });
     cy.get('a[href="/at/testing/permanent"]').click();
     cy.location('pathname').should('equal', '/at/testing/permanent');
     cy.get(`.knowledge-box-home .endpoint-container`).should('contain', 'NucliaDB API endpoint')
@@ -44,15 +44,15 @@ describe('User Login', () => {
   
   it('should error for an invalid user', () => {
     cy.visit('/');
-    cy.get(`[formcontrolname="email"] input`).type('wrong-email@gmail.com');
-    cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}');
+    cy.get(`[formcontrolname="email"] input`).type('wrong-email@gmail.com',{ log: false });
+    cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}',{ log: false });
     cy.get(`[data-cy="login-error"]`).should('contain', 'Authentication error.').and('contain', 'Please try again or reset your password below.')
   });
 
   it('should error for an invalid password for existing user', () => {
     cy.visit('/');
-    cy.get(`[formcontrolname="email"] input`).type(user.email);
-    cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}');
+    cy.get(`[formcontrolname="email"] input`).type(user.email,{ log: false });
+    cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}',{ log: false });
     cy.get(`[data-cy="login-error"]`).should('contain', 'Authentication error.').and('contain', 'Please try again or reset your password below.')
   });
 });
