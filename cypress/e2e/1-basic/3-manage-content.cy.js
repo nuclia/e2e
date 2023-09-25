@@ -98,6 +98,7 @@ describe('Manage content', () => {
 
     cy.task('log', 'Delete pending resources');
     cy.get('[data-cy="pending-access"] button').click();
+    cy.get('.resource-list pa-table-row').should('have.length.at.least', 1);
     cy.get('[data-cy="select-all"] input').click();
     cy.get('[data-cy="delete-selection"]').should('be.visible').click();
     cy.get('pa-confirmation-dialog button[aria-label="Delete"]').click();
