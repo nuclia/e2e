@@ -28,7 +28,7 @@ describe('Search', () => {
     cy.get(nucliaSearchResultsSelector)
       .shadow()
       .find(`${searchResultContainerSelector} ${searchResultLiSelector}`)
-      .should('have.length', 11);
+      .should('have.length', 4);
 
     // should allow to preview in the resource
     cy.get(nucliaSearchResultsSelector)
@@ -43,7 +43,7 @@ describe('Search', () => {
     cy.get(nucliaSearchResultsSelector)
       .shadow()
       .find(`${viewerSelector} ${searchResultLiSelector}`)
-      .should('have.length', 11);
+      .should('have.length', 4);
     cy.get(nucliaSearchResultsSelector).shadow().find(`${viewerSelector} ${findInResourceInputSelector}`).click();
     cy.get(nucliaSearchResultsSelector)
       .shadow()

@@ -36,7 +36,7 @@ describe('Chat with your docs', () => {
     cy.get(nucliaSearchResultsSelector)
       .shadow()
       .find(`${initialAnswerSelector} ${searchResultLiSelector}`)
-      .should('have.length', 11);
+      .should('have.length', 4);
 
     // chat with your doc
     cy.get(nucliaSearchResultsSelector).shadow().find(`${initialAnswerSelector} ${chatWithYourDocsSelector}`).click();
