@@ -75,6 +75,8 @@ describe('Manage content', () => {
     cy.loginToEmptyKb();
     goTo('Resources list');
 
+    cy.location('pathname').should('equal', `/at/testing/${emptyKb.name}/resources/processed`);
+
     // Upload file
     cy.task('log', 'Upload file');
     uploadContent('Upload files');
