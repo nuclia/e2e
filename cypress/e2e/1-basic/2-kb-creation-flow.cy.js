@@ -30,7 +30,6 @@ describe('KB creation flow', () => {
     cy.get('pa-option[id="permanent"]').click();
     cy.contains('Import data').click();
     cy.get('.resource-list-content pa-table-row', { timeout: 150000 }).should('have.length', 2);
-
   });
 
   it('should allow to delete the kb', () => {

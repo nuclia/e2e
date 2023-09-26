@@ -19,14 +19,14 @@ describe('Manage content', () => {
   const authHeader = getAuthHeader();
 
   before(() => {
+    // clean up resources
     cy.request({
       method: 'GET',
       url: `${endpoint}/resources`,
       headers: authHeader
     }).then(response => {
       expect(response.status).to.eq(200);
-      // make sure the resource we just added is there, without relying on the resource count which depends on the success of other tests
-      let resourceCount = response.body['resources'].length;
+      const resourceCount = response.body['resources'].length;
       if (resourceCount > 0) {
         // This will be output to terminal
         cy.task('log', `Delete ${resourceCount} resources from previous tests`);
@@ -36,6 +36,27 @@ describe('Manage content', () => {
             url: `${endpoint}/resource/${resource.id}`,
             headers: authHeader
           }).then(deleteResponse => expect(deleteResponse.status).to.eq(204));
+        });
+      }
+    });
+
+    // clean up labelsets
+    cy.request({
+      method: 'GET',
+      url: `${endpoint}/labelsets`,
+      headers: authHeader
+    }).then(response => {
+      expect(response.status).to.eq(200);
+      const labelsets = Object.keys(response.body['labelsets']);
+      if (labelsets.length > 0) {
+        // This will be output to terminal
+        cy.task('log', `Delete ${labelsets.length} label sets from previous tests`);
+        labelsets.forEach(labelset => {
+          cy.request({
+            method: 'DELETE',
+            url: `${endpoint}/labelset/${labelset}`,
+            headers: authHeader
+          }).then(deleteResponse => expect(deleteResponse.status).to.eq(200));
         });
       }
     });
@@ -136,7 +157,6 @@ describe('Manage content', () => {
           headers: getAuthHeader()
         }).then(response => {
           expect(response.status).to.eq(200);
-          expect(response.body['resources'].length).to.eq(3);
 
           response.body['resources'].forEach((resource) => {
             if (resource.title === title) {
