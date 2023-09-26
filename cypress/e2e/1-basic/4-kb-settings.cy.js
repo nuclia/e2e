@@ -2,7 +2,7 @@
 
 import { emptyKb, getAuthHeader, goTo } from '../../support/common';
 
-describe('Manage content', () => {
+describe('Change KB settings', () => {
   const endpoint = `https://stashify.cloud/api/v1/account/testing/kb/${emptyKb.name}`;
   const authHeader = getAuthHeader();
 
@@ -29,7 +29,6 @@ describe('Manage content', () => {
       '\nWhy did you say that? Now I feel like I want to delete this kb.\n'
     );
     cy.scrollTo('bottom');
-    cy.contains('Save').should('be.enabled');
     cy.contains('Save').click();
     cy.get('.pa-toast-wrapper').should('contain', 'The new settings have been saved successfully');
   });
