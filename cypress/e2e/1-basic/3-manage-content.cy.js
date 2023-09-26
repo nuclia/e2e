@@ -39,27 +39,6 @@ describe('Manage content', () => {
         });
       }
     });
-
-    // clean up labelsets
-    cy.request({
-      method: 'GET',
-      url: `${endpoint}/labelsets`,
-      headers: authHeader
-    }).then(response => {
-      expect(response.status).to.eq(200);
-      const labelsets = Object.keys(response.body['labelsets']);
-      if (labelsets.length > 0) {
-        // This will be output to terminal
-        cy.task('log', `Delete ${labelsets.length} label sets from previous tests`);
-        labelsets.forEach(labelset => {
-          cy.request({
-            method: 'DELETE',
-            url: `${endpoint}/labelset/${labelset}`,
-            headers: authHeader
-          }).then(deleteResponse => expect(deleteResponse.status).to.eq(200));
-        });
-      }
-    });
   });
 
   it('should use the API to upload a file', () => {
@@ -118,58 +97,6 @@ describe('Manage content', () => {
     cy.get('[data-cy="pending-access"] button').should('be.visible');
     checkResourceWasAdded(endpoint, 'nuclia-logo.png');
     checkResourceWasAdded(endpoint, 'https://nuclia.com/contact/');
-  });
-
-  it('should create a label set and classify a resource with it', () => {
-    cy.loginToEmptyKb();
-
-    cy.get('[data-cy="kb-endpoint"]').then($endpointContainer => {
-      const endpoint = $endpointContainer.text().trim();
-
-      cy.task('log', 'Create a label set');
-      goTo('Classification');
-      cy.contains('Add new').click();
-      cy.get('input#title-input').type('Heroes');
-      cy.get('.pa-toggle').contains('Resources').click();
-      cy.get('.label-content.unsaved-label input').type('Catwoman{enter}');
-      cy.get('.label-content.unsaved-label input').type('Poison Ivy{enter}');
-      cy.contains('Save').click();
-      cy.get('pa-expander-header').should('contain', 'Heroes');
-
-      cy.task('log', 'Set labels on resources');
-      goTo('Resources list');
-      cy.get('[data-cy="resource-title"]').first().invoke('text').then(resourceTitle => {
-        const title = resourceTitle.trim();
-
-        cy.get('[data-cy="menu-button"] button').first().click();
-        cy.get('ul.pa-menu li').contains('Edit').click();
-        cy.get('pa-button[icon="label"]').click();
-        cy.get('nav ul li').contains('Resource').click();
-        cy.contains('Select the labels').click();
-        cy.contains('Heroes').click();
-        cy.contains('Catwoman').click();
-        cy.get('body').type('{esc}');
-        cy.contains('Save').click();
-        cy.get('.pa-toast-wrapper').should('contain', 'Resource saved');
-        cy.request({
-          method: 'GET',
-          url: `${endpoint}/resources`,
-          headers: getAuthHeader()
-        }).then(response => {
-          expect(response.status).to.eq(200);
-
-          response.body['resources'].forEach((resource) => {
-            if (resource.title === title) {
-              expect(resource['usermetadata']['classifications']).to.deep.equal([{
-                labelset: 'heroes',
-                label: 'Catwoman',
-                cancelled_by_user: false
-              }], 'includes the label added');
-            }
-          });
-        });
-      })
-    });
   });
 
   it('should delete resources', () => {

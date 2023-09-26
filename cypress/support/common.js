@@ -2,6 +2,11 @@ import { closeButton, nucliaSearchResultsSelector, viewerSelector } from '../e2e
 
 export const KB_NAME = `new-kb-${Cypress.env('KB_NAME')}`;
 
+export const permanentKb = {
+  name: 'permanent',
+  id: '096d9070-f7be-40c8-a24c-19c89072e3ff'
+}
+
 export const emptyKb = {
   name: 'permanent-empty',
   id: '1efc5a33-bc5a-490c-8b47-b190beee212d'
