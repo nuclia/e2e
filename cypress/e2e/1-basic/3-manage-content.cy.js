@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { emptyKb, getAuthHeader, goTo, uploadContent } from '../../support/common';
+import { emptyKb, getAuthHeader, goTo } from '../../support/common';
 
 function checkResourceWasAdded(endpoint, resourceTitle) {
   cy.request({
@@ -73,28 +73,29 @@ describe('Manage content', () => {
 
   it('should upload content from the UI', () => {
     cy.loginToEmptyKb();
-    goTo('Resources list');
-
-    cy.location('pathname').should('equal', `/at/testing/${emptyKb.name}/resources/processed`);
+    goTo('Upload data');
 
     // Upload file
     cy.task('log', 'Upload file');
-    uploadContent('Upload files');
+
+    cy.get('stf-upload-option[icon="file"]').click();
+
     cy.get('#upload-file-chooser').attachFile('nuclia-logo.png');
     cy.get('app-upload-files').contains('Add').click();
     cy.get('pa-modal-title').contains('Upload queue').should('exist');
     cy.get('.status pa-icon[name="check"]', { timeout: 10000 }).should('exist');
     cy.get('app-upload-progress button[aria-label="Close"]').click();
     cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
+    cy.location('pathname').should('equal', `/at/testing/${emptyKb.name}/resources/pending`);
 
     cy.task('log', 'Upload link');
-    uploadContent('Add links');
+    goTo('Upload data');
+    cy.get('stf-upload-option[icon="link"]').click();
     cy.get('app-create-link pa-input input').type('https://nuclia.com/contact/');
     cy.get('app-create-link button').contains('Add').click();
     cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
+    cy.location('pathname').should('equal', `/at/testing/${emptyKb.name}/resources/pending`);
 
-    cy.task('log', 'Check pending button and uploaded resources are there');
-    cy.get('[data-cy="pending-access"] button').should('be.visible');
     checkResourceWasAdded(endpoint, 'nuclia-logo.png');
     checkResourceWasAdded(endpoint, 'https://nuclia.com/contact/');
   });

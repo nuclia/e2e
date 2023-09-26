@@ -62,9 +62,3 @@ export const closeViewer = () => {
     .find(`${viewerSelector} ${closeButton}`)
     .click();
 }
-
-export const uploadContent = (label) => {
-  cy.get('.resource-list-header').contains('Upload').click();
-  cy.get('.pa-option-content').contains(label).should('be.visible');
-  cy.get('.pa-option-content').contains(label).click();
-};
