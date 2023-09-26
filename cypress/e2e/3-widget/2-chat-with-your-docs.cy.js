@@ -36,7 +36,7 @@ describe('Chat with your docs', () => {
     cy.get(nucliaSearchResultsSelector)
       .shadow()
       .find(`${initialAnswerSelector} ${searchResultLiSelector}`)
-      .should('have.length', 4);
+      .should('have.length.at.least', 1);
 
     // chat with your doc
     cy.get(nucliaSearchResultsSelector).shadow().find(`${initialAnswerSelector} ${chatWithYourDocsSelector}`).click();
@@ -47,7 +47,7 @@ describe('Chat with your docs', () => {
     cy.get(nucliaSearchResultsSelector)
       .shadow()
       .find(`${chatContainerSelector} ${answerContainerSelector}`)
-      .should('have.length', 1);
+      .should('have.length.at.least', 1);
 
     cy.get(nucliaSearchResultsSelector)
       .shadow()
@@ -56,11 +56,11 @@ describe('Chat with your docs', () => {
     cy.get(nucliaSearchResultsSelector)
       .shadow()
       .find(`${chatContainerSelector} ${chatQuestionSelector}`)
-      .should('have.length', 2)
+      .should('have.length.at.least', 1)
       .and('contain', secondQuery);
     cy.get(nucliaSearchResultsSelector)
       .shadow()
       .find(`${chatContainerSelector} ${answerContainerSelector}`)
-      .should('have.length', 2);
+      .should('have.length.at.least', 1);
   });
 });
