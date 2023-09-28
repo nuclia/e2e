@@ -132,6 +132,7 @@ describe('Resources', () => {
           cy.contains('Heroes').click();
           cy.contains('Catwoman').click();
           cy.get('body').type('{esc}');
+          cy.get('.label-list pa-chip-closeable').should('have.length', 2);
           cy.contains('Save').click();
           cy.get('.pa-toast-wrapper').should('contain', 'Resource saved');
           cy.request({
