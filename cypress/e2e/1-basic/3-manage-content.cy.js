@@ -6,7 +6,7 @@ function checkResourceWasAdded(endpoint, resourceTitle) {
   cy.request({
     method: 'GET',
     url: `${endpoint}/resources`,
-    headers: getAuthHeader()
+    headers: getAuthHeader(false)
   }).then(response => {
     expect(response.status).to.eq(200);
     // make sure the resource we just added is there, without relying on the resource count which depends on the success of other tests

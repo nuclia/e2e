@@ -17,8 +17,12 @@ export const user = {
   password: `${Cypress.env('USER_PWD')}`,
 };
 
-export function getAuthHeader() {
-  return { Authorization: `Bearer ${Cypress.env('BEARER_TOKEN')}` };
+export function getAuthHeader(synchronous = true) {
+  const headers = { Authorization: `Bearer ${Cypress.env('BEARER_TOKEN')}` };
+  if (synchronous) {
+    headers['x-synchronous'] = true;
+  }
+  return headers;
 }
 
 export function onlyPermanentKb() {
