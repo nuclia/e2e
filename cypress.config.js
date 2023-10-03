@@ -25,7 +25,7 @@ module.exports = defineConfig({
       require('cypress-mochawesome-reporter/plugin')(on);
     },
     env: {
-      KB_NAME: 'local'
+      KB_NAME: 'cypress'
     }
   }
 });
