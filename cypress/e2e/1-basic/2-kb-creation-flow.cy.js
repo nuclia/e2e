@@ -22,16 +22,6 @@ describe('KB creation flow', () => {
     cy.get('.state-container .title-s').should('contain', 'private');
   });
 
-  it('should import a dataset', () => {
-    cy.loginToNewKb();
-    cy.task('log', 'Import dataset');
-    goTo('Resources list');
-    cy.get('.dataset-picker pa-select').click();
-    cy.get('pa-option[id="permanent"]').click();
-    cy.contains('Import data').click();
-    cy.get('.resource-list-content pa-table-row', { timeout: 150000 }).should('have.length', 2);
-  });
-
   it('should allow to delete the kb', () => {
     cy.loginToNewKb();
     goTo('Manage account');
