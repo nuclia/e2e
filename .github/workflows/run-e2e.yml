@@ -44,5 +44,5 @@ jobs:
           webhook: ${{ secrets.DISCORD_WEBHOOK_APPLICATION }}
           message: |
             ⚠️ tests failed
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>
           username: 'Cypress E2E'
