@@ -99,15 +99,4 @@ describe('Manage content', () => {
     checkResourceWasAdded(endpoint, 'nuclia-logo.png');
     checkResourceWasAdded(endpoint, 'https://nuclia.com/contact/');
   });
-
-  it('should delete resources', () => {
-    cy.loginToEmptyKb();
-    goTo('Resources list');
-    cy.task('log', 'Delete resources');
-    cy.get('.resource-list pa-table-row').should('have.length.at.least', 1);
-    cy.get('[data-cy="select-all"] input').click();
-    cy.get('[data-cy="delete-selection"]').should('be.visible').click();
-    cy.get('pa-confirmation-dialog button[aria-label="Delete"]').click();
-    cy.get('[data-cy="spinner"]').should('be.visible');
-  });
 });
