@@ -86,7 +86,7 @@ describe('Manage content', () => {
     cy.get('.status pa-icon[name="check"]', { timeout: 10000 }).should('exist');
     cy.get('app-upload-progress button[aria-label="Close"]').click();
     cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
-    cy.location('pathname').should('equal', `/at/testing/${emptyKb.name}/resources/pending`);
+    cy.location('pathname').should('equal', `/at/testing/europe-1/${emptyKb.name}/resources/pending`);
 
     cy.task('log', 'Upload link');
     goTo('Upload data');
@@ -94,7 +94,7 @@ describe('Manage content', () => {
     cy.get('app-create-link pa-input input').type('https://nuclia.com/contact/');
     cy.get('app-create-link button').contains('Add').click();
     cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
-    cy.location('pathname').should('equal', `/at/testing/${emptyKb.name}/resources/pending`);
+    cy.location('pathname').should('equal', `/at/testing/europe-1/${emptyKb.name}/resources/pending`);
 
     checkResourceWasAdded(endpoint, 'nuclia-logo.png');
     checkResourceWasAdded(endpoint, 'https://nuclia.com/contact/');
