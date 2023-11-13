@@ -17,7 +17,7 @@ describe('Create NUA key with the dashboard', () => {
     cy.get('pa-modal-advanced').should('be.visible');
     cy.get('pa-modal-advanced input[name="title"]').should('be.visible').type('A new key');
     cy.get('pa-modal-advanced').contains('Save').should('be.disabled');
-    cy.get('pa-modal-advanced input[name="email"]').type(user.email);
+    cy.get('pa-modal-advanced input[name="contact"]').type(user.email);
     cy.get('pa-modal-advanced').contains('Save').should('be.enabled');
     cy.get('pa-modal-advanced').contains('Save').click();
     cy.get('pa-modal-dialog').contains('Copy').click();

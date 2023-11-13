@@ -15,9 +15,9 @@ describe('KB creation flow', () => {
     cy.get('app-kb-add [formcontrolname="description"] textarea').type('Some kb');
     cy.get('app-kb-add').contains('Next').click();
     cy.get('app-kb-add').contains('Save').click();
-    cy.get(`a[href="/at/testing/${KB_NAME}"]`, { timeout: 10000 }).should('contain', KB_NAME);
-    cy.get(`a[href="/at/testing/${KB_NAME}"]`).click();
-    cy.location('pathname').should('equal', `/at/testing/${KB_NAME}`);
+    cy.get(`a[href="/at/testing/europe-1/${KB_NAME}"]`, { timeout: 10000 }).should('contain', KB_NAME);
+    cy.get(`a[href="/at/testing/europe-1/${KB_NAME}"]`).click();
+    cy.location('pathname').should('equal', `/at/testing/europe-1/${KB_NAME}`);
     cy.get('app-kb-switch').should('contain', KB_NAME);
     cy.get('.state-container .title-s').should('contain', 'private');
   });
