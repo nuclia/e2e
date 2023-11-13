@@ -12,7 +12,7 @@ describe('Create NUA key with the dashboard', () => {
     goTo('Understanding API keys');
     // Create NUA key
     cy.get('.account-nua :not(.client) button')
-      .contains('Create new Nuclia understanding API key')
+      .contains('Create new Nuclia Understanding API key')
       .click({ force: true });
     cy.get('pa-modal-advanced').should('be.visible');
     cy.get('pa-modal-advanced input[name="title"]').should('be.visible').type('A new key');
