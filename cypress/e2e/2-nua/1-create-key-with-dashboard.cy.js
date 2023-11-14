@@ -1,27 +1,44 @@
 /// <reference types="cypress" />
 
-import { goTo, user } from '../../support/common';
+import { getAuthHeader, goTo, user } from '../../support/common';
 
 describe('Create NUA key with the dashboard', () => {
+  before(() => {
+    const authHeader = getAuthHeader();
+    // https://stashify.cloud/api/v1/account/testing/nua_clients
+    cy.request({
+      method: 'GET',
+      url: 'https://stashify.cloud/api/v1/account/testing/nua_clients',
+      headers: authHeader
+    }).then(response => {
+      expect(response.status).to.eq(200);
+      const clients = response.body['clients'] || [];
+      if (clients.length > 1) {
+        clients.filter((client) => client['title'] !== 'e2e').forEach(client => {
+          cy.request({
+            method: 'DELETE',
+            url: `https://stashify.cloud/api/v1/account/testing/nua_client/${client.client_id}`,
+            headers: authHeader
+          }).then(patchResponse => expect(patchResponse.status).to.eq(204));
+        });
+      }
+    });
+  });
+
   beforeEach(() => cy.login());
 
   it('creates and deletes key', () => {
-    // TODO: improve resilience by checking through the API first if there is only the permanent e2e NUA key
-
-    goTo('Manage account');
-    goTo('Understanding API keys');
+    goTo('go-to-manage-account');
+    goTo('go-to-nua-keys');
     // Create NUA key
-    cy.get('.account-nua :not(.client) button')
-      .contains('Create new Nuclia Understanding API key')
-      .click({ force: true });
+    cy.get('[data-cy="open-create-nua-key-dialog"]').click();
     cy.get('pa-modal-advanced').should('be.visible');
     cy.get('pa-modal-advanced input[name="title"]').should('be.visible').type('A new key');
-    cy.get('pa-modal-advanced').contains('Save').should('be.disabled');
+    cy.get('pa-modal-advanced').get('[data-cy="save-nua-client"]').get('button').should('be.disabled');
     cy.get('pa-modal-advanced input[name="contact"]').type(user.email);
-    cy.get('pa-modal-advanced').contains('Save').should('be.enabled');
-    cy.get('pa-modal-advanced').contains('Save').click();
-    cy.get('pa-modal-dialog').contains('Copy').click();
-    cy.get('pa-modal-dialog').contains('Close').click();
+    cy.get('pa-modal-advanced').get('[data-cy="save-nua-client"]').click();
+    cy.get('pa-modal-dialog').get('[data-cy="copy-token"]').click();
+    cy.get('pa-modal-dialog').get('[data-cy="close-token-dialog"]').click();
 
     // Delete NUA key
     cy.get('.account-nua .client-row').contains('A new key');

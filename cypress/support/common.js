@@ -50,9 +50,9 @@ export function onlyPermanentKb() {
   });
 }
 
-export const goTo = (menuLabel, popup = false) => {
+export const goTo = (navbarItemSelector, popup = false) => {
   cy.get('.app-navbar').trigger('mouseover');
-  cy.contains(menuLabel).click();
+  cy.get(`[data-cy="${navbarItemSelector}"]`).click();
   if (!popup) {
     // make sure the sidebar collapses
     cy.get('app-user-menu').click();

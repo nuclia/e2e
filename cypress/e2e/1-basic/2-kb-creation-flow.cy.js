@@ -8,9 +8,9 @@ describe('KB creation flow', () => {
   it('should allow to create a new kb', () => {
     cy.login();
 
-    goTo('Manage account');
-    goTo('Knowledge Boxes');
-    cy.contains('Add Knowledge Box').click();
+    goTo('go-to-manage-account');
+    goTo('go-to-account-kbs');
+    cy.get('[data-cy="add-kb"]').click();
     cy.get('app-kb-add [formcontrolname="title"] input').type(KB_NAME);
     cy.get('app-kb-add [formcontrolname="description"] textarea').type('Some kb');
     cy.get('app-kb-add').contains('Next').click();
@@ -24,8 +24,8 @@ describe('KB creation flow', () => {
 
   it('should allow to delete the kb', () => {
     cy.loginToNewKb();
-    goTo('Manage account');
-    goTo('Knowledge Boxes');
+    goTo('go-to-manage-account');
+    goTo('go-to-account-kbs');
     cy.get(`[data-cy="${KB_NAME}-link"]`).contains(KB_NAME);
     cy.get(`[data-cy="${KB_NAME}-delete"]`).click();
     cy.get('[qa="confirmation-dialog-confirm-button"]').click();

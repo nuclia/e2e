@@ -74,7 +74,7 @@ describe('Resources', () => {
   describe('Resources list', () => {
     beforeEach(() => {
       cy.login();
-      goTo('Resources list');
+      goTo('go-to-resources');
     });
 
     it('should list existing resources', () => {
@@ -88,7 +88,7 @@ describe('Resources', () => {
     });
 
     it('should show labels on resources', () => {
-      cy.contains('Displayed columns').click();
+      cy.get('[data-cy="visible-columns-dropdown"]').click();
       cy.get('pa-checkbox').contains('Classification').click();
       cy.get('pa-chip-closeable').should('contain', 'permanent');
     });
@@ -100,7 +100,7 @@ describe('Resources', () => {
     });
 
     it('should list existing label set', () => {
-      goTo('Classification');
+      goTo('go-to-classification');
       cy.get('.label-sets-management pa-expander').contains('dataset').click();
       cy.get('.label-sets-management pa-expander .labels').contains('permanent');
     });
@@ -108,13 +108,13 @@ describe('Resources', () => {
     it('should create a label set', () => {
       const labelset = 'Heroes';
       const label = 'Catwoman';
-      goTo('Classification');
-      cy.contains('Add new').click();
+      goTo('go-to-classification');
+      cy.get('[data-cy="add-label-set"]').click();
       cy.get('input#title-input').type(labelset);
       cy.get('.pa-toggle').contains('Resources').click();
       cy.get('.label-content.unsaved-label input').type(`${label}{enter}`);
       cy.get('.label-content.unsaved-label input').type('Poison Ivy{enter}');
-      cy.contains('Save').click();
+      cy.get('[data-cy="save-label-set"]').click();
       cy.get('pa-expander-header').should('contain', 'Heroes');
     });
   });
@@ -122,7 +122,7 @@ describe('Resources', () => {
   describe('Search', () => {
     beforeEach(() => {
       cy.login();
-      goTo('Search');
+      goTo('go-to-search');
     });
 
     it('should show suggestions and open preview from it', () => {
