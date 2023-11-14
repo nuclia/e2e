@@ -100,6 +100,7 @@ describe('Resources', () => {
     });
 
     it('should list existing label set', () => {
+      goTo('go-to-settings');
       goTo('go-to-classification');
       cy.get('.label-sets-management pa-expander').contains('dataset').click();
       cy.get('.label-sets-management pa-expander .labels').contains('permanent');
@@ -108,6 +109,7 @@ describe('Resources', () => {
     it('should create a label set', () => {
       const labelset = 'Heroes';
       const label = 'Catwoman';
+      goTo('go-to-settings');
       goTo('go-to-classification');
       cy.get('[data-cy="add-label-set"]').click();
       cy.get('input#title-input').type(labelset);
