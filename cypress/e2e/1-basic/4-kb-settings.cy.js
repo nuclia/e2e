@@ -21,15 +21,15 @@ describe('Change KB settings', () => {
 
   it('should allow to change the kb settings', () => {
     cy.loginToEmptyKb();
-    goTo('Settings');
+    goTo('go-to-settings');
     cy.scrollTo('bottom');
-    cy.contains('Save').should('be.disabled');
+    cy.get('[data-cy="save-kb-settings"]').get('button').should('be.disabled');
     cy.scrollTo('top');
     cy.get(`[formcontrolname="description"] textarea`).type(
       '\nWhy did you say that? Now I feel like I want to delete this kb.\n'
     );
     cy.scrollTo('bottom');
-    cy.contains('Save').click();
+    cy.get('[data-cy="save-kb-settings"]').click();
     cy.get('.pa-toast-wrapper').should('contain', 'The new settings have been saved successfully');
   });
 });

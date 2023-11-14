@@ -73,7 +73,7 @@ describe('Manage content', () => {
 
   it('should upload content from the UI', () => {
     cy.loginToEmptyKb();
-    goTo('Upload data');
+    goTo('go-to-upload');
 
     // Upload file
     cy.task('log', 'Upload file');
@@ -89,7 +89,7 @@ describe('Manage content', () => {
     cy.location('pathname').should('equal', `/at/testing/europe-1/${emptyKb.name}/resources/pending`);
 
     cy.task('log', 'Upload link');
-    goTo('Upload data');
+    goTo('go-to-upload');
     cy.get('stf-upload-option[icon="link"]').click();
     cy.get('app-create-link pa-input input').type('https://nuclia.com/contact/');
     cy.get('app-create-link button').contains('Add').click();
