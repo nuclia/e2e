@@ -11,6 +11,6 @@ describe('Create a new account', () => {
     cy.get(`[formcontrolname="password"] input`).type('Batman');
     cy.get('button[type="submit"]').should('be.enabled');
     cy.get('button[type="submit"]').click();
-    cy.get('[qa="confirmation-title"]').should('contain', 'Check your emails!');
+    cy.get('[qa="confirmation-title"]').should('contain', 'Check your email inbox!');
   });
 });
