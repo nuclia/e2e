@@ -89,12 +89,12 @@ describe('Resources', () => {
 
     it('should show labels on resources', () => {
       cy.get('[data-cy="visible-columns-dropdown"]').click();
-      cy.get('pa-checkbox').contains('Classification').click();
+      cy.get('pa-checkbox').contains('Labels').click();
       cy.get('pa-chip-closeable').should('contain', 'permanent');
     });
   });
 
-  describe('Classification', () => {
+  describe('Label sets', () => {
     beforeEach(() => {
       cy.login();
     });
