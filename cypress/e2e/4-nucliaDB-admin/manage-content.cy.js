@@ -9,21 +9,31 @@ describe('NucliaDB admin – Manage content', () => {
       headers: STANDALONE_HEADER
     }).then(response => {
       expect(response.status).to.eq(200);
-      response.body['kbs'].forEach(kb => {
-        cy.request({
-          method: 'DELETE',
-          url: `http://localhost:8080/api/v1/kb/${kb['uuid']}`,
-          headers: STANDALONE_HEADER
-        }).then(deleteResponse => {
-          expect(deleteResponse.status).to.eq(200);
-          return cy.request({
-            method: 'POST',
-            url: 'http://localhost:8080/api/v1/kbs',
-            headers: STANDALONE_HEADER,
-            body: { 'slug': `${STANDALONE_KB_NAME}`, 'zone': 'local', 'title': `${STANDALONE_KB_NAME}` }
-          }).then((creationResponse) => expect(creationResponse.status).to.eq(201));
+      const kbPayload = { 'slug': `${STANDALONE_KB_NAME}`, 'zone': 'local', 'title': `${STANDALONE_KB_NAME}` };
+      if (response.body['kbs'].length > 0) {
+        response.body['kbs'].forEach(kb => {
+          cy.request({
+            method: 'DELETE',
+            url: `http://localhost:8080/api/v1/kb/${kb['uuid']}`,
+            headers: STANDALONE_HEADER
+          }).then(deleteResponse => {
+            expect(deleteResponse.status).to.eq(200);
+            return cy.request({
+              method: 'POST',
+              url: 'http://localhost:8080/api/v1/kbs',
+              headers: STANDALONE_HEADER,
+              body: kbPayload
+            }).then((creationResponse) => expect(creationResponse.status).to.eq(201));
+          });
         });
-      });
+      } else {
+        return cy.request({
+          method: 'POST',
+          url: 'http://localhost:8080/api/v1/kbs',
+          headers: STANDALONE_HEADER,
+          body: kbPayload
+        }).then((creationResponse) => expect(creationResponse.status).to.eq(201));
+      }
     });
   });
 
