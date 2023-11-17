@@ -25,7 +25,7 @@ jobs:
               -v nucliadb-standalone:/data \
               -e NUCLIA_PUBLIC_URL="https://{zone}.stashify.cloud" \
               -e NUA_API_KEY=${{ secrets.NUA_KEY }} \
-              nuclia/nucliadb:latest
+              nuclia/nucliadb:latest &
       # Install npm dependencies, cache them correctly and run all Cypress tests
       - name: Cypress run
         id: cypress
