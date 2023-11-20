@@ -25,7 +25,9 @@ module.exports = defineConfig({
       require('cypress-mochawesome-reporter/plugin')(on);
     },
     env: {
-      KB_NAME: 'backend-sucks'
+      KB_NAME: 'backend-sucks',
+      STANDALONE_KB_NAME: 'standalone-kb',
+      NUCLIA_DB_ADMIN_URL: 'http://0.0.0.0:8080/admin',
     }
   }
 });

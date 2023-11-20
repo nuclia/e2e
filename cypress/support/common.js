@@ -1,6 +1,10 @@
 import { closeButton, nucliaSearchResultsSelector, viewerSelector } from '../e2e/selectors/widget-selectors';
 
 export const KB_NAME = `new-kb-${Cypress.env('KB_NAME')}`;
+export const STANDALONE_KB_NAME = `${Cypress.env('STANDALONE_KB_NAME')}`;
+export const STANDALONE_HEADER = {
+  'X-NUCLIADB-ROLES': 'MANAGER'
+};
 
 export const permanentKb = {
   name: 'permanent',
@@ -55,8 +59,8 @@ export const goTo = (navbarItemSelector, popup = false) => {
   cy.get(`[data-cy="${navbarItemSelector}"]`).click();
   if (!popup) {
     // make sure the sidebar collapses
-    cy.get('app-user-menu').click();
-    cy.get('app-user-menu').click();
+    cy.get('app-kb-switch').click();
+    cy.get('app-kb-switch').click();
   }
 };
 
