@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { getAuthHeader, goTo, user } from '../../support/common';
+import { getAuthHeader, goTo, goToManageAccount, user } from '../../support/common';
 
 describe('Create NUA key with the dashboard', () => {
   before(() => {
@@ -28,7 +28,7 @@ describe('Create NUA key with the dashboard', () => {
   beforeEach(() => cy.login());
 
   it('creates and deletes key', () => {
-    goTo('go-to-manage-account');
+    goToManageAccount();
     goTo('go-to-nua-keys');
     // Create NUA key
     cy.get('[data-cy="open-create-nua-key-dialog"]').click();

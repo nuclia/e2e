@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { goTo, KB_NAME, onlyPermanentKb } from '../../support/common';
+import { goTo, goToManageAccount, KB_NAME, onlyPermanentKb } from '../../support/common';
 
 describe('KB creation flow', () => {
   before(() => onlyPermanentKb());
@@ -8,7 +8,7 @@ describe('KB creation flow', () => {
   it('should allow to create a new kb', () => {
     cy.login();
 
-    goTo('go-to-manage-account');
+    goToManageAccount();
     goTo('go-to-account-kbs');
     cy.get('[data-cy="add-kb"]').click();
     cy.get('app-kb-add [formcontrolname="title"] input').type(KB_NAME);
@@ -24,7 +24,7 @@ describe('KB creation flow', () => {
 
   it('should allow to delete the kb', () => {
     cy.loginToNewKb();
-    goTo('go-to-manage-account');
+    goToManageAccount();
     goTo('go-to-account-kbs');
     cy.get(`[data-cy="${KB_NAME}-link"]`).contains(KB_NAME);
     cy.get(`[data-cy="${KB_NAME}-delete"]`).click();
