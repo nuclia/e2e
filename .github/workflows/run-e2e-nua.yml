@@ -1,4 +1,4 @@
-name: run-e2e
+name: run-nua-e2e
 run-name: Running e2e NUA tests
 on:
   push:
