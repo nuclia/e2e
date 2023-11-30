@@ -27,7 +27,7 @@ describe('User Login', () => {
 
     // logout
     cy.get('[data-cy="user-menu"]').click();
-    cy.get('[data-cy="logout"]').contains('Logout').click();
+    cy.get('[data-cy="logout"]').click();
     cy.location('pathname').should('equal', '/user/login');
   });
 
