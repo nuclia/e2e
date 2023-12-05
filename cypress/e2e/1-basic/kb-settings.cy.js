@@ -21,6 +21,7 @@ describe('Change KB settings', () => {
 
   it('should allow to change the kb settings', () => {
     cy.loginToEmptyKb();
+    goTo('go-to-advanced');
     goTo('go-to-settings');
     cy.scrollTo('bottom');
     cy.get('[data-cy="save-kb-settings"]').get('button').should('be.disabled');
