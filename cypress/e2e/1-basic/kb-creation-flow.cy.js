@@ -3,11 +3,13 @@
 import { goTo, goToManageAccount, KB_NAME, onlyPermanentKb } from '../../support/common';
 
 describe('KB creation flow', () => {
-  before(() => onlyPermanentKb());
+  before(() => {
+    onlyPermanentKb();
+
+  });
 
   it('should allow to create a new kb', () => {
     cy.login();
-
     goToManageAccount();
     goTo('go-to-account-kbs');
     cy.get('[data-cy="add-kb"]').click();
