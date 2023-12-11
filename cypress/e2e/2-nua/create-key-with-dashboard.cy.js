@@ -39,7 +39,7 @@ describe('Create NUA key with the dashboard', () => {
     cy.get('pa-modal-dialog').get('[data-cy="close-token-dialog"]').click();
 
     // Delete NUA key
-    cy.get('.account-nua .client-row').contains('A new key');
+    cy.get('.page-spacing .client-row').contains('A new key');
     cy.get(`[data-cy="A new key-delete"]`).click();
     cy.get('[qa="confirmation-dialog-confirm-button"]').click();
   });
