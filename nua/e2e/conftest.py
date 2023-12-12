@@ -23,8 +23,8 @@ TOKENS = {
     scope="function",
     params=[
         "europe-1.stashify.cloud",
-        # "europe-1.nuclia.cloud",
-        # "aws-us-east-2-1.nuclia.cloud",
+        "europe-1.nuclia.cloud",
+        "aws-us-east-2-1.nuclia.cloud",
     ],
 )
 def nua_config(request):

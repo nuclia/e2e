@@ -11,7 +11,35 @@ def define_path(file: str):
 def test_pdf(nua_config):
     path = define_path("2310.14587.pdf")
     nc = NucliaProcessing()
-    nc.process_file(path)
+    payload = nc.process_file(path)
+
+
+def test_video(nua_config):
+    path = define_path("simple_video.mp4")
+    nc = NucliaProcessing()
+    payload = nc.process_file(path)
+
+
+def test_vude_1(nua_config):
+    path = define_path(
+        "y2mate_is_Stone_1_Minute_Short_Film_Hot_Shot_5hPtU8Jbpg0_720p_1701938639.mp4"  # noqa
+    )
+    nc = NucliaProcessing()
+    payload = nc.process_file(path)
+    assert payload
+    print(payload.extracted_text[0].body)
+    assert "harmful" in payload.extracted_text[0].body.text
+
+
+def test_vude_2(nua_config):
+    path = define_path(
+        "yt5s.io-The Wait  - 1 Minute Short Film _ Award Winning.mp4"
+    )  # noqa
+    nc = NucliaProcessing()
+    payload = nc.process_file(path)
+    assert payload
+    print(payload.extracted_text[0].body)
+    assert "two months" in payload.extracted_text[0].body.text
 
 
 def test_activity(nua_config):
