@@ -28,6 +28,12 @@ TOKENS = {
     ],
 )
 def nua_config(request):
+    if (
+        os.environ.get("TEST_ENV") == "stage"
+        and "stashify.cloud" not in request.param  # noqa
+    ):  # noqa
+        pytest.skip("skipped on this platform: {}")
+
     nuclia.REGIONAL = f"https://{request.param}"
 
     token = TOKENS.get(request.param)
