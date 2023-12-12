@@ -1,5 +1,5 @@
-name: run-nua-e2e
-run-name: Running e2e STAGE NUA tests
+name: run-nua-e2e-prod
+run-name: Running e2e PROD NUA tests
 on:
   push:
     branches:
@@ -11,7 +11,7 @@ on:
     # run every at every saturdat at 12
     - cron: '25 4 * * 6'
 jobs:
-  cypress-run:
+  test:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
