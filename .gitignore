@@ -38,6 +38,7 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
+.python-version
 
 # System Files
 .DS_Store
