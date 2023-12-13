@@ -63,6 +63,10 @@ export const goTo = (navbarItemSelector, popup = false) => {
     cy.get('app-kb-switch').click();
   }
 };
+export function goToManageAccount () {
+  cy.get('app-user-menu').click();
+  cy.get('[data-cy="go-to-manage-account"]').click();
+}
 
 export const closeViewer = () => {
   cy.get(nucliaSearchResultsSelector)
