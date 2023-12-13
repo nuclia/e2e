@@ -1,9 +1,6 @@
 name: run-nua-e2e-prod
 run-name: Running e2e PROD NUA tests
 on:
-  push:
-    branches:
-      - '**'
   workflow_dispatch:
     branches:
       - main
@@ -43,6 +40,7 @@ jobs:
         if: success() || failure() # always run even if the previous step fails
         with:
           report_paths: 'nua.xml'
+
       - name: Discord notification
         uses: cl8dep/action-discord@0.1
         if: ${{ failure() && github.ref_name == 'main' }}

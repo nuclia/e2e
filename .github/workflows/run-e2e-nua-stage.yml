@@ -31,6 +31,9 @@ jobs:
           pip install -r nua/requirements.txt
 
       - name: Install dependencies
+        env: # Or as an environment variable
+          TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}
+
         run: |
           TEST_ENV=stage pytest nua/e2e --durations=0 --junitxml nua.xml   
 
@@ -39,6 +42,7 @@ jobs:
         if: success() || failure() # always run even if the previous step fails
         with:
           report_paths: 'nua.xml'
+
       - name: Discord notification
         uses: cl8dep/action-discord@0.1
         if: ${{ failure() && github.ref_name == 'main' }}
