@@ -17,7 +17,7 @@ yarn install
 By default, tests are running on stage (thanks to `baseUrl` set in `cypress.config.js`). 
 To run the tests in your local environment:
 ```shell
-CYPRESS_BASE_URL=http://localhost:4200  cypress run
+CYPRESS_BASE_URL=http://localhost:4200  cypress open
 ```
 
 ## Run with Docker

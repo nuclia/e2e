@@ -8,7 +8,7 @@ on:
     branches:
       - main
   schedule:
-    # run every at every minute 25 of every hour monday to friday
+    # run every day at every minute 25 of every hour monday to friday
     - cron: '25 * * * 1-5'
       # run at 00:25 and 12:25 on saturday and sunday
     - cron: '25 0,12 * * 0,6'
