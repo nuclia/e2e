@@ -16,6 +16,7 @@ function login(kbName = 'permanent') {
       // Store auth tokens
       win.localStorage.setItem('JWT_KEY', Cypress.env('BEARER_TOKEN'))
       win.localStorage.setItem('NUCLIA_GETTING_STARTED_DONE', 'true');
+      win.localStorage.setItem('NUCLIA_NEW_REGIONAL_ENDPOINTS', 'true');
     }
   });
   cy.contains(kbName).click();
