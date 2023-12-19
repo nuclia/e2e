@@ -68,7 +68,7 @@ describe('Resources', () => {
 
   it('should display status', () => {
     cy.login();
-    cy.get('.total-resources').should('contain', '2');
+    cy.get('.kb-metrics .title-m:first-of-type').should('contain', '2');
   });
 
   describe('Resources list', () => {
