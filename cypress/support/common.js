@@ -1,6 +1,5 @@
 import { closeButton, nucliaSearchResultsSelector, viewerSelector } from '../e2e/selectors/widget-selectors';
 
-export const KB_NAME = `new-kb-${Cypress.env('KB_NAME')}`;
 export const STANDALONE_KB_NAME = `${Cypress.env('STANDALONE_KB_NAME')}`;
 export const STANDALONE_HEADER = {
   'X-NUCLIADB-ROLES': 'MANAGER'
