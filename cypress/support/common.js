@@ -5,6 +5,11 @@ export const STANDALONE_HEADER = {
   'X-NUCLIADB-ROLES': 'MANAGER'
 };
 
+export const ACCOUNT = {
+  id: '23d9209a-34be-4648-8ef0-5b522f9976be',
+  slug: 'testing'
+}
+
 export const permanentKb = {
   name: 'permanent',
   id: '096d9070-f7be-40c8-a24c-19c89072e3ff'
