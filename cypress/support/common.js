@@ -2,23 +2,23 @@ import { closeButton, nucliaSearchResultsSelector, viewerSelector } from '../e2e
 
 export const STANDALONE_KB_NAME = `${Cypress.env('STANDALONE_KB_NAME')}`;
 export const STANDALONE_HEADER = {
-  'X-NUCLIADB-ROLES': 'MANAGER'
+  'X-NUCLIADB-ROLES': 'MANAGER',
 };
 
 export const ACCOUNT = {
   id: '23d9209a-34be-4648-8ef0-5b522f9976be',
-  slug: 'testing'
-}
+  slug: 'testing',
+};
 
 export const permanentKb = {
   name: 'permanent',
-  id: '096d9070-f7be-40c8-a24c-19c89072e3ff'
-}
+  id: '096d9070-f7be-40c8-a24c-19c89072e3ff',
+};
 
 export const emptyKb = {
   name: 'permanent-empty',
-  id: '1efc5a33-bc5a-490c-8b47-b190beee212d'
-}
+  id: '1efc5a33-bc5a-490c-8b47-b190beee212d',
+};
 
 export const user = {
   email: `${Cypress.env('USER_NAME')}`,
@@ -34,23 +34,23 @@ export function getAuthHeader(synchronous = true) {
 }
 
 export function onlyPermanentKb() {
-  const authHeader = { 'Authorization': `Bearer ${Cypress.env('BEARER_TOKEN')}` };
+  const authHeader = { Authorization: `Bearer ${Cypress.env('BEARER_TOKEN')}` };
   cy.request({
     method: 'GET',
-    url: `https://stashify.cloud/api/v1/account/testing/kbs`,
-    headers: authHeader
+    url: `https://europe-1.stashify.cloud/api/v1/account/${ACCOUNT.id}/kbs`,
+    headers: authHeader,
   }).then((response) => {
     expect(response.status).to.eq(200);
 
     if (response.body.length > 2) {
-      response.body.forEach(kb => {
+      response.body.forEach((kb) => {
         if (!kb.slug.includes('permanent')) {
           cy.request({
             method: 'DELETE',
             url: `https://stashify.cloud/api/v1/account/testing/kb/${kb.slug}`,
-            headers: authHeader
+            headers: authHeader,
           }).then((deleteResponse) => {
-            expect(deleteResponse.status).to.eq( 204);
+            expect(deleteResponse.status).to.eq(204);
           });
         }
       });
@@ -67,14 +67,11 @@ export const goTo = (navbarItemSelector, popup = false) => {
     cy.get('app-kb-switch').click();
   }
 };
-export function goToManageAccount () {
+export function goToManageAccount() {
   cy.get('app-user-menu').click();
   cy.get('[data-cy="go-to-manage-account"]').click();
 }
 
 export const closeViewer = () => {
-  cy.get(nucliaSearchResultsSelector)
-    .shadow()
-    .find(`${viewerSelector} ${closeButton}`)
-    .click();
-}
+  cy.get(nucliaSearchResultsSelector).shadow().find(`${viewerSelector} ${closeButton}`).click();
+};
