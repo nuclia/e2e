@@ -21,7 +21,6 @@ describe('KB creation flow', () => {
     cy.get(`[data-cy="${KB_NAME}-link"]`).click();
     cy.location('pathname').should('equal', `/at/testing/europe-1/${KB_NAME}`);
     cy.get('app-kb-switch').should('contain', KB_NAME);
-    cy.get('.state-container .title-s').should('contain', 'private');
   });
 
   it('should allow to delete the kb', () => {

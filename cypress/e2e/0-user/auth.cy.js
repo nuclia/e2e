@@ -23,7 +23,7 @@ describe('User Login', () => {
     cy.get(`[data-cy="password"] input[type="password"]`).type(`${user.password}{enter}`,{ log: false });
     cy.get('a').contains('permanent').click();
     cy.location('pathname').should('equal', '/at/testing/europe-1/permanent');
-    cy.get(`.knowledge-box-home .endpoint-container`).should('contain', 'NucliaDB API endpoint')
+    cy.get(`.kb-details .title-xxs`).should('contain', 'NucliaDB API endpoint')
 
     // logout
     cy.get('[data-cy="user-menu"]').click();

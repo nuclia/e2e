@@ -19,7 +19,7 @@ function login(kbName = 'permanent') {
     }
   });
   cy.contains(kbName).click();
-  cy.get(`.knowledge-box-home .endpoint-container`).should('contain', 'NucliaDB API endpoint')
+  cy.get(`.kb-details .title-xxs`).should('contain', 'NucliaDB API endpoint')
 }
 
 // -- This is a parent command --
