@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
 describe('Create a new account', () => {
-  it.skip('allows to go to account creation', () => {
+  it('allows to go to account creation', () => {
     cy.visit('/');
     cy.get('[data-cy="create-account"]').click();
     cy.get('[data-cy="signup-form"]').should('exist');
