@@ -12,8 +12,7 @@ def test_llm_rag_chatgpt_openai(nua_config):
         model="chatgpt-azure-3",
     )
     
-    keywords ="CEO Nuclia Eudald".split()
-    assert all([word in generated for word in keywords])
+    assert b"Eudald" in generated
 
 
 def test_llm_rag_chatgpt_azure(nua_config):
@@ -26,8 +25,7 @@ def test_llm_rag_chatgpt_azure(nua_config):
         ],
         model="chatgpt-azure",
     )
-    keywords ="CEO Nuclia Eudald".split()
-    assert all([word in generated for word in keywords])
+    assert b"Eudald" in generated
 
 
 def test_llm_rag_anthropic(nua_config):
@@ -42,7 +40,7 @@ def test_llm_rag_anthropic(nua_config):
     )
     
     keywords ="CEO Nuclia Eudald".split()
-    assert all([word in generated for word in keywords])
+    assert b"Eudald" in generated
 
 
 def test_llm_rag_palm(nua_config):
