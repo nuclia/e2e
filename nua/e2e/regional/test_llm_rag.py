@@ -39,7 +39,6 @@ def test_llm_rag_anthropic(nua_config):
         model="anthropic",
     )
     
-    keywords ="CEO Nuclia Eudald".split()
     assert b"Eudald" in generated
 
 
@@ -48,12 +47,12 @@ def test_llm_rag_palm(nua_config):
     generated = np.rag(
         question="Which is the CEO of Nuclia?",
         context=[
-            "Nuclia CTO is Ramon Navarro",
-            "Eudald Camprubí is CEO at the same company as Ramon Navarro",
+            "Nuclia CTO is leo",
+            "Luis is CEO at the same company as leo",
         ],
         model="gemini-pro",
     )
-    assert b"Eudald" in generated
+    assert b"Luis" in generated
 
 
 def test_llm_rag_nuclia_everest_v1(nua_config):
