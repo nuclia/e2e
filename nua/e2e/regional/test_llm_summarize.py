@@ -9,7 +9,7 @@ DATA = {
 
 def test_summarize_chatgpt(nua_config):
     np = NucliaPredict()
-    embed = np.summarize(DATA, model="chatgpt")
+    embed = np.summarize(DATA, model="chatgpt-azure-3")
     assert "Manresa" in embed.summary
     assert "Barcelona" in embed.summary
 
@@ -30,30 +30,9 @@ def test_summarize_anthropic(nua_config):
 
 def test_summarize_palm(nua_config):
     np = NucliaPredict()
-    embed = np.summarize(DATA, model="palm")
+    embed = np.summarize(DATA, model="gemini-pro")
     assert "manresa" in embed.summary
     assert "barcelona" in embed.summary
-
-
-def test_summarize_cohere(nua_config):
-    np = NucliaPredict()
-    embed = np.summarize(DATA, model="cohere")
-    assert "Manresa" in embed.summary
-    assert "Barcelona" in embed.summary
-
-
-def test_summarize_nuclia_atlas_v1(nua_config):
-    np = NucliaPredict()
-    embed = np.summarize(DATA, model="nuclia-atlas-v1")
-    assert "Manresa" in embed.summary
-    assert "Barcelona" in embed.summary
-
-
-def test_summarize_nuclia_etna_v1(nua_config):
-    np = NucliaPredict()
-    embed = np.summarize(DATA, model="nuclia-etna-v1")
-    assert "Manresa" in embed.summary
-    assert "Barcelona" in embed.summary
 
 
 def test_summarize_nuclia_everest_v1(nua_config):
