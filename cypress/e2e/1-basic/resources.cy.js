@@ -102,22 +102,27 @@ describe('Resources', () => {
     it('should list existing label set', () => {
       goTo('go-to-advanced');
       goTo('go-to-classification');
-      cy.get('.label-sets-management pa-expander').contains('dataset').click();
-      cy.get('.label-sets-management pa-expander .labels').contains('permanent');
+      cy.get('[data-cy="resource-label-sets"]').contains('dataset').click();
+      cy.get('[data-cy="label-list-input"] textarea').should('have.value', 'permanent');
     });
 
     it('should create a label set', () => {
       const labelset = 'Heroes';
-      const label = 'Catwoman';
+      const label1 = 'Catwoman';
+      const label2 = 'Poison Ivy';
       goTo('go-to-advanced');
       goTo('go-to-classification');
       cy.get('[data-cy="add-label-set"]').click();
-      cy.get('input#title-input').type(labelset);
+      cy.get('[data-cy="label-set-title-input"]').type(labelset);
       cy.get('.pa-toggle').contains('Resources').click();
-      cy.get('.label-content.unsaved-label input').type(`${label}{enter}`);
-      cy.get('.label-content.unsaved-label input').type('Poison Ivy{enter}');
+      cy.get('[data-cy="label-list-input"]').type(`${label1}`);
+      cy.get('[data-cy="grid-view"]').click();
+      cy.get('[data-cy="label-item-input"]').type(`${label2}{enter}`);
+      cy.get('[data-cy="label-grid"]').find('nsi-label').should('have.length', 2);
+      cy.get('[data-cy="list-view"]').click();
+      cy.get('[data-cy="label-list-input"] textarea').should('have.value', `${label1}, ${label2}`)
       cy.get('[data-cy="save-label-set"]').click();
-      cy.get('pa-expander-header').should('contain', 'Heroes');
+      cy.get('[data-cy="resource-label-sets"]').should('contain', 'Heroes');
     });
   });
 
