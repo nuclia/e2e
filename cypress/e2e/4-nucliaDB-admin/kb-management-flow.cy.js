@@ -28,8 +28,8 @@ describe('NucliaDB Admin – KB management flow', () => {
     cy.get('app-kb-switch').should('contain', STANDALONE_KB_NAME);
 
     cy.task('log', `Delete the created KB`);
-    cy.get('.app-navbar').trigger('mouseover');
-    cy.get(`[data-cy="go-to-manage-kbs"]`).click();
+    cy.get('app-standalone-menu').click();
+    cy.get(`[data-cy="go-to-kb-list"`).click();
     cy.location('hash').should('equal', '#/admin/select/local');
     cy.get('[data-cy="kb-list-item"]').should('have.length', 1);
     cy.get('[data-cy="delete-kb-button"]').click();
