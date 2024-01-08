@@ -46,6 +46,18 @@ jobs:
           name: cypress-reports
           path: cypress/reports
           if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+      - name: Slack notification
+        id: slack
+        uses: slackapi/slack-github-action@v1.24.0
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
+        with:
+          payload: |
+            {
+              "text": "⚠️ tests failed\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
       - name: Discord notification
         uses: cl8dep/action-discord@0.1
         if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
