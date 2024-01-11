@@ -58,12 +58,3 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-      - name: Discord notification
-        uses: cl8dep/action-discord@0.1
-        if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_APPLICATION }}
-          message: |
-            ⚠️ tests failed
-            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>
-          username: 'Cypress E2E'
