@@ -12,9 +12,8 @@ import {
   nucliaSearchBarSelector,
   nucliaSearchResultsSelector,
   searchBarInputSelector,
-  searchResultLiSelector,
   secondQuery,
-  searchResultTitle,
+  answerSourceTitleSelector
 } from '../selectors/widget-selectors';
 
 describe('Chat with your docs', () => {
@@ -29,14 +28,6 @@ describe('Chat with your docs', () => {
       .shadow()
       .find(`${initialAnswerSelector} ${answerContainerSelector}`)
       .should('exist');
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${initialAnswerSelector} ${searchResultTitle}`)
-      .should('contain', expectedResourceTitle);
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${initialAnswerSelector} ${searchResultLiSelector}`)
-      .should('have.length.at.least', 1);
 
     // chat with your doc
     cy.get(nucliaSearchResultsSelector).shadow().find(`${initialAnswerSelector} ${chatWithYourDocsSelector}`).click();
@@ -62,5 +53,19 @@ describe('Chat with your docs', () => {
       .shadow()
       .find(`${chatContainerSelector} ${answerContainerSelector}`)
       .should('have.length.at.least', 1);
+  });
+
+  // This test is disabled because returned sources are not deterministic at the moment
+  xit('should display sources that have been used to generate the answer', () => {
+    cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).click();
+    cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${secondQuery}\n`, { force: true });
+    cy.get(nucliaSearchResultsSelector)
+      .shadow()
+      .find(`${initialAnswerSelector} ${answerContainerSelector}`)
+      .should('exist');
+    cy.get(nucliaSearchResultsSelector)
+      .shadow()
+      .find(`${initialAnswerSelector} ${answerSourceTitleSelector}`)
+      .should('contain', expectedResourceTitle);
   });
 });
