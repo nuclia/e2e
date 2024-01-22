@@ -13,7 +13,8 @@ export const searchResultTitle = '.sw-result-row .title-m';
 // Chat selectors
 export const initialAnswerSelector = '.sw-initial-answer';
 export const chatWithYourDocsSelector = '.go-to-chat';
-export const answerContainerSelector = '.answer-container';
+export const answerContainerSelector = '.answer-text';
+export const answerSourceTitleSelector = '.resource-title';
 export const chatContainerSelector = '.sw-chat .chat-container';
 export const chatInputSelector = '.sw-chat-input input';
 export const chatQuestionSelector = '.question';
