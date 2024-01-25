@@ -33,7 +33,7 @@ describe('User Login', () => {
 
   it('should display login errors', () => {
     cy.visit('/');
-    cy.get(`[formcontrolname="email"] input`).type('user').clear().blur();
+    cy.get(`[formcontrolname="email"] input`).type('user').blur().focus().clear().blur();
     cy.get('[formcontrolname="email"] .pa-field-help-error').should('be.visible').and('contain', 'Required field');
 
     cy.get(`[data-cy="password"] input[type="password"]`).type('wrong password').clear().blur();
