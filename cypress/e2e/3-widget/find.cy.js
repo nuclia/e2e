@@ -14,9 +14,9 @@ import {
   searchResultTitle,
 } from '../selectors/widget-selectors';
 
-describe('Search', () => {
+describe('Find', () => {
   beforeEach(() => {
-    cy.visit('https://nuclia.github.io/frontend/e2e/widget.html');
+    cy.visit('https://nuclia.github.io/frontend/e2e/find.html');
   });
 
   it('should display results, preview and allow to search paragraphs in the resource', () => {
