@@ -13,12 +13,12 @@ import {
   nucliaSearchResultsSelector,
   searchBarInputSelector,
   secondQuery,
-  answerSourceTitleSelector
+  answerSourceTitleSelector, answerCitationSelector
 } from '../selectors/widget-selectors';
 
-describe('Chat with your docs', () => {
+describe('Ask', () => {
   beforeEach(() => {
-    cy.visit('https://nuclia.github.io/frontend/e2e/widget.html');
+    cy.visit('https://nuclia.github.io/frontend/e2e/ask.html');
   });
 
   it('should display initial answer and allow to chat with your docs', () => {
@@ -56,13 +56,17 @@ describe('Chat with your docs', () => {
   });
 
   // This test is disabled because returned sources are not deterministic at the moment
-  xit('should display sources that have been used to generate the answer', () => {
+  it('should display citations and search results that have been used to generate the answer', () => {
     cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).click();
     cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${secondQuery}\n`, { force: true });
     cy.get(nucliaSearchResultsSelector)
       .shadow()
       .find(`${initialAnswerSelector} ${answerContainerSelector}`)
       .should('exist');
+    cy.get(nucliaSearchResultsSelector)
+      .shadow()
+      .find(`${initialAnswerSelector} ${answerCitationSelector}`)
+      .should('contain', 1);
     cy.get(nucliaSearchResultsSelector)
       .shadow()
       .find(`${initialAnswerSelector} ${answerSourceTitleSelector}`)
