@@ -6,30 +6,34 @@ def test_llm_generate_chatgpt(nua_config):
     generated = np.generate(
         "Which is the capital of Catalonia?", model="chatgpt-azure-3"
     )
-    assert b"Barcelona" in generated
+    assert "Barcelona" in generated.answer
 
 
 def test_llm_generate_azure_chatgpt(nua_config):
     np = NucliaPredict()
     generated = np.generate("Which is the capital of Catalonia?", model="chatgpt-azure")
-    assert b"Barcelona" in generated
+    assert "Barcelona" in generated.answer
 
 
 def test_llm_generate_anthropic(nua_config):
     np = NucliaPredict()
     generated = np.generate("Which is the capital of Catalonia?", model="anthropic")
-    assert b"Barcelona" in generated
+    assert "Barcelona" in generated.answer
 
 
 def test_llm_generate_palm(nua_config):
     np = NucliaPredict()
     generated = np.generate("Which is the capital of Catalonia?", model="gemini-pro")
-    assert b"Barcelona" in generated
+    assert "Barcelona" in generated.answer
 
 
 def test_llm_generate_nuclia_everest_v1(nua_config):
+    if "stashify" not in nua_config:
+        # Lets only test on stashify as everest is not on prod
+        return
+
     np = NucliaPredict()
     generated = np.generate(
         "Which is the capital of Catalonia?", model="nuclia-everest-v1"
     )
-    assert b"Barcelona" in generated
+    assert "Barcelona" in generated.answer

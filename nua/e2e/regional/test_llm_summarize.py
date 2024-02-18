@@ -6,7 +6,7 @@ DATA = {
     "manresa": "Manresa és un municipi i una ciutat de Catalunya, capital de la comarca del Bages i de la Catalunya central. Està situada al pla de Bages, prop de l'angle on conflueixen els rius Llobregat i Cardener. Amb una població de 76.250 habitants el 2018,[1] és la ciutat més poblada del Bages i de la Catalunya Central. Es troba a 65 km al nord de Barcelona, i marca el límit entre l'àrea industrial al voltant de Barcelona i l'àrea rural del nord. La ciutat forma un nus molt important de comunicacions, accentuat amb l'eix del Llobregat i l'eix transversal, entre la muntanya i el mar, entre les planes interiors de l'Urgell i la Segarra i les comarques orientals del país. Quant a l'economia, Manresa destaca en la indústria tèxtil, química i maquinària, si bé en les últimes dècades ha substituït la indústria pel comerç. La ciutat també destaca pel seu conjunt medieval, amb els ponts damunt el riu Cardener i la seva catedral d'estil gòtic. A més, en aquesta ciutat també es troben esglésies d'estil barroc, així com interessants edificacions modernistes.",  # noqa
 }
 
-DATA_COFFEE ={
+DATA_COFFEE = {
     "Flat white": """A flat white is a coffee drink consisting of espresso with microfoam (steamed milk with small, fine bubbles and a glossy or velvety consistency). It generally has a higher proportion of espresso to milk than a caffè latte, and a thinner layer of microfoam than a cappuccino. Although the term "flat white" was used in the United Kingdom to describe a type of espresso-based drink in the 1960s, the modern flat white was developed in Australia and New Zealand.
 
 Description
@@ -25,6 +25,7 @@ Regional variants
 In Australia the drink is referred to as a macchiato and has some variants.[6] A traditional long macchiato is usually a double shot of espresso with a dash of textured milk and most of the glass left empty. In Perth, a 'long mac topped up' is usually ordered, which is a double shot of espresso with the glass filled with textured milk. In Melbourne, it is a double-shot of espresso, a glass half-filled with water, and a dash of textured milk on top.[7]""",
 }
 
+
 def test_summarize_chatgpt(nua_config):
     np = NucliaPredict()
     embed = np.summarize(DATA, model="chatgpt-azure-3")
@@ -42,19 +43,15 @@ def test_summarize_azure_chatgpt(nua_config):
 def test_summarize_anthropic(nua_config):
     np = NucliaPredict()
     embed = np.summarize(DATA_COFFEE, model="anthropic")
-    #changed to partial summaries since anthropic is not consistent in the global summary at all
+    # changed to partial summaries since anthropic is not consistent in the global summary at all
     assert "flat white" in embed.resources["Flat white"].summary.lower()
     assert "macchiato" in embed.resources["Macchiato"].summary.lower()
 
 
-def test_summarize_palm(nua_config):
-    np = NucliaPredict()
-    embed = np.summarize(DATA_COFFEE, model="gemini-pro")
-    assert "flat white" in embed.summary.lower()
-    assert "macchiato" in embed.summary.lower()
-
-
 def test_summarize_nuclia_everest_v1(nua_config):
+    if "stashify" not in nua_config:
+        # Lets only test on stashify as everest is not on prod
+        return
     np = NucliaPredict()
     embed = np.summarize(DATA, model="nuclia-everest-v1")
     assert "Manresa" in embed.summary

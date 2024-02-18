@@ -49,5 +49,5 @@ def nua_config(request):
         assert client_id
         nuclia_auth._config.set_default_nua(client_id)
 
-        yield
+        yield request.param
         reset_config_file()

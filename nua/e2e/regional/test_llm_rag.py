@@ -11,8 +11,8 @@ def test_llm_rag_chatgpt_openai(nua_config):
         ],
         model="chatgpt-azure-3",
     )
-    
-    assert b"Eudald" in generated
+
+    assert "Eudald" in generated.answer
 
 
 def test_llm_rag_chatgpt_azure(nua_config):
@@ -25,7 +25,7 @@ def test_llm_rag_chatgpt_azure(nua_config):
         ],
         model="chatgpt-azure",
     )
-    assert b"Eudald" in generated
+    assert "Eudald" in generated.answer
 
 
 def test_llm_rag_anthropic(nua_config):
@@ -38,8 +38,8 @@ def test_llm_rag_anthropic(nua_config):
         ],
         model="anthropic",
     )
-    
-    assert b"Eudald" in generated
+
+    assert "Eudald" in generated.answer
 
 
 def test_llm_rag_palm(nua_config):
@@ -52,10 +52,14 @@ def test_llm_rag_palm(nua_config):
         ],
         model="gemini-pro",
     )
-    assert b"Luis" in generated
+    assert "Luis" in generated.answer
 
 
 def test_llm_rag_nuclia_everest_v1(nua_config):
+    if "stashify" not in nua_config:
+        # Lets only test on stashify as everest is not on prod
+        return
+
     np = NucliaPredict()
     generated = np.rag(
         question="Which is the CEO of Nuclia?",
@@ -65,4 +69,4 @@ def test_llm_rag_nuclia_everest_v1(nua_config):
         ],
         model="nuclia-everest-v1",
     )
-    assert b"Eudald" in generated
+    assert "Eudald" in generated.answer
