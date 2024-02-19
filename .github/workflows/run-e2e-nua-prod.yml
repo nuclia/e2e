@@ -41,12 +41,15 @@ jobs:
         with:
           report_paths: 'nua.xml'
 
-      - name: Discord notification
-        uses: cl8dep/action-discord@0.1
+      - name: Slack notification
+        id: slack
+        uses: slackapi/slack-github-action@v1.24.0
         if: ${{ failure() && github.ref_name == 'main' }}
         with:
-          webhook: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
-          message: |
-            ⚠️ tests failed @NUA
-            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>
-          username: 'NUA E2E'
+          payload: |
+            {
+              "text": "⚠️ tests failed\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
