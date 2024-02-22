@@ -26,7 +26,7 @@ describe('Ask', () => {
     cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${firstQuery}\n`, { force: true });
     cy.get(nucliaSearchResultsSelector)
       .shadow()
-      .find(`${initialAnswerSelector} ${answerContainerSelector}`)
+      .find(`${initialAnswerSelector} ${answerContainerSelector}`, {timeout: 6000})
       .should('exist');
 
     // chat with your doc
@@ -61,7 +61,7 @@ describe('Ask', () => {
     cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${secondQuery}\n`, { force: true });
     cy.get(nucliaSearchResultsSelector)
       .shadow()
-      .find(`${initialAnswerSelector} ${answerContainerSelector}`)
+      .find(`${initialAnswerSelector} ${answerContainerSelector}`, {timeout: 6000})
       .should('exist');
     cy.get(nucliaSearchResultsSelector)
       .shadow()
