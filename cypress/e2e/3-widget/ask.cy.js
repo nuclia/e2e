@@ -15,61 +15,67 @@ import {
   secondQuery,
   answerSourceTitleSelector, answerCitationSelector
 } from '../selectors/widget-selectors';
+import { ACCOUNT } from '../../support/common';
 
 describe('Ask', () => {
-  beforeEach(() => {
-    cy.visit('https://nuclia.github.io/frontend/e2e/ask.html');
-  });
 
-  it('should display initial answer and allow to chat with your docs', () => {
-    cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).click();
-    cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${firstQuery}\n`, { force: true });
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${initialAnswerSelector} ${answerContainerSelector}`, {timeout: 6000})
-      .should('exist');
+  ACCOUNT.availableZones.forEach((zone) => {
+    describe(`on ${zone.slug}`, () => {
+      beforeEach(() => {
+        cy.visit(zone.askUrl);
+      });
 
-    // chat with your doc
-    cy.get(nucliaSearchResultsSelector).shadow().find(`${initialAnswerSelector} ${chatWithYourDocsSelector}`).click();
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${chatContainerSelector} ${chatQuestionSelector}`)
-      .should('contain', firstQuery);
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${chatContainerSelector} ${answerContainerSelector}`)
-      .should('have.length.at.least', 1);
+      it('should display initial answer and allow to chat with your docs', () => {
+        cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).click();
+        cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${firstQuery}\n`, { force: true });
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find(`${initialAnswerSelector} ${answerContainerSelector}`, {timeout: 6000})
+          .should('exist');
 
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${chatContainerSelector} ${chatInputSelector}`)
-      .type(`${secondQuery}\n`);
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${chatContainerSelector} ${chatQuestionSelector}`)
-      .should('have.length.at.least', 1)
-      .and('contain', secondQuery);
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${chatContainerSelector} ${answerContainerSelector}`)
-      .should('have.length.at.least', 1);
-  });
+        // chat with your doc
+        cy.get(nucliaSearchResultsSelector).shadow().find(`${initialAnswerSelector} ${chatWithYourDocsSelector}`).click();
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find(`${chatContainerSelector} ${chatQuestionSelector}`)
+          .should('contain', firstQuery);
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find(`${chatContainerSelector} ${answerContainerSelector}`)
+          .should('have.length.at.least', 1);
 
-  // This test is disabled because returned sources are not deterministic at the moment
-  it('should display citations and search results that have been used to generate the answer', () => {
-    cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).click();
-    cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${secondQuery}\n`, { force: true });
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${initialAnswerSelector} ${answerContainerSelector}`, {timeout: 6000})
-      .should('exist');
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${initialAnswerSelector} ${answerCitationSelector}`)
-      .should('contain', 1);
-    cy.get(nucliaSearchResultsSelector)
-      .shadow()
-      .find(`${initialAnswerSelector} ${answerSourceTitleSelector}`)
-      .should('contain', expectedResourceTitle);
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find(`${chatContainerSelector} ${chatInputSelector}`)
+          .type(`${secondQuery}\n`);
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find(`${chatContainerSelector} ${chatQuestionSelector}`)
+          .should('have.length.at.least', 1)
+          .and('contain', secondQuery);
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find(`${chatContainerSelector} ${answerContainerSelector}`)
+          .should('have.length.at.least', 1);
+      });
+
+      // This test is disabled because returned sources are not deterministic at the moment
+      it('should display citations and search results that have been used to generate the answer', () => {
+        cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).click();
+        cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${secondQuery}\n`, { force: true });
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find(`${initialAnswerSelector} ${answerContainerSelector}`, {timeout: 6000})
+          .should('exist');
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find(`${initialAnswerSelector} ${answerCitationSelector}`)
+          .should('contain', 1);
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find(`${initialAnswerSelector} ${answerSourceTitleSelector}`)
+          .should('contain', expectedResourceTitle);
+      });
+    });
   });
 });
