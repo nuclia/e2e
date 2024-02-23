@@ -1,6 +1,6 @@
 import { closeButton, nucliaSearchResultsSelector, viewerSelector } from '../e2e/selectors/widget-selectors';
 
-export const ZONES = {
+const ZONES = {
   europe: 'europe-1',
   usa: 'aws-us-east-2-1'
 }

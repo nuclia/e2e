@@ -9,7 +9,7 @@
 // ***********************************************
 
 
-function login(kbName = 'permanent') {
+function login(kbName) {
   cy.visit(`/`, {
     onBeforeLoad(win) {
       // Store auth tokens
@@ -22,7 +22,7 @@ function login(kbName = 'permanent') {
 }
 
 // -- This is a parent command --
-Cypress.Commands.add('login', () => login());
+Cypress.Commands.add('login', (zone) => login(zone.permanentKb.name));
 Cypress.Commands.add('loginToEmptyKb', (zone) => login(zone.emptyKb.name));
 
 

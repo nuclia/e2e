@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, ACCOUNT_STAGE, getAuthHeader, goTo } from '../../support/common';
+import { ACCOUNT, getAuthHeader, goTo } from '../../support/common';
 
 function checkResourceWasAdded(endpoint, resourceTitle) {
   cy.request({
@@ -17,7 +17,7 @@ function checkResourceWasAdded(endpoint, resourceTitle) {
 describe('Manage content', () => {
   const authHeader = getAuthHeader();
 
-  ACCOUNT_STAGE.availableZones.forEach((zone) => {
+  ACCOUNT.availableZones.forEach((zone) => {
     const endpoint = `https://${zone.slug}.${ACCOUNT.domain}/api/v1/kb/${zone.emptyKb.id}`;
 
     before(() => {

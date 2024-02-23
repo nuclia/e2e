@@ -70,13 +70,13 @@ describe('Resources', () => {
       });
 
       it('should display status', () => {
-        cy.login();
+        cy.login(zone);
         cy.get('.kb-metrics .title-m:first-of-type').should('contain', '2');
       });
 
       describe('Resources list', () => {
         beforeEach(() => {
-          cy.login();
+          cy.login(zone);
           goTo('go-to-resources');
         });
 
@@ -101,7 +101,7 @@ describe('Resources', () => {
 
       describe('Label sets', () => {
         beforeEach(() => {
-          cy.login();
+          cy.login(zone);
         });
 
         it('should list existing label set', () => {
@@ -133,7 +133,7 @@ describe('Resources', () => {
 
       describe('Search', () => {
         beforeEach(() => {
-          cy.login();
+          cy.login(zone);
           goTo('go-to-search');
         });
 
