@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, emptyKb, getAuthHeader, goTo } from '../../support/common';
+import { ACCOUNT, emptyKb, getAuthHeader, goTo, ZONES } from '../../support/common';
 
 describe('Change KB settings', () => {
-  const endpoint = `https://europe-1.stashify.cloud/api/v1/account/${ACCOUNT.id}/kb/${emptyKb.id}`;
+  const endpoint = `https://${ZONES['europe']}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kb/${emptyKb.id}`;
   const authHeader = getAuthHeader();
 
   before(() => {

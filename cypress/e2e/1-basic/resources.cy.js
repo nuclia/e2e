@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { closeViewer, getAuthHeader, goTo, onlyPermanentKb, permanentKb } from '../../support/common';
+import { ACCOUNT, closeViewer, getAuthHeader, goTo, onlyPermanentKb, permanentKb, ZONES } from '../../support/common';
 import {
   expectedResourceTitle,
   firstQuery,
@@ -17,7 +17,7 @@ describe('Resources', () => {
   before(() => {
     onlyPermanentKb();
 
-    const endpoint = `https://europe-1.stashify.cloud/api/v1/kb/${permanentKb.id}`;
+    const endpoint = `https://${ZONES['europe']}.${ACCOUNT.domain}/api/v1/kb/${permanentKb.id}`;
     const authHeader = getAuthHeader();
 
     // keep only permanent labels on resources

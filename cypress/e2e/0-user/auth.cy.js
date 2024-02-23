@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { user } from '../../support/common';
+import { ACCOUNT, permanentKb, user } from '../../support/common';
 
 describe('User Login', () => {
   it('should redirect unauthenticated user to login page', function() {
@@ -14,15 +14,15 @@ describe('User Login', () => {
     cy.get(`[formcontrolname="email"] input`).type(user.email,{ log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type(user.password,{ log: false });
     cy.get(`button[type='submit']`).click();
-    cy.location('pathname').should('equal', '/select/testing');
+    cy.location('pathname').should('equal', `/select/${ACCOUNT.slug}`);
   });
 
   it('should allow a visitor to login and logout', () => {
     cy.visit('/');
     cy.get(`[formcontrolname="email"] input`).type(user.email,{ log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type(`${user.password}{enter}`,{ log: false });
-    cy.get('a').contains('permanent').click();
-    cy.location('pathname').should('equal', '/at/testing/europe-1/permanent');
+    cy.get('a').contains(permanentKb.name).click();
+    cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${permanentKb.zone}/${permanentKb.slug}`);
     cy.get(`.kb-details .title-xxs`).should('contain', 'NucliaDB API endpoint')
 
     // logout

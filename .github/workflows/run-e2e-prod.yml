@@ -22,7 +22,7 @@ jobs:
           docker build -t nucliadb-server .
           docker run -p 8080:8080 \
               -v nucliadb-standalone:/data \
-              -e NUA_API_KEY=${{ secrets.NUA_KEY_PROD }} \
+              -e NUA_API_KEY=${{ secrets.NUA_KEY_PROD_EUROPE }} \
               nucliadb-server &
       # Install npm dependencies, cache them correctly and run all Cypress tests
       - name: Cypress run
@@ -32,9 +32,11 @@ jobs:
           install-command: yarn install
         env:
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_PROD }}
-          CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY_PROD }}
+          CYPRESS_NUA_KEY_EUROPE: ${{ secrets.NUA_KEY_PROD_EUROPE }}
+          CYPRESS_NUA_KEY_USA: ${{ secrets.NUA_KEY_PROD_USA }}
           CYPRESS_USER_NAME: ${{ secrets.USER_NAME_PROD }}
           CYPRESS_USER_PWD: ${{ secrets.USER_PWD_PROD }}
+          CYPRESS_RUNNING_ENV: prod
         # after the test run completes store reports and any screenshots
       - name: Cypress reports
         uses: actions/upload-artifact@v3

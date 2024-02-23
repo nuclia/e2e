@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { emptyKb, getAuthHeader, goTo } from '../../support/common';
+import { ACCOUNT, emptyKb, getAuthHeader, goTo, ZONES } from '../../support/common';
 
 function checkResourceWasAdded(endpoint, resourceTitle) {
   cy.request({
@@ -15,7 +15,7 @@ function checkResourceWasAdded(endpoint, resourceTitle) {
 }
 
 describe('Manage content', () => {
-  const endpoint = `https://europe-1.stashify.cloud/api/v1/kb/${emptyKb.id}`;
+  const endpoint = `https://${ZONES['europe']}.${ACCOUNT.domain}/api/v1/kb/${emptyKb.id}`;
   const authHeader = getAuthHeader();
 
   before(() => {
@@ -86,7 +86,7 @@ describe('Manage content', () => {
     cy.get('.status pa-icon[name="check"]', { timeout: 10000 }).should('exist');
     cy.get('app-upload-progress button[aria-label="Close"]').click();
     cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
-    cy.location('pathname').should('equal', `/at/testing/europe-1/${emptyKb.name}/resources/pending`);
+    cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${emptyKb.zone}/${emptyKb.name}/resources/pending`);
 
     cy.task('log', 'Upload link');
     goTo('go-to-upload');
@@ -94,7 +94,7 @@ describe('Manage content', () => {
     cy.get('app-create-link pa-input input').type('https://nuclia.com/contact/');
     cy.get('app-create-link button').contains('Add').click();
     cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
-    cy.location('pathname').should('equal', `/at/testing/europe-1/${emptyKb.name}/resources/pending`);
+    cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${emptyKb.zone}/${emptyKb.name}/resources/pending`);
 
     checkResourceWasAdded(endpoint, 'nuclia-logo.png');
     checkResourceWasAdded(endpoint, 'https://nuclia.com/contact/');

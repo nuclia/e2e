@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { goTo, goToManageAccount, onlyPermanentKb } from '../../support/common';
+import { ACCOUNT, goTo, goToManageAccount, onlyPermanentKb, ZONES } from '../../support/common';
 
 describe('KB creation flow', () => {
   before(() => {
@@ -21,7 +21,7 @@ describe('KB creation flow', () => {
     cy.get('app-kb-add').contains('Save').click();
     cy.get(`[data-cy="${newKbName}-link"]`, { timeout: 10000 }).should('contain', newKbName);
     cy.get(`[data-cy="${newKbName}-link"]`).click();
-    cy.location('pathname').should('equal', `/at/testing/europe-1/${newKbName}`);
+    cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${ZONES['europe']}/${newKbName}`);
     cy.get('app-kb-switch').should('contain', newKbName);
 
     // Deletion test
