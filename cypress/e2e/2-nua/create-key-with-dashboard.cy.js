@@ -14,7 +14,7 @@ describe('Create NUA key with the dashboard', () => {
         expect(response.status).to.eq(200);
         const clients = response.body['clients'] || [];
         if (clients.length > 1) {
-          clients.filter((client) => !client['title'].include('e2e')).forEach(client => {
+          clients.filter((client) => !client['title'].includes('e2e')).forEach(client => {
             cy.request({
               method: 'DELETE',
               url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_client/${client.client_id}`,
