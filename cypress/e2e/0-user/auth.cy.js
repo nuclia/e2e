@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, permanentKb, user } from '../../support/common';
+import { ACCOUNT, user } from '../../support/common';
 
 describe('User Login', () => {
   it('should redirect unauthenticated user to login page', function() {
@@ -18,6 +18,7 @@ describe('User Login', () => {
   });
 
   it('should allow a visitor to login and logout', () => {
+    const permanentKb = ACCOUNT.availableZones[0].permanentKb;
     cy.visit('/');
     cy.get(`[formcontrolname="email"] input`).type(user.email,{ log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type(`${user.password}{enter}`,{ log: false });

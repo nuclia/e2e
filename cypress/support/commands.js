@@ -9,7 +9,6 @@
 // ***********************************************
 
 
-import { emptyKb } from './common';
 function login(kbName = 'permanent') {
   cy.visit(`/`, {
     onBeforeLoad(win) {
@@ -24,7 +23,7 @@ function login(kbName = 'permanent') {
 
 // -- This is a parent command --
 Cypress.Commands.add('login', () => login());
-Cypress.Commands.add('loginToEmptyKb', () => login(emptyKb.name));
+Cypress.Commands.add('loginToEmptyKb', (zone) => login(zone.emptyKb.name));
 
 
 // -- This is a child command --
