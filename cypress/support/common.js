@@ -28,7 +28,9 @@ export const ACCOUNT_STAGE = {
       slug: 'permanent-empty',
       id: '1efc5a33-bc5a-490c-8b47-b190beee212d',
       zone: ZONES['europe'],
-    }
+    },
+    askUrl: 'https://nuclia.github.io/frontend/e2e/ask.html',
+    findUrl: 'https://nuclia.github.io/frontend/e2e/find.html',
   }],
 };
 
@@ -50,7 +52,9 @@ export const ACCOUNT_PROD = {
       slug: 'permanent-empty',
       id: '6176242a-b15d-459b-b4b9-5740fc1fed72',
       zone: ZONES['europe'],
-    }
+    },
+    askUrl: 'https://nuclia.github.io/frontend/e2e/prod/ask-europe.html',
+    findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-europe.html'
   }, {
     slug: ZONES['usa'],
     nuaKey: `${Cypress.env('NUA_KEY_PROD_USA')}`,
@@ -65,7 +69,9 @@ export const ACCOUNT_PROD = {
       slug: 'permanent-empty-usa',
       id: '53861c47-20b2-4c6f-bd7a-3286ca5bec13',
       zone: ZONES['usa'],
-    }
+    },
+    askUrl: 'https://nuclia.github.io/frontend/e2e/prod/ask-usa.html',
+    findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-usa.html'
   }],
 };
 
