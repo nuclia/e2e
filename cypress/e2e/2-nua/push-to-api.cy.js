@@ -15,7 +15,7 @@ describe('Push file', () => {
         return cy.request({
           method: 'POST',
           json: true,
-          url: `https://europe-1.stashify.cloud/api/v1/processing/push`,
+          url: `https://europe-1.stashify.cloud/api/v2/processing/push`,
           headers: { 'x-stf-nuakey': `Bearer ${Cypress.env('NUA_KEY')}` },
           body: {
             filefield: { 'nuclia-logo.png': resp.body }
