@@ -1,0 +1,64 @@
+name: run-e2e-stage
+run-name: Running e2e tests on Stage
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+    branches:
+      - main
+  schedule:
+    # Run at minute 25 past every hour from 7 through 23 on Monday.
+    - cron: 25 7-23 * * 1
+    # Run at minute 25 on every day-of-week from Tuesday through Thursday.
+    - cron: '25 * * * 2-4'
+    # Run at minute 25 past every hour from 0 through 19 on Friday.
+    - cron: 25 0-19 * * 5
+    # Run at 00:25 and 12:25 on saturday and sunday
+    - cron: '25 0,12 * * 0,6'
+jobs:
+  cypress-run:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      # Launch NucliaDB in docker
+      - run: |
+          docker pull nuclia/nucliadb:latest
+          docker build -t nucliadb-server .
+          docker run -p 8080:8080 \
+              -v nucliadb-standalone:/data \
+              -e NUCLIA_PUBLIC_URL="https://{zone}.stashify.cloud" \
+              -e NUA_API_KEY=${{ secrets.NUA_KEY }} \
+              nucliadb-server &
+      # Install npm dependencies, cache them correctly and run all Cypress tests
+      - name: Cypress run
+        id: cypress
+        uses: cypress-io/github-action@v6
+        with:
+          install-command: yarn install
+        env:
+          CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY }}
+          CYPRESS_USER_NAME: ${{ secrets.USER_NAME }}
+          CYPRESS_USER_PWD: ${{ secrets.USER_PWD }}
+        # after the test run completes store reports and any screenshots
+      - name: Cypress reports
+        uses: actions/upload-artifact@v3
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
+        with:
+          name: cypress-reports
+          path: cypress/reports
+          if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+      - name: Slack notification
+        id: slack
+        uses: slackapi/slack-github-action@v1.24.0
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
+        with:
+          payload: |
+            {
+              "text": "⚠️ tests failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
