@@ -75,7 +75,7 @@ export const ACCOUNT_PROD = {
   }],
 };
 
-export const ACCOUNT = `${Cypress.env('CYPRESS_RUNNING_ENV')}` === 'prod' ? ACCOUNT_PROD : ACCOUNT_STAGE;
+export const ACCOUNT = `${Cypress.env('RUNNING_ENV')}` === 'prod' ? ACCOUNT_PROD : ACCOUNT_STAGE;
 
 export const user = {
   email: `${Cypress.env('USER_NAME')}`,
