@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    # run every at every saturdat at 12
+    # run at 04:25 on Saturday
     - cron: '25 4 * * 6'
 jobs:
   test:
