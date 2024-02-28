@@ -30,3 +30,5 @@ export const closeButton = '.header-actions button[aria-label="generic.close"]';
 export const firstQuery = 'bluetooth';
 export const secondQuery = 'radio';
 export const expectedResourceTitle = 'Lamarr Lesson plan.pdf';
+export const firstQuestion = 'Did Hedy Lamarr invented wifi?';
+export const secondQuestion = 'Was Hedy Lamarr an actress?';
