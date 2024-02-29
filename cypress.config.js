@@ -27,6 +27,10 @@ module.exports = defineConfig({
     env: {
       STANDALONE_KB_NAME: 'standalone-kb',
       NUCLIA_DB_ADMIN_URL: 'http://0.0.0.0:8080/admin',
+    },
+    retries: {
+      openMode: 0,
+      runMode: 1
     }
   }
 });
