@@ -18,7 +18,7 @@ import {
 } from '../selectors/widget-selectors';
 import { ACCOUNT } from '../../support/common';
 
-describe('Ask', () => {
+describe('Ask', {retries: {openMode: 0, runMode: 2}}, () => {
   ACCOUNT.availableZones.forEach((zone) => {
     describe(`on ${zone.slug}`, () => {
       beforeEach(() => {
