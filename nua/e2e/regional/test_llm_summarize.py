@@ -56,3 +56,23 @@ def test_summarize_nuclia_everest_v1(nua_config):
     embed = np.summarize(DATA, model="nuclia-everest-v1")
     assert "Manresa" in embed.summary
     assert "Barcelona" in embed.summary
+
+
+def test_summarize_nuclia_mistral_small(nua_config):
+    if "stashify" not in nua_config:
+        # Lets only test on stashify as everest is not on prod
+        return
+    np = NucliaPredict()
+    embed = np.summarize(DATA, model="mistral")
+    assert "Manresa" in embed.summary
+    assert "Barcelona" in embed.summary
+
+
+def test_summarize_nuclia_mistral_large(nua_config):
+    if "stashify" not in nua_config:
+        # Lets only test on stashify as everest is not on prod
+        return
+    np = NucliaPredict()
+    embed = np.summarize(DATA, model="azure-mistral")
+    assert "Manresa" in embed.summary
+    assert "Barcelona" in embed.summary
