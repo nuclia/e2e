@@ -18,7 +18,7 @@ import {
 } from '../selectors/widget-selectors';
 import { ACCOUNT } from '../../support/common';
 
-describe('Ask', {retries: {openMode: 0, runMode: 2}}, () => {
+describe('Ask', () => {
   ACCOUNT.availableZones.forEach((zone) => {
     describe(`on ${zone.slug}`, () => {
       beforeEach(() => {
@@ -33,7 +33,7 @@ describe('Ask', {retries: {openMode: 0, runMode: 2}}, () => {
           .type(`${firstQuestion}\n`, { force: true });
         cy.get(nucliaSearchResultsSelector)
           .shadow()
-          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 6000 })
+          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 10000 })
           .should('exist');
 
         // chat with your doc
