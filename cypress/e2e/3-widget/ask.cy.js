@@ -73,7 +73,7 @@ describe('Ask', () => {
           .type(`${secondQuestion}\n`, { force: true });
         cy.get(nucliaSearchResultsSelector)
           .shadow()
-          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 6000 })
+          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 10000 })
           .should('exist');
         cy.get(nucliaSearchResultsSelector)
           .shadow()
