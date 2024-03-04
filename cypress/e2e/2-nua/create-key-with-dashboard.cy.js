@@ -34,6 +34,8 @@ describe('Create NUA key with the dashboard', () => {
       cy.get('[data-cy="open-create-nua-key-dialog"]').click();
       cy.get('pa-modal-advanced').should('be.visible');
       cy.get('pa-modal-advanced input[name="title"]').should('be.visible').type('A new key');
+      cy.get('pa-select').click();
+      cy.get('pa-option').contains('Europe 1').click();
       cy.get('pa-modal-advanced').get('[data-cy="save-nua-client"]').click();
       cy.get('pa-modal-dialog').get('[data-cy="copy-token"]').click();
       cy.get('pa-modal-dialog').get('[data-cy="close-token-dialog"]').click();
