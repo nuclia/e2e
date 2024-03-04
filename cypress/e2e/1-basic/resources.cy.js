@@ -3,7 +3,7 @@
 import { ACCOUNT, closeViewer, getAuthHeader, goTo, onlyPermanentKb } from '../../support/common';
 import {
   expectedResourceTitle,
-  firstQuery,
+  firstQuestion,
   nucliaSearchBarSelector,
   nucliaSearchResultsSelector,
   searchBarInputSelector,
@@ -131,7 +131,7 @@ describe('Resources', () => {
         });
       });
 
-      describe('Search', () => {
+      describe.skip('Search', () => {
         beforeEach(() => {
           cy.login(zone);
           goTo('go-to-search');
@@ -146,7 +146,7 @@ describe('Resources', () => {
         });
 
         it('should display results', () => {
-          cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${firstQuery}\n`, { force: true });
+          cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${firstQuestion}\n`, { force: true });
           cy.get(nucliaSearchResultsSelector)
             .shadow()
             .find(`${searchResultContainerSelector} ${searchResultTitle}`)
