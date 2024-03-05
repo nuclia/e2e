@@ -21,11 +21,9 @@ import { ACCOUNT } from '../../support/common';
 describe('Ask', () => {
   ACCOUNT.availableZones.forEach((zone) => {
     describe(`on ${zone.slug}`, () => {
-      beforeEach(() => {
-        cy.visit(zone.askUrl);
-      });
-
       it('should display initial answer and allow to chat with your docs', () => {
+        cy.visit(zone.askUrl);
+
         cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).click();
         cy.get(nucliaSearchBarSelector)
           .shadow()
@@ -33,7 +31,7 @@ describe('Ask', () => {
           .type(`${firstQuestion}\n`, { force: true });
         cy.get(nucliaSearchResultsSelector)
           .shadow()
-          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 10000 })
+          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 6000 })
           .should('exist');
 
         // chat with your doc
@@ -66,6 +64,8 @@ describe('Ask', () => {
       });
 
       it('should display citations and search results that have been used to generate the answer', () => {
+        cy.visit(zone.citationsUrl);
+
         cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).click();
         cy.get(nucliaSearchBarSelector)
           .shadow()
