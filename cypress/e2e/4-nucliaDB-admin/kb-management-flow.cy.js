@@ -23,9 +23,8 @@ describe('NucliaDB Admin – KB management flow', () => {
 
     cy.task('log', `Create a new standalone KB`);
     cy.get('[data-cy="create-kb-button"]').click();
-    cy.get('[data-cy="new-kb-name-input"]').type(STANDALONE_KB_NAME);
-    cy.get('[data-cy="new-kb-next-button"]').click();
-    cy.get('[data-cy="new-kb-save-button"]').click();
+    cy.get('[formcontrolname="title"] input').type(STANDALONE_KB_NAME);
+    cy.get('[data-cy="new-kb-save-button"] button').should('be.enabled').click();
     cy.get('app-kb-switch').should('contain', STANDALONE_KB_NAME);
 
     cy.task('log', `Delete the created KB`);

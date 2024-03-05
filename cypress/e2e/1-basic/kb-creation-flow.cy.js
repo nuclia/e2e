@@ -16,12 +16,11 @@ describe('KB creation flow', () => {
       goToManageAccount();
       goTo('go-to-account-kbs');
       cy.get('[data-cy="add-kb"]').click();
-      cy.get('app-kb-add [formcontrolname="title"] input').type(newKbName);
-      cy.get('app-kb-add [formcontrolname="description"] textarea').type('Some kb');
+      cy.get('[formcontrolname="title"] input').type(newKbName);
+      cy.get('[formcontrolname="description"] textarea').type('Some kb');
       cy.get('[data-cy="new-kb-zone-select"]').click();
       cy.get('pa-option').contains('Europe 1').click();
-      cy.get('app-kb-add').contains('Next').click();
-      cy.get('app-kb-add').contains('Save').click();
+      cy.get('[data-cy="new-kb-save-button"] button').should('be.enabled').click();
       cy.get(`[data-cy="${newKbName}-link"]`, { timeout: 10000 }).should('contain', newKbName);
       cy.get(`[data-cy="${newKbName}-link"]`).click();
       cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${zone.slug}/${newKbName}`);
