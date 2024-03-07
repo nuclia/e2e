@@ -1,5 +1,5 @@
 name: run-e2e-prod
-run-name: Running e2e tests on prod
+run-name: Running Cypress e2e tests on prod
 on:
   push:
     branches:

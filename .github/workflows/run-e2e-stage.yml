@@ -1,5 +1,5 @@
 name: run-e2e-stage
-run-name: Running e2e tests on Stage
+run-name: Running Cypress e2e tests on Stage
 on:
   push:
     branches:
@@ -71,7 +71,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
       - name: Notification test
-        id: slack
+        id: slack-test
         uses: slackapi/slack-github-action@v1.25.0
         with:
           payload: |
