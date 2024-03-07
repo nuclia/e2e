@@ -32,28 +32,35 @@ jobs:
               -e NUA_API_KEY=${{ secrets.NUA_KEY }} \
               nucliadb-server &
       # Install npm dependencies, cache them correctly and run all Cypress tests
-      - name: Cypress run
+      - name: Install dependencies
+        run: yarn install
+      - name: Run Cypress tests
         id: cypress
-        uses: cypress-io/github-action@v6
-        with:
-          install-command: yarn install
-        env:
-          CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY }}
-          CYPRESS_USER_NAME: ${{ secrets.USER_NAME }}
-          CYPRESS_USER_PWD: ${{ secrets.USER_PWD }}
-          CYPRESS_RUNNING_ENV: stage
-        # after the test run completes store reports and any screenshots
-      - name: Check results
-        id: check
-        shell: bash
         run: |
-          echo "GITHUB_STEP_SUMMARY: $GITHUB_STEP_SUMMARY"
-          tail $GITHUB_STEP_SUMMARY
-          echo "resultsUrl: ${{ steps.cypress.outputs.resultsUrl }}"
-          # $(sed -e '1,/Run Finished/d' <<< $GITHUB_OUTPUT)
-          SUMMARY="Manual summary" >> $GITHUB_OUTPUT
-          echo "Summary extracted: $SUMMARY"
+          npx cypress run --env CYPRESS_BEARER_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }},CYPRESS_NUA_KEY=${{ secrets.NUA_KEY }},CYPRESS_USER_NAME=${{ secrets.USER_NAME }},CYPRESS_USER_PWD=${{ secrets.USER_PWD }},CYPRESS_RUNNING_ENV=stage
+#          CYPRESS_RESULTS=$() >> "$GITHUB_OUTPUT"
+#      - name: Cypress run
+#        id: cypress
+#        uses: cypress-io/github-action@v6
+#        with:
+#          install-command: yarn install
+#        env:
+#          CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+#          CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY }}
+#          CYPRESS_USER_NAME: ${{ secrets.USER_NAME }}
+#          CYPRESS_USER_PWD: ${{ secrets.USER_PWD }}
+#          CYPRESS_RUNNING_ENV: stage
+        # after the test run completes store reports and any screenshots
+#      - name: Check results
+#        id: check
+#        shell: bash
+#        run: |
+#          echo "GITHUB_STEP_SUMMARY: $GITHUB_STEP_SUMMARY"
+#          tail $GITHUB_STEP_SUMMARY
+#          echo "resultsUrl: ${{ steps.cypress.outputs.resultsUrl }}"
+#          # $(sed -e '1,/Run Finished/d' <<< $GITHUB_OUTPUT)
+#          SUMMARY="Manual summary" >> $GITHUB_OUTPUT
+#          echo "Summary extracted: $SUMMARY"
       - name: Cypress reports
         uses: actions/upload-artifact@v3
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
