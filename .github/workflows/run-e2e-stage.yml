@@ -37,7 +37,8 @@ jobs:
       - name: Run Cypress tests
         id: cypress
         shell: bash
-        run: CYPRESS_RESULTS=$(npx cypress run --env CYPRESS_BEARER_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }},CYPRESS_NUA_KEY=${{ secrets.NUA_KEY }},CYPRESS_USER_NAME=${{ secrets.USER_NAME }},CYPRESS_USER_PWD=${{ secrets.USER_PWD }},CYPRESS_RUNNING_ENV=stage) >> $GITHUB_OUTPUT
+        run: |
+          npx cypress run --env "CYPRESS_BEARER_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }},CYPRESS_NUA_KEY=${{ secrets.NUA_KEY }},CYPRESS_USER_NAME=${{ secrets.USER_NAME }},CYPRESS_USER_PWD=${{ secrets.USER_PWD }},CYPRESS_RUNNING_ENV=stage"
 #      - name: Cypress run
 #        id: cypress
 #        uses: cypress-io/github-action@v6
