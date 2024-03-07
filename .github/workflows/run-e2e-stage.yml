@@ -37,6 +37,7 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           install-command: yarn install
+          command: CYPRESS_RESULTS=$(cypress run) >> $GITHUB_ENV
         env:
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY }}
@@ -44,6 +45,12 @@ jobs:
           CYPRESS_USER_PWD: ${{ secrets.USER_PWD }}
           CYPRESS_RUNNING_ENV: stage
         # after the test run completes store reports and any screenshots
+      - name: Check results
+        shell: bash
+        run: |
+          echo "From CYPRESS_RESULTS:\n${{ env.CYPRESS_RESULTS }}"
+          SUMMARY=$(sed -e '1,/Run Finished/d' <<< ${{ env.CYPRESS_RESULTS }})
+          echo "Summary extracted:\n${{ env.SUMMARY }}"
       - name: Cypress reports
         uses: actions/upload-artifact@v3
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
@@ -58,7 +65,18 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ Cypress E2E job #${{ github.run_number }} triggered by ${{ github.triggering_actor }} failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "⚠️ Cypress E2E job #${{ github.run_number }} triggered by ${{ github.triggering_actor }} failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n${{ env.SUMMARY }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      - name: Notification test
+        id: slack
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": "🧑‍🔬 Testing Cypress report in notification:\nJob #${{ github.run_number }} triggered by ${{ github.triggering_actor }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n${{ env.SUMMARY }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
