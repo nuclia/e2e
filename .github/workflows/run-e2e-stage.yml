@@ -36,9 +36,8 @@ jobs:
         run: yarn install
       - name: Run Cypress tests
         id: cypress
-        run: |
-          npx cypress run --env CYPRESS_BEARER_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }},CYPRESS_NUA_KEY=${{ secrets.NUA_KEY }},CYPRESS_USER_NAME=${{ secrets.USER_NAME }},CYPRESS_USER_PWD=${{ secrets.USER_PWD }},CYPRESS_RUNNING_ENV=stage
-#          CYPRESS_RESULTS=$() >> "$GITHUB_OUTPUT"
+        shell: bash
+        run: CYPRESS_RESULTS=$(npx cypress run --env CYPRESS_BEARER_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }},CYPRESS_NUA_KEY=${{ secrets.NUA_KEY }},CYPRESS_USER_NAME=${{ secrets.USER_NAME }},CYPRESS_USER_PWD=${{ secrets.USER_PWD }},CYPRESS_RUNNING_ENV=stage) >> $GITHUB_OUTPUT
 #      - name: Cypress run
 #        id: cypress
 #        uses: cypress-io/github-action@v6
@@ -50,17 +49,17 @@ jobs:
 #          CYPRESS_USER_NAME: ${{ secrets.USER_NAME }}
 #          CYPRESS_USER_PWD: ${{ secrets.USER_PWD }}
 #          CYPRESS_RUNNING_ENV: stage
+      - name: Cypress results
+        id: results
+        shell: bash
+        run: |
+          echo "CYPRESS_RESULTS: $CYPRESS_RESULTS"
+          echo "${{ steps.cypress.outputs.CYPRESS_RESULTS }}"
+          SUMMARY="$(sed -e '1,/Run Finished/d' <<< ${{ steps.cypress.outputs.CYPRESS_RESULTS }})"
+          echo "Summary extracted: $SUMMARY"
+          echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+          echo "$SUMMARY" >> $GITHUB_OUTPUT
         # after the test run completes store reports and any screenshots
-#      - name: Check results
-#        id: check
-#        shell: bash
-#        run: |
-#          echo "GITHUB_STEP_SUMMARY: $GITHUB_STEP_SUMMARY"
-#          tail $GITHUB_STEP_SUMMARY
-#          echo "resultsUrl: ${{ steps.cypress.outputs.resultsUrl }}"
-#          # $(sed -e '1,/Run Finished/d' <<< $GITHUB_OUTPUT)
-#          SUMMARY="Manual summary" >> $GITHUB_OUTPUT
-#          echo "Summary extracted: $SUMMARY"
       - name: Cypress reports
         uses: actions/upload-artifact@v3
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
@@ -75,7 +74,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ Cypress E2E job #${{ github.run_number }} failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n${{ steps.check.outputs.SUMMARY }}"
+              "text": "⚠️ Cypress E2E job #${{ github.run_number }} failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
@@ -86,7 +85,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "🧑‍🔬 Testing Cypress report in notification:\nJob #${{ github.run_number }} triggered by ${{ github.triggering_actor }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n${{ env.SUMMARY }}"
+              "text": "🧑‍🔬 Testing Cypress report in notification:\nJob #${{ github.run_number }} triggered by ${{ github.triggering_actor }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n${{ steps.cypress.outputs.SUMMARY }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
