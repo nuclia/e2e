@@ -45,12 +45,15 @@ jobs:
           CYPRESS_RUNNING_ENV: stage
         # after the test run completes store reports and any screenshots
       - name: Check results
+        id: check
         shell: bash
         run: |
-          tail $GITHUB_OUTPUT
-          SUMMARY=$(sed -e '1,/Run Finished/d' <<< $GITHUB_OUTPUT)
+          echo "GITHUB_STEP_SUMMARY: $GITHUB_STEP_SUMMARY"
+          tail $GITHUB_STEP_SUMMARY
+          echo "resultsUrl: ${{steps.cypress.outputs.resultsUrl}}"
+          # $(sed -e '1,/Run Finished/d' <<< $GITHUB_OUTPUT)
+          SUMMARY="Manual summary" >> "$GITHUB_OUTPUT"
           echo "Summary extracted: $SUMMARY"
-          $SUMMARY >> $GITHUB_ENV
       - name: Cypress reports
         uses: actions/upload-artifact@v3
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
@@ -65,7 +68,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ Cypress E2E job #${{ github.run_number }} failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n${{ env.SUMMARY }}"
+              "text": "⚠️ Cypress E2E job #${{ github.run_number }} failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n${{ steps.check.outputs.SUMMARY }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
