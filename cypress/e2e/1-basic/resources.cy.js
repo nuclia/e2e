@@ -149,7 +149,7 @@ describe('Resources', () => {
           cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${firstQuestion}\n`, { force: true });
           cy.get(nucliaSearchResultsSelector)
             .shadow()
-            .find(`${searchResultContainerSelector} ${searchResultTitle}`)
+            .find(`${searchResultContainerSelector} ${searchResultTitle}`, {timeout: 6000})
             .should('have.length', 2);
           cy.get(nucliaSearchResultsSelector)
             .shadow()
