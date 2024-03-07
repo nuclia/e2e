@@ -1,5 +1,5 @@
 name: run-e2e-prod
-run-name: Running e2e tests on prod
+run-name: Running Cypress e2e tests on prod
 on:
   push:
     branches:
@@ -52,7 +52,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "‼️⚠️ Cypress E2E job #${{ github.run_number }} triggered by ${{ github.triggering_actor }} failed on Prod ‼️\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "‼️⚠️ Cypress E2E job #${{ github.run_number }} failed on Prod ‼️\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
