@@ -37,7 +37,6 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           install-command: yarn install
-          command: CYPRESS_RESULTS=$(cypress run) >> $GITHUB_ENV
         env:
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY }}
@@ -48,9 +47,10 @@ jobs:
       - name: Check results
         shell: bash
         run: |
-          echo "From CYPRESS_RESULTS:\n${{ env.CYPRESS_RESULTS }}"
-          SUMMARY=$(sed -e '1,/Run Finished/d' <<< ${{ env.CYPRESS_RESULTS }})
-          echo "Summary extracted:\n${{ env.SUMMARY }}"
+          tail $GITHUB_OUTPUT
+          SUMMARY=$(sed -e '1,/Run Finished/d' <<< $GITHUB_OUTPUT)
+          echo "Summary extracted: $SUMMARY"
+          $SUMMARY >> $GITHUB_ENV
       - name: Cypress reports
         uses: actions/upload-artifact@v3
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
@@ -65,7 +65,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ Cypress E2E job #${{ github.run_number }} triggered by ${{ github.triggering_actor }} failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n${{ env.SUMMARY }}"
+              "text": "⚠️ Cypress E2E job #${{ github.run_number }} failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n${{ env.SUMMARY }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
