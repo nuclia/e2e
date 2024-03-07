@@ -50,9 +50,9 @@ jobs:
         run: |
           echo "GITHUB_STEP_SUMMARY: $GITHUB_STEP_SUMMARY"
           tail $GITHUB_STEP_SUMMARY
-          echo "resultsUrl: ${{steps.cypress.outputs.resultsUrl}}"
+          echo "resultsUrl: ${{ steps.cypress.outputs.resultsUrl }}"
           # $(sed -e '1,/Run Finished/d' <<< $GITHUB_OUTPUT)
-          SUMMARY="Manual summary" >> "$GITHUB_OUTPUT"
+          SUMMARY="Manual summary" >> $GITHUB_OUTPUT
           echo "Summary extracted: $SUMMARY"
       - name: Cypress reports
         uses: actions/upload-artifact@v3
