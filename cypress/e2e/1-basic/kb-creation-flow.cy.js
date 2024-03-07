@@ -3,11 +3,11 @@
 import { ACCOUNT, goTo, goToManageAccount, onlyPermanentKb } from '../../support/common';
 
 describe('KB creation flow', () => {
-  before(() => {
-    onlyPermanentKb();
-  });
-
   ACCOUNT.availableZones.forEach((zone) => {
+    beforeEach(() => {
+      onlyPermanentKb();
+    });
+
     it(`should allow to create a new kb and then delete it on ${zone.slug}`, () => {
       const newKbName = `new-kb-${Date.now()}`;
       cy.login(zone);

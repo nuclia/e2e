@@ -5,7 +5,7 @@ import { ACCOUNT, getAuthHeader, goTo, goToManageAccount } from '../../support/c
 describe('Create NUA key with the dashboard', () => {
   const authHeader = getAuthHeader();
   ACCOUNT.availableZones.forEach((zone) => {
-    before(() => {
+    beforeEach(() => {
       cy.request({
         method: 'GET',
         url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_clients`,
@@ -23,9 +23,9 @@ describe('Create NUA key with the dashboard', () => {
           });
         }
       });
-    });
 
-    beforeEach(() => cy.login(zone));
+      cy.login(zone)
+    });
 
     it('creates and deletes key', () => {
       goToManageAccount();

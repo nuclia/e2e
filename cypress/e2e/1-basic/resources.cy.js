@@ -131,7 +131,7 @@ describe('Resources', () => {
         });
       });
 
-      describe.skip('Search', () => {
+      describe('Search', () => {
         beforeEach(() => {
           cy.login(zone);
           goTo('go-to-search');
@@ -150,7 +150,7 @@ describe('Resources', () => {
           cy.get(nucliaSearchResultsSelector)
             .shadow()
             .find(`${searchResultContainerSelector} ${searchResultTitle}`)
-            .should('have.length', 1);
+            .should('have.length', 2);
           cy.get(nucliaSearchResultsSelector)
             .shadow()
             .find(`${searchResultContainerSelector} ${searchResultTitle}`)

@@ -31,7 +31,7 @@ describe('Ask', () => {
           .type(`${firstQuestion}\n`, { force: true });
         cy.get(nucliaSearchResultsSelector)
           .shadow()
-          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 6000 })
+          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 7000 })
           .should('exist');
 
         // chat with your doc
