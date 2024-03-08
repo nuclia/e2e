@@ -45,6 +45,7 @@ jobs:
           CYPRESS_RUNNING_ENV: stage
         # after the test run completes store reports and any screenshots
       - name: Cypress reports
+        id: report
         uses: actions/upload-artifact@v3
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
         with:
@@ -58,7 +59,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ Cypress E2E job #${{ github.run_number }} failed on Stage\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "⚠️ Cypress E2E failed on Stage\nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n📜Cypress report: ${{ steps.report.outputs.artifact-url }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
