@@ -32,6 +32,7 @@ export const ACCOUNT_STAGE = {
     askUrl: 'https://nuclia.github.io/frontend/e2e/ask.html',
     citationsUrl: 'https://nuclia.github.io/frontend/e2e/citations.html',
     findUrl: 'https://nuclia.github.io/frontend/e2e/find.html',
+    searchUrl: 'https://nuclia.github.io/frontend/e2e/search.html',
   }],
 };
 
@@ -56,7 +57,8 @@ export const ACCOUNT_PROD = {
     },
     askUrl: 'https://nuclia.github.io/frontend/e2e/prod/ask-europe.html',
     citationsUrl: 'https://nuclia.github.io/frontend/e2e/prod/citations-europe.html',
-    findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-europe.html'
+    findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-europe.html',
+    searchUrl: 'https://nuclia.github.io/frontend/e2e/search-europe.html',
   }, {
     slug: ZONES['usa'],
     nuaKey: `${Cypress.env('NUA_KEY_PROD_USA')}`,
@@ -74,7 +76,8 @@ export const ACCOUNT_PROD = {
     },
     askUrl: 'https://nuclia.github.io/frontend/e2e/prod/ask-usa.html',
     citationsUrl: 'https://nuclia.github.io/frontend/e2e/prod/citations-usa.html',
-    findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-usa.html'
+    findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-usa.html',
+    searchUrl: 'https://nuclia.github.io/frontend/e2e/search-usa.html',
   }],
 };
 

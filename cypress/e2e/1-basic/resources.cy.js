@@ -1,17 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, closeViewer, getAuthHeader, goTo, onlyPermanentKb } from '../../support/common';
-import {
-  expectedResourceTitle,
-  firstQuestion,
-  nucliaSearchBarSelector,
-  nucliaSearchResultsSelector,
-  searchBarInputSelector,
-  searchResultContainerSelector,
-  searchResultTitle,
-  suggestionResultSelector,
-  viewerSelector
-} from '../selectors/widget-selectors';
+import { ACCOUNT, getAuthHeader, goTo, onlyPermanentKb } from '../../support/common';
 
 describe('Resources', () => {
   ACCOUNT.availableZones.forEach((zone) => {
@@ -88,7 +77,7 @@ describe('Resources', () => {
           cy.contains('Lamarr Lesson plan.pdf').click();
           cy.get('.edit-resource > header').should('contain', 'Lamarr Lesson plan.pdf');
           cy.get('.edit-resource .main-container .paragraph-container').should('contain', 'Lamarr Lesson plan.pdf');
-          cy.get('.edit-resource nav li:not(.active):first').click()
+          cy.get('.edit-resource nav li:not(.active):first').click();
           cy.get('.edit-resource .main-container').should('contain', 'Hedy Lamarr, An Inventive Mind');
         });
 
@@ -125,46 +114,9 @@ describe('Resources', () => {
           cy.get('[data-cy="label-item-input"]').type(`${label2}{enter}`);
           cy.get('[data-cy="label-grid"]').find('nsi-label').should('have.length', 2);
           cy.get('[data-cy="list-view"]').click();
-          cy.get('[data-cy="label-list-input"] textarea').should('have.value', `${label1}, ${label2}`)
+          cy.get('[data-cy="label-list-input"] textarea').should('have.value', `${label1}, ${label2}`);
           cy.get('[data-cy="save-label-set"]').click();
           cy.get('[data-cy="resource-label-sets"]').should('contain', 'Heroes');
-        });
-      });
-
-      describe('Search', () => {
-        beforeEach(() => {
-          cy.login(zone);
-          goTo('go-to-search');
-        });
-
-        it('should show suggestions and open preview from it', () => {
-          cy.get(nucliaSearchBarSelector).shadow().find('.sw-search-input input').type('Lamarr');
-          cy.get(nucliaSearchBarSelector).shadow().find(suggestionResultSelector).should('have.length', 2);
-          cy.get(nucliaSearchBarSelector).shadow().find(`${suggestionResultSelector}:first-child`).click();
-          cy.get(nucliaSearchResultsSelector).shadow().find('.sw-viewer .header-title').should('contain', 'Lamarr Lesson plan.pdf');
-          closeViewer();
-        });
-
-        it('should display results', () => {
-          cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${firstQuestion}\n`, { force: true });
-          cy.get(nucliaSearchResultsSelector)
-            .shadow()
-            .find(`${searchResultContainerSelector} ${searchResultTitle}`, {timeout: 6000})
-            .should('have.length', 2);
-          cy.get(nucliaSearchResultsSelector)
-            .shadow()
-            .find(`${searchResultContainerSelector} ${searchResultTitle}`)
-            .should('contain', expectedResourceTitle);
-          cy.get(nucliaSearchResultsSelector)
-            .shadow()
-            .find(`${searchResultContainerSelector} ${searchResultTitle}`)
-            .contains(expectedResourceTitle)
-            .click();
-          cy.get(nucliaSearchResultsSelector)
-            .shadow()
-            .find(`${viewerSelector} .header-title .title-m`)
-            .should('contain', expectedResourceTitle);
-          closeViewer();
         });
       });
     });
