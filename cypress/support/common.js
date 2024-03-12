@@ -48,7 +48,7 @@ export const ACCOUNT_PROD = {
     {
       slug: ZONES['europe'],
       title: 'Europe',
-      nuaKey: `${Cypress.env('NUA_KEY_PROD_EUROPE')}`,
+      nuaKey: `${Cypress.env('NUA_KEY_EUROPE')}`,
       permanentKb: {
         name: 'permanent',
         slug: 'permanent',
@@ -69,7 +69,7 @@ export const ACCOUNT_PROD = {
     {
       slug: ZONES['usa'],
       title: 'USA',
-      nuaKey: `${Cypress.env('NUA_KEY_PROD_USA')}`,
+      nuaKey: `${Cypress.env('NUA_KEY_USA')}`,
       permanentKb: {
         name: 'permanent USA',
         slug: 'permanent-usa',
