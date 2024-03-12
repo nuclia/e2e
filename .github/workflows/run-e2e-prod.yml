@@ -48,7 +48,7 @@ jobs:
       - name: Slack notification
         id: slack
         uses: slackapi/slack-github-action@v1.25.0
-        if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
         with:
           payload: |
             {
