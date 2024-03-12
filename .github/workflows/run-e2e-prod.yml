@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     branches:
       - e2e-on-prod
-#  schedule:
-#    # Run at minute 15 past every 3rd hour on every day-of-week from Sunday through Saturday.
-#    - cron: '15 */3 * * 0-6'
+  schedule:
+    # Run at minute 35 past every 3rd hour on every day-of-week from Sunday through Saturday.
+    - cron: '45 */3 * * 0-6'
 jobs:
   cypress-run:
     runs-on: ubuntu-22.04
