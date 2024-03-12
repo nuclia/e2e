@@ -95,7 +95,7 @@ describe('Manage content', () => {
         cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
         cy.location('pathname').should(
           'equal',
-          `/at/${ACCOUNT.slug}/${zone.emptyKb.zone}/${zone.emptyKb.name}/resources/pending`,
+          `/at/${ACCOUNT.slug}/${zone.emptyKb.zone}/${zone.emptyKb.slug}/resources/pending`,
         );
 
         cy.task('log', 'Upload link');
@@ -106,7 +106,7 @@ describe('Manage content', () => {
         cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
         cy.location('pathname').should(
           'equal',
-          `/at/${ACCOUNT.slug}/${zone.emptyKb.zone}/${zone.emptyKb.name}/resources/pending`,
+          `/at/${ACCOUNT.slug}/${zone.emptyKb.zone}/${zone.emptyKb.slug}/resources/pending`,
         );
 
         checkResourceWasAdded(endpoint, 'nuclia-logo.png');
