@@ -31,7 +31,7 @@ describe('Manage content', () => {
         const resourceCount = response.body['resources'].length;
         if (resourceCount > 0) {
           // This will be output to terminal
-          cy.task('log', `Delete ${resourceCount} resources from previous tests`);
+          cy.task('log', `Delete ${resourceCount} resources from previous tests on ${zone.slug}`);
           response.body['resources'].forEach((resource) => {
             cy.request({
               method: 'DELETE',
