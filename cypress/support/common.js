@@ -37,6 +37,7 @@ export const ACCOUNT_STAGE = {
       searchUrl: 'https://nuclia.github.io/frontend/e2e/search.html',
     },
   ],
+  permanentKbCount: 2,
 };
 
 export const ACCOUNT_PROD = {
@@ -63,7 +64,7 @@ export const ACCOUNT_PROD = {
       askUrl: 'https://nuclia.github.io/frontend/e2e/prod/ask-europe.html',
       citationsUrl: 'https://nuclia.github.io/frontend/e2e/prod/citations-europe.html',
       findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-europe.html',
-      searchUrl: 'https://nuclia.github.io/frontend/e2e/search-europe.html',
+      searchUrl: 'https://nuclia.github.io/frontend/e2e/prod/search-europe.html',
     },
     {
       slug: ZONES['usa'],
@@ -84,9 +85,10 @@ export const ACCOUNT_PROD = {
       askUrl: 'https://nuclia.github.io/frontend/e2e/prod/ask-usa.html',
       citationsUrl: 'https://nuclia.github.io/frontend/e2e/prod/citations-usa.html',
       findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-usa.html',
-      searchUrl: 'https://nuclia.github.io/frontend/e2e/search-usa.html',
+      searchUrl: 'https://nuclia.github.io/frontend/e2e/prod/search-usa.html',
     },
   ],
+  permanentKbCount: 4,
 };
 
 export const ACCOUNT = `${Cypress.env('RUNNING_ENV')}` === 'prod' ? ACCOUNT_PROD : ACCOUNT_STAGE;
