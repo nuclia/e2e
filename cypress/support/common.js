@@ -121,7 +121,7 @@ export function onlyPermanentKb() {
           if (!kb.slug.includes('permanent')) {
             cy.request({
               method: 'DELETE',
-              url: `https://${ACCOUNT.domain}/api/v1/account/${ACCOUNT.slug}/kb/${kb.slug}`,
+              url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kb/${kb.id}`,
               headers: authHeader,
             }).then((deleteResponse) => {
               expect(deleteResponse.status).to.eq(204);
