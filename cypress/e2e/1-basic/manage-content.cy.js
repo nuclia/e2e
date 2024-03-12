@@ -101,7 +101,7 @@ describe('Manage content', () => {
         cy.task('log', 'Upload link');
         goTo('go-to-upload');
         cy.get('stf-upload-option[icon="link"]').click();
-        cy.get('app-create-link pa-input input').type('https://nuclia.com/contact/');
+        cy.get('app-create-link pa-input input:first').type('https://nuclia.com/contact/');
         cy.get('app-create-link button').contains('Add').click();
         cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
         cy.location('pathname').should(
