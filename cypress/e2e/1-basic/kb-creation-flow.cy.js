@@ -19,7 +19,7 @@ describe('KB creation flow', () => {
       cy.get('[formcontrolname="title"] input').type(newKbName);
       cy.get('[formcontrolname="description"] textarea').type('Some kb');
       cy.get('[data-cy="new-kb-zone-select"]').click();
-      cy.get('pa-option').contains('Europe 1').click();
+      cy.get('pa-option').contains(zone.title).click();
       cy.get('[data-cy="new-kb-save-button"] button').should('be.enabled').click();
       cy.get(`[data-cy="${newKbName}-link"]`, { timeout: 10000 }).should('contain', newKbName);
       cy.get(`[data-cy="${newKbName}-link"]`).click();
