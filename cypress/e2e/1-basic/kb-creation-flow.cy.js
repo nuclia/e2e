@@ -32,8 +32,7 @@ describe('KB creation flow', () => {
       cy.get(`[data-cy="${newKbName}-link"]`).contains(newKbName);
       cy.get(`[data-cy="${newKbName}-delete"]`).click();
       cy.get('[qa="confirmation-dialog-confirm-button"]').click();
-      cy.get('.account-kbs-list .account-kb').should('have.length', 2);
+      cy.get('.account-kbs-list .account-kb').should('have.length', ACCOUNT.permanentKbCount);
     });
   });
-
 });
