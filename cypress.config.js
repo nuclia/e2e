@@ -9,17 +9,16 @@ module.exports = defineConfig({
   reporterOptions: {
     overwrite: false,
     html: false,
-    json: true
+    json: true,
   },
   e2e: {
-    baseUrl: 'https://stashify.cloud',
     setupNodeEvents(on) {
       // Enable ability to log to the terminal from the tests
       on('task', {
         log(message) {
           console.log(`    ${message}`);
           return null;
-        }
+        },
       });
       // Load plugins
       require('cypress-mochawesome-reporter/plugin')(on);
@@ -30,7 +29,7 @@ module.exports = defineConfig({
     },
     retries: {
       openMode: 0,
-      runMode: 1
-    }
-  }
+      runMode: 1,
+    },
+  },
 });
