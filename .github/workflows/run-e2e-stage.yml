@@ -38,6 +38,7 @@ jobs:
         with:
           install-command: yarn install
         env:
+          CYPRESS_BASE_URL: https://stashify.cloud
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY }}
           CYPRESS_USER_NAME: ${{ secrets.USER_NAME }}
