@@ -16,6 +16,9 @@ on:
     - cron: 25 0-19 * * 5
     # Run at 00:25 and 12:25 on saturday and sunday
     - cron: '25 0,12 * * 0,6'
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 jobs:
   cypress-run:
     runs-on: ubuntu-22.04
