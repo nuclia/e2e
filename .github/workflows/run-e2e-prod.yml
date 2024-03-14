@@ -8,8 +8,10 @@ on:
     branches:
       - e2e-on-prod
   schedule:
-    # Run at minute 35 past every 3rd hour on every day-of-week from Sunday through Saturday.
+    # Run at minute 45 past every 3rd hour on every day-of-week from Sunday through Saturday.
     - cron: '45 */3 * * 0-6'
+  repository_dispatch:
+    types: [trigger_e2e]
 jobs:
   cypress-run:
     runs-on: ubuntu-22.04
