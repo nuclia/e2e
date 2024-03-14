@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: e2e-on-prod
       # Launch NucliaDB in docker
       - run: |
           docker pull nuclia/nucliadb:latest
