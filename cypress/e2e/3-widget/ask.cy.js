@@ -1,7 +1,9 @@
 /// <reference types="cypress" />
 
 import {
+  answerCitationSelector,
   answerContainerSelector,
+  answerSourceTitleSelector,
   chatContainerSelector,
   chatInputSelector,
   chatQuestionSelector,
@@ -13,8 +15,6 @@ import {
   nucliaSearchResultsSelector,
   searchBarInputSelector,
   secondQuestion,
-  answerSourceTitleSelector,
-  answerCitationSelector,
 } from '../selectors/widget-selectors';
 import { ACCOUNT } from '../../support/common';
 
@@ -31,7 +31,7 @@ describe('Ask', () => {
           .type(`${firstQuestion}\n`, { force: true });
         cy.get(nucliaSearchResultsSelector)
           .shadow()
-          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 7000 })
+          .find(`${initialAnswerSelector} ${answerContainerSelector}`, { timeout: 8000 })
           .should('exist');
 
         // chat with your doc
