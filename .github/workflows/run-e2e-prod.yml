@@ -47,6 +47,7 @@ jobs:
           CYPRESS_RUNNING_ENV: prod
         # after the test run completes store reports and any screenshots
       - name: Cypress reports
+        id: report
         uses: actions/upload-artifact@v4
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
         with:

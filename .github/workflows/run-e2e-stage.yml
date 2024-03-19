@@ -63,7 +63,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ Cypress E2E failed on Stage\nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n📜Cypress report: ${{ steps.report.outputs.artifact-url }}"
+              "text": "⚠️ Cypress E2E failed on Stage\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n📜Cypress report: ${{ steps.report.outputs.artifact-url }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
