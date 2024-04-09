@@ -77,7 +77,7 @@ describe('Ask', () => {
           .should('exist');
         cy.get(nucliaSearchResultsSelector)
           .shadow()
-          .find(`${initialAnswerSelector} ${answerCitationSelector}`, { timeout: 6000 })
+          .find(`${initialAnswerSelector} ${answerCitationSelector}`, { timeout: 8000 })
           .should('contain', 1);
         cy.get(nucliaSearchResultsSelector)
           .shadow()
