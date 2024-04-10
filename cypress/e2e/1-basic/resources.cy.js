@@ -20,9 +20,9 @@ describe('Resources', () => {
           expect(response.status).to.eq(200);
           let chain = Promise.resolve();
           response.body['resources'].forEach((resource) => {
-            chain = chain
-              .then(() =>
-                cy.request({
+            chain = chain.then(() =>
+              cy
+                .request({
                   method: 'PATCH',
                   url: `${endpoint}/resource/${resource.id}`,
                   body: {
@@ -39,10 +39,10 @@ describe('Resources', () => {
                   },
                   headers: authHeader,
                 })
-              )
-              .then((patchResponse) => expect(patchResponse.status).to.eq(200));
-            return chain;
+                .then((patchResponse) => expect(patchResponse.status).to.eq(200))
+            );
           });
+          return chain;
         });
 
         // clean up labelsets
