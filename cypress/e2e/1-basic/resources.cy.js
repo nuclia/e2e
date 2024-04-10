@@ -4,7 +4,6 @@ import { ACCOUNT, getAuthHeader, goTo, onlyPermanentKb } from '../../support/com
 
 describe('Resources', () => {
   ACCOUNT.availableZones.forEach((zone) => {
-
     describe(`on ${zone.slug}`, () => {
       before(() => {
         onlyPermanentKb();
@@ -16,24 +15,33 @@ describe('Resources', () => {
         cy.request({
           method: 'GET',
           url: `${endpoint}/resources`,
-          headers: authHeader
-        }).then(response => {
+          headers: authHeader,
+        }).then((response) => {
           expect(response.status).to.eq(200);
-          response.body['resources'].forEach(resource => {
-            cy.request({
-              method: 'PATCH',
-              url: `${endpoint}/resource/${resource.id}`,
-              body: {
-                usermetadata: {
-                  classifications: [{
-                    labelset: 'dataset',
-                    label: 'permanent',
-                    cancelled_by_user: false
-                  }], relations: []
-                }
-              },
-              headers: authHeader
-            }).then(patchResponse => expect(patchResponse.status).to.eq(200));
+          let chain = Promise.resolve();
+          response.body['resources'].forEach((resource) => {
+            chain = chain
+              .then(() =>
+                cy.request({
+                  method: 'PATCH',
+                  url: `${endpoint}/resource/${resource.id}`,
+                  body: {
+                    usermetadata: {
+                      classifications: [
+                        {
+                          labelset: 'dataset',
+                          label: 'permanent',
+                          cancelled_by_user: false,
+                        },
+                      ],
+                      relations: [],
+                    },
+                  },
+                  headers: authHeader,
+                })
+              )
+              .then((patchResponse) => expect(patchResponse.status).to.eq(200));
+            return chain;
           });
         });
 
@@ -41,19 +49,21 @@ describe('Resources', () => {
         cy.request({
           method: 'GET',
           url: `${endpoint}/labelsets`,
-          headers: authHeader
-        }).then(response => {
+          headers: authHeader,
+        }).then((response) => {
           expect(response.status).to.eq(200);
           const labelsets = Object.keys(response.body['labelsets']);
           if (labelsets.length > 1) {
             cy.task('log', `Delete ${labelsets.length - 1} label sets from previous tests`);
-            labelsets.filter(labelset => labelset !== 'dataset').forEach(labelset => {
-              cy.request({
-                method: 'DELETE',
-                url: `${endpoint}/labelset/${labelset}`,
-                headers: authHeader
-              }).then(deleteResponse => expect(deleteResponse.status).to.eq(200));
-            });
+            labelsets
+              .filter((labelset) => labelset !== 'dataset')
+              .forEach((labelset) => {
+                cy.request({
+                  method: 'DELETE',
+                  url: `${endpoint}/labelset/${labelset}`,
+                  headers: authHeader,
+                }).then((deleteResponse) => expect(deleteResponse.status).to.eq(200));
+              });
           }
         });
       });
