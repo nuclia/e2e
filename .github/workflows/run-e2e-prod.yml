@@ -61,7 +61,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "‼️⚠️ Cypress E2E failed on Prod ‼️\nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n📜Cypress report: ${{ steps.report.outputs.artifact-url }}"
+              "text": "‼️️Cypress E2E failed on PROD ‼️\nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
