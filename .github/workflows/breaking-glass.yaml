@@ -1,0 +1,9 @@
+name: Breaking Glass
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  breaking-glass:
+    if: github.event.label.name == 'breaking-glass'
+    uses: nuclia/tooling/.github/workflows/_breaking-glass.yaml@main
