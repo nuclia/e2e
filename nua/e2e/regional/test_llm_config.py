@@ -22,4 +22,4 @@ def test_llm_config_nua(nua_config):
 
     assert config.resource_labelers_models is None
     assert config.ner_model == "multilingual"
-    assert config.generative_model == "chatgpt-azure-3"
+    assert config.generative_model == "chatgpt-azure"

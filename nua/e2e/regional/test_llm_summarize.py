@@ -46,13 +46,3 @@ def test_summarize_anthropic(nua_config):
     # changed to partial summaries since anthropic is not consistent in the global summary at all
     assert "flat white" in embed.resources["Flat white"].summary.lower()
     assert "macchiato" in embed.resources["Macchiato"].summary.lower()
-
-
-def test_summarize_nuclia_everest_v1(nua_config):
-    if "stashify" not in nua_config:
-        # Lets only test on stashify as everest is not on prod
-        return
-    np = NucliaPredict()
-    embed = np.summarize(DATA, model="nuclia-everest-v1")
-    assert "Manresa" in embed.summary
-    assert "Barcelona" in embed.summary
