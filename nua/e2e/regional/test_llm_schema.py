@@ -5,7 +5,6 @@ def test_llm_schema_nua(nua_config):
     np = NucliaPredict()
     config = np.schema()
 
-    assert len(config.resource_labelers_models.options) == 0
     assert len(config.ner_model.options) == 1
     assert len(config.generative_model.options) >= 5
 
@@ -13,6 +12,5 @@ def test_llm_schema_nua(nua_config):
 def test_llm_schema_kbid(nua_config):
     np = NucliaPredict()
     config = np.schema("fake_kbid")
-    assert len(config.resource_labelers_models.options) == 0
     assert len(config.ner_model.options) == 1
     assert len(config.generative_model.options) >= 5

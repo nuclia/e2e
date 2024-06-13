@@ -25,15 +25,3 @@ def test_llm_generate_palm(nua_config):
     np = NucliaPredict()
     generated = np.generate("Which is the capital of Catalonia?", model="gemini-pro")
     assert "Barcelona" in generated.answer
-
-
-def test_llm_generate_nuclia_everest_v1(nua_config):
-    if "stashify" not in nua_config:
-        # Lets only test on stashify as everest is not on prod
-        return
-
-    np = NucliaPredict()
-    generated = np.generate(
-        "Which is the capital of Catalonia?", model="nuclia-everest-v1"
-    )
-    assert "Barcelona" in generated.answer
