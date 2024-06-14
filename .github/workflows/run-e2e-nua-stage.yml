@@ -30,7 +30,7 @@ jobs:
           pip install flake8 pytest
           pip install -r nua/requirements.txt
 
-      - name: Install dependencies
+      - name: Run tests
         env: # Or as an environment variable
           TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}
 
@@ -50,7 +50,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ tests failed\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "⚠️ tests failed on STAGE\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}

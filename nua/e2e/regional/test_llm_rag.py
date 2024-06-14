@@ -28,7 +28,7 @@ def test_llm_rag_chatgpt_azure(nua_config):
     assert "Eudald" in generated.answer
 
 
-def test_llm_rag_anthropic(nua_config):
+def test_llm_rag_claude(nua_config):
     np = NucliaPredict()
     generated = np.rag(
         question="Which is the CEO of Nuclia?",
@@ -36,13 +36,13 @@ def test_llm_rag_anthropic(nua_config):
             "Nuclia CTO is Ramon Navarro",
             "Eudald Camprubí is CEO at the same company as Ramon Navarro",
         ],
-        model="anthropic",
+        model="claude-3",
     )
 
     assert "Eudald" in generated.answer
 
 
-def test_llm_rag_palm(nua_config):
+def test_llm_rag_gemini(nua_config):
     np = NucliaPredict()
     generated = np.rag(
         question="Which is the CEO of Nuclia?",
@@ -50,6 +50,6 @@ def test_llm_rag_palm(nua_config):
             "Nuclia CTO is leo",
             "Luis is CEO at the same company as leo",
         ],
-        model="gemini-pro",
+        model="gemini-1-5-pro",
     )
     assert "Luis" in generated.answer
