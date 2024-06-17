@@ -5,7 +5,7 @@ import pytest
 
 import nuclia
 from nuclia.config import reset_config_file, set_config_file
-from nuclia.sdk import NucliaAuth
+from nuclia.sdk.auth import NucliaAuth
 
 import logging
 
