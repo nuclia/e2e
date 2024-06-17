@@ -17,7 +17,6 @@ def test_llm_generate_azure_chatgpt(nua_config):
 
 def test_llm_generate_claude(nua_config):
     np = NucliaPredict()
-    import pdb; pdb.set_trace()
     generated = np.generate("Which is the capital of Catalonia?", model="claude-3")
     assert "Barcelona" in generated.answer
 
