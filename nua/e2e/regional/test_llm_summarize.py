@@ -40,9 +40,9 @@ def test_summarize_azure_chatgpt(nua_config):
     assert "Barcelona" in embed.summary
 
 
-def test_summarize_anthropic(nua_config):
+def test_summarize_claude(nua_config):
     np = NucliaPredict()
-    embed = np.summarize(DATA_COFFEE, model="anthropic")
+    embed = np.summarize(DATA_COFFEE, model="claude-3-fast")
     # changed to partial summaries since anthropic is not consistent in the global summary at all
     assert "flat white" in embed.resources["Flat white"].summary.lower()
     assert "macchiato" in embed.resources["Macchiato"].summary.lower()
