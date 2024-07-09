@@ -18,6 +18,9 @@ describe('KB creation flow', () => {
       cy.get('[data-cy="add-kb"]').click();
       cy.get('[formcontrolname="title"] input').type(newKbName);
       cy.get('[formcontrolname="description"] textarea').type('Some kb');
+      // Zones are loaded asynchronously, and we noticed some flakiness on prod because cypress selected the zone before angular was totally ready
+      // So we check the controls visibility first to make sure cycle detection will work when cypress clicks on the zone
+      cy.get('[formcontrolname="zone"] pa-radio').should('be.visible');
       cy.get('[formcontrolname="zone"] pa-radio').contains(zone.title).click();
       cy.get('[data-cy="new-kb-save-button"] button').should('be.enabled').click();
       cy.get(`[data-cy="${newKbName}-link"]`, { timeout: 10000 }).should('contain', newKbName);
