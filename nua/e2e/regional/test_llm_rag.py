@@ -23,7 +23,7 @@ def test_llm_rag_chatgpt_azure(nua_config):
             "Nuclia CTO is Ramon Navarro",
             "Eudald Camprubí is CEO at the same company as Ramon Navarro",
         ],
-        model="chatgpt-azure",
+        model="chatgpt-azure-4o",
     )
     assert "Eudald" in generated.answer
 
