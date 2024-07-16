@@ -35,7 +35,7 @@ def test_summarize_chatgpt(nua_config):
 
 def test_summarize_azure_chatgpt(nua_config):
     np = NucliaPredict()
-    embed = np.summarize(DATA, model="chatgpt-azure")
+    embed = np.summarize(DATA, model="chatgpt-azure-4o")
     assert "Manresa" in embed.summary
     assert "Barcelona" in embed.summary
 

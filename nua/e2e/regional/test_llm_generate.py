@@ -13,7 +13,7 @@ def test_llm_generate_chatgpt(nua_config):
 
 def test_llm_generate_azure_chatgpt(nua_config):
     np = NucliaPredict()
-    generated = np.generate("Which is the capital of Catalonia?", model="chatgpt-azure")
+    generated = np.generate("Which is the capital of Catalonia?", model="chatgpt-azure-4o")
     assert "Barcelona" in generated.answer
 
 
