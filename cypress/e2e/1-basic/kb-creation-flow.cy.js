@@ -16,7 +16,10 @@ describe('KB creation flow', () => {
       goToManageAccount();
       goTo('go-to-account-kbs');
       cy.get('[data-cy="add-kb"]').click();
-      cy.get('[formcontrolname="title"] input').type(newKbName);
+
+      // endpoints are globally slower on stage, so we increase the timeout for stage only (see [sc-10891])
+      const timeout = ACCOUNT.domain === 'nuclia.cloud' ? 4000 : 8000;
+      cy.get('[formcontrolname="title"] input', { timeout }).type(newKbName);
       cy.get('[formcontrolname="description"] textarea').type('Some kb');
       // Zones are loaded asynchronously, and we noticed some flakiness on prod because cypress selected the zone before angular was totally ready
       // So we check the controls visibility first to make sure cycle detection will work when cypress clicks on the zone
