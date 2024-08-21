@@ -1,6 +1,7 @@
 from pathlib import Path
-from nuclia.sdk.process import NucliaProcessing
+
 import pytest
+from nuclia.sdk.process import NucliaProcessing
 
 FILE_PATH = f"{Path(__file__).parent.parent}/assets/"
 

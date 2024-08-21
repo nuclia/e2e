@@ -1,7 +1,7 @@
-from nuclia.sdk.predict import NucliaPredict
 import pytest
 from nuclia.exceptions import NuaAPIException
 from nuclia.lib.nua_responses import LearningConfigurationCreation
+from nuclia.sdk.predict import NucliaPredict
 
 
 def test_llm_config_nua(nua_config):
