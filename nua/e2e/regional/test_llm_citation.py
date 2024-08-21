@@ -1,6 +1,3 @@
-from nuclia.sdk.predict import NucliaPredict
-
-
 # def test_llm_citations_everest(nua_config):
 #     np = NucliaPredict()
 #     embed = np.generate("Who is the CEO of Nuclia?", model="everest")

@@ -1,13 +1,11 @@
+import logging
 import os
 import tempfile
 
-import pytest
-
 import nuclia
+import pytest
 from nuclia.config import reset_config_file, set_config_file
 from nuclia.sdk.auth import NucliaAuth
-
-import logging
 
 logger = logging.getLogger("e2e")
 
@@ -29,8 +27,7 @@ TOKENS = {
 )
 def nua_config(request):
     if (
-        os.environ.get("TEST_ENV") == "stage"
-        and "stashify.cloud" not in request.param  # noqa
+        os.environ.get("TEST_ENV") == "stage" and "stashify.cloud" not in request.param  # noqa
     ):  # noqa
         pytest.skip("skipped on this platform: {}")
 
