@@ -10,7 +10,7 @@ import {
   searchResultContainerSelector,
   searchResultTitle,
   suggestionResultSelector,
-  viewerSelector
+  viewerSelector,
 } from '../selectors/widget-selectors';
 
 describe('Search', () => {
@@ -21,15 +21,21 @@ describe('Search', () => {
       });
 
       it('should show suggestions and open preview from it', () => {
-        cy.get(nucliaSearchBarSelector).shadow().find('.sw-search-input input').type('Lamarr');
+        cy.get(nucliaSearchBarSelector).shadow().find('.sw-search-input textarea').type('Lamarr');
         cy.get(nucliaSearchBarSelector).shadow().find(suggestionResultSelector).should('have.length', 2);
         cy.get(nucliaSearchBarSelector).shadow().find(`${suggestionResultSelector}:first-child`).click();
-        cy.get(nucliaSearchResultsSelector).shadow().find('.sw-viewer .header-title').should('contain', 'Lamarr Lesson plan.pdf');
+        cy.get(nucliaSearchResultsSelector)
+          .shadow()
+          .find('.sw-viewer .header-title')
+          .should('contain', 'Lamarr Lesson plan.pdf');
         closeViewer();
       });
 
       it('should display results', () => {
-        cy.get(nucliaSearchBarSelector).shadow().find(searchBarInputSelector).type(`${firstQuestion}\n`, { force: true });
+        cy.get(nucliaSearchBarSelector)
+          .shadow()
+          .find(searchBarInputSelector)
+          .type(`${firstQuestion}\n`, { force: true });
         cy.get(nucliaSearchResultsSelector)
           .shadow()
           .find(`${searchResultContainerSelector} ${searchResultTitle}`, { timeout: 6000 })

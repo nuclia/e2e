@@ -17,12 +17,12 @@ export const answerContainerSelector = '.answer-text';
 export const answerCitationSelector = '.source .number';
 export const answerSourceTitleSelector = '.source .result-title';
 export const chatContainerSelector = '.sw-chat .chat-container';
-export const chatInputSelector = '.sw-chat-input input';
+export const chatInputSelector = '.sw-chat-input textarea';
 export const chatQuestionSelector = '.question';
 
 // Viewer selectors
 export const viewerSelector = '.sw-viewer';
-export const searchBarInputSelector = '.sw-search-input input';
+export const searchBarInputSelector = '.sw-search-input textarea';
 export const findInResourceInputSelector = '.find-bar-container input';
 export const closeButton = '.header-actions button[aria-label="generic.close"]';
 
