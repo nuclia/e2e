@@ -28,7 +28,7 @@ export const closeButton = '.header-actions button[aria-label="generic.close"]';
 
 // Data sent and expected
 export const firstQuery = 'bluetooth';
-export const secondQuery = 'radio';
+export const secondQuery = 'colleen cheslak';
 export const expectedResourceTitle = 'Lamarr Lesson plan.pdf';
 export const firstQuestion = 'Who was Hedy Lamarr?';
-export const secondQuestion = 'What did Hedy Lamarr invent?';
+export const secondQuestion = 'Who organizes the lesson named "An Inventive Mind"?';
