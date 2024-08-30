@@ -21,6 +21,7 @@ jobs:
               -v nucliadb-standalone:/data \
               -e NUCLIA_PUBLIC_URL="https://{zone}.gcp-global-dev-1.nuclia.io" \
               -e NUA_API_KEY=${{ secrets.NUA_KEY_DEV }} \
+              -e NUA_ZONE=gcp-dev-1 \
               nucliadb-server &
       # Install npm dependencies, cache them correctly and run all Cypress tests
       - name: Cypress run
