@@ -15,6 +15,7 @@ export const ACCOUNT_STAGE = {
   id: '23d9209a-34be-4648-8ef0-5b522f9976be',
   slug: 'testing',
   domain: 'stashify.cloud',
+  hasMultipleZones: true,
   availableZones: [
     {
       slug: ZONES['europe'],
@@ -44,6 +45,7 @@ export const ACCOUNT_PROD = {
   id: '5cec111b-ea23-4b0c-a82a-d1a666dd1fd2',
   slug: 'nuclia-testing',
   domain: 'nuclia.cloud',
+  hasMultipleZones: true,
   availableZones: [
     {
       slug: ZONES['europe'],
@@ -94,6 +96,7 @@ export const ACCOUNT_DEV = {
   id: '22e77dea-3552-45ad-b387-1c8755f9c3cc',
   slug: 'testing',
   domain: 'gcp-global-dev-1.nuclia.io',
+  hasMultipleZones: false,
   availableZones: [
     {
       slug: ZONES['dev'],
