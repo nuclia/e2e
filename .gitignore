@@ -2,6 +2,7 @@
 
 # env variables
 cypress.env.json
+cypress.env.*.json
 /cypress-prod.env.json
 
 # output
