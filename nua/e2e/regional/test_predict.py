@@ -1,35 +1,53 @@
+import pytest
 from nuclia.sdk.predict import NucliaPredict
 
+from regional.models import ALL_ENCODERS, ALL_LLMS
 
-def test_predict_sentence_multilingual_2023_02_21(nua_config):
+
+@pytest.mark.parametrize("model", ALL_ENCODERS.keys())
+def test_predict_sentence(nua_config, model):
     np = NucliaPredict()
-    embed = np.sentence(text="This is my text", model="multilingual-2024-05-06")
+    embed = np.sentence(text="This is my text", model=model)
     assert embed.time > 0
-    assert len(embed.data) == 1024
+    # Deprecated field (data)
+    assert len(embed.data) == ALL_ENCODERS[model]
+    # TODO: Check new fields 'vectors' and 'timings' that support vectorsets once SDK supports vectorsets
 
 
-def test_predict_sentence_multilingual_2023_08_16(nua_config):
+# TODO: Add test for predict sentence with multiple models in one request (vectorsets)
+
+
+def test_predict_query(nua_config):
     np = NucliaPredict()
-    embed = np.sentence(text="This is my text", model="multilingual-2023-08-16")
+    embed = np.query(text="I love Barcelona")
+    # Semantic
+    assert embed.semantic_threshold > 0
+    assert len(embed.sentence.data) > 128
+    # Generative
+    assert embed.max_context > 0
+    # Tokens
+    assert embed.language == "en"
+    assert (
+        len(embed.entities.tokens) > 0 and embed.entities.tokens[0].text == "Barcelona"
+    )
+
+
+# TODO: Add test for predict rerank once SDK supports rerank
+
+
+def test_predict_tokens(nua_config):
+    np = NucliaPredict()
+    embed = np.tokens(text="I love Barcelona")
+    assert embed.tokens[0].text == "Barcelona"
+    assert embed.tokens[0].start == 7
+    assert embed.tokens[0].end == 16
     assert embed.time > 0
-    assert len(embed.data) == 1024
 
 
-def test_predict_sentence_multilingual_en(nua_config):
+@pytest.mark.parametrize("model", ALL_LLMS)
+def test_predict_rephrase(nua_config, model):
+    # Check that rephrase is working for all models
     np = NucliaPredict()
-    embed = np.sentence(text="This is my text", model="en-2024-04-24")
-    assert embed.time > 0
-    assert len(embed.data) == 768
-
-
-def test_predict_entity_multilingual_2023_02_21(nua_config):
-    np = NucliaPredict()
-    embed = np.tokens(text="I'm flying to Barcelona", model="multilingual")
-    assert embed.time > 0
-    assert len(embed.tokens) == 1
-
-
-def test_predict_query_multilingual_multilingual(nua_config):
-    np = NucliaPredict()
-    embed = np.query(text="This is my text")
-    assert len(embed.sentence.data) == 1024
+    # TODO: Test that custom rephrase prompt works once SDK supports it
+    rephrased = np.rephrase(question="Barcelona best coffe", model=model)
+    assert rephrased != "Barcelona best coffe" and rephrased != ""

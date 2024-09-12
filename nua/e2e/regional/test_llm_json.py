@@ -2,18 +2,8 @@ import pytest
 from nuclia.lib.nua_responses import ChatModel, UserPrompt
 from nuclia.sdk.predict import NucliaPredict
 
-LLM_WITH_JSON_OUTPUT_SUPPORT = [
-    "chatgpt-azure-4-turbo",
-    "chatgpt-azure-4o",
-    "claude-3",
-    "claude-3-fast",
-    "claude-3-5-fast",
-    "chatgpt4",
-    "chatgpt4o",
-    "chatgpt4o-mini",
-    "gemini-1-5-pro",
-    "azure-mistral",
-]
+from regional.models import LLM_WITH_JSON_OUTPUT_SUPPORT
+
 SCHEMA = {
     "name": "ClassificationReverse",
     "description": "Correctly extracted with all the required parameters with correct types",
