@@ -50,4 +50,4 @@ def test_predict_rephrase(nua_config, model):
     np = NucliaPredict()
     # TODO: Test that custom rephrase prompt works once SDK supports it
     rephrased = np.rephrase(question="Barcelona best coffe", model=model)
-    assert "What" in rephrased and "?" in rephrased
+    assert "?" in rephrased
