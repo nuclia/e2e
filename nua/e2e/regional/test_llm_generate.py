@@ -1,31 +1,11 @@
+import pytest
 from nuclia.sdk.predict import NucliaPredict
 
+from regional.models import ALL_LLMS
 
-def test_llm_generate_chatgpt(nua_config):
+
+@pytest.mark.parametrize("model", ALL_LLMS)
+def test_llm_generate(nua_config, model):
     np = NucliaPredict()
-    generated = np.generate(
-        "Which is the capital of Catalonia?", model="chatgpt-azure-3"
-    )
-    assert "Barcelona" in generated.answer
-
-
-def test_llm_generate_azure_chatgpt(nua_config):
-    np = NucliaPredict()
-    generated = np.generate(
-        "Which is the capital of Catalonia?", model="chatgpt-azure-4o"
-    )
-    assert "Barcelona" in generated.answer
-
-
-def test_llm_generate_claude(nua_config):
-    np = NucliaPredict()
-    generated = np.generate("Which is the capital of Catalonia?", model="claude-3")
-    assert "Barcelona" in generated.answer
-
-
-def test_llm_generate_gemini(nua_config):
-    np = NucliaPredict()
-    generated = np.generate(
-        "Which is the capital of Catalonia?", model="gemini-1-5-pro"
-    )
+    generated = np.generate("Which is the capital of Catalonia?", model=model)
     assert "Barcelona" in generated.answer

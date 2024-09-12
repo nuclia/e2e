@@ -1,7 +1,11 @@
+import pytest
 from nuclia.sdk.predict import NucliaPredict
 
+from regional.models import ALL_LLMS
 
-def test_llm_rag_chatgpt_openai(nua_config):
+
+@pytest.mark.parametrize("model", ALL_LLMS)
+def test_llm_rag(nua_config, model):
     np = NucliaPredict()
     generated = np.rag(
         question="Which is the CEO of Nuclia?",
@@ -9,47 +13,7 @@ def test_llm_rag_chatgpt_openai(nua_config):
             "Nuclia CTO is Ramon Navarro",
             "Eudald Camprubí is CEO at the same company as Ramon Navarro",
         ],
-        model="chatgpt-azure-3",
+        model=model,
     )
 
     assert "Eudald" in generated.answer
-
-
-def test_llm_rag_chatgpt_azure(nua_config):
-    np = NucliaPredict()
-    generated = np.rag(
-        question="Which is the CEO of Nuclia?",
-        context=[
-            "Nuclia CTO is Ramon Navarro",
-            "Eudald Camprubí is CEO at the same company as Ramon Navarro",
-        ],
-        model="chatgpt-azure-4o",
-    )
-    assert "Eudald" in generated.answer
-
-
-def test_llm_rag_claude(nua_config):
-    np = NucliaPredict()
-    generated = np.rag(
-        question="Which is the CEO of Nuclia?",
-        context=[
-            "Nuclia CTO is Ramon Navarro",
-            "Eudald Camprubí is CEO at the same company as Ramon Navarro",
-        ],
-        model="claude-3",
-    )
-
-    assert "Eudald" in generated.answer
-
-
-def test_llm_rag_gemini(nua_config):
-    np = NucliaPredict()
-    generated = np.rag(
-        question="Which is the CEO of Nuclia?",
-        context=[
-            "Nuclia CTO is leo",
-            "Luis is CEO at the same company as leo",
-        ],
-        model="gemini-1-5-pro",
-    )
-    assert "Luis" in generated.answer
