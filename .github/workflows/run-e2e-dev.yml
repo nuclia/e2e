@@ -1,6 +1,7 @@
 name: run-e2e-dev
 run-name: Running Cypress e2e tests on Dev
 on:
+  workflow_call:
   workflow_dispatch:
     branches:
       - main
