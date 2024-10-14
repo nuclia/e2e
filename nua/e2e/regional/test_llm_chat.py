@@ -14,7 +14,7 @@ def test_llm_chat(nua_config):
         question="Which is the CEO of Nuclia?",
         retrieval=False,
         user_id="Nuclia PY CLI",
-        system="You are a helpful assistant, your first word is always the language you will be using in the conversation",
+        system="You are a helpful assistant, your first word is always the language you will be using in the conversation in all caps.\nExample: 'FRANÇAIS: Bonjour, madame.'",
         user_prompt=UserPrompt(
             prompt="Respond to the question using the context pieces provided, please answer in ITALIAN:\n Question: {question}\n Context: {context}"
         ),
@@ -29,7 +29,7 @@ def test_llm_chat(nua_config):
         model=ALL_LLMS[0],
     )
     # Check that system + user prompt worked
-    assert generated.answer.startswith("ITALIANO")
+    assert generated.answer.startswith("ITALIAN")
     # Check that citations are present and make sense
     assert "1" in generated.citations and "2" not in generated.citations
     # Check that the answer is correct
