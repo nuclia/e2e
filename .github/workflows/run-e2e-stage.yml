@@ -8,12 +8,6 @@ on:
     branches:
       - main
   schedule:
-    # Run at minute 25 past every hour from 4 through 23 on Monday.
-    - cron: 25 4-23 * * 1
-    # Run at minute 25 past every hour on every day-of-week from Tuesday through Thursday.
-    - cron: '25 * * * 2-4'
-    # Run at minute 25 past every hour from 0 through 19 on Friday.
-    - cron: 25 0-19 * * 5
     # Run at 00:25 and 12:25 on saturday and sunday
     - cron: '25 0,12 * * 0,6'
 concurrency:
