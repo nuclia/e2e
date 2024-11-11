@@ -1,0 +1,61 @@
+name: run-e2e-gke-stage-1
+run-name: Running Cypress e2e tests on GKE Stage 1
+on:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+jobs:
+  cypress-run:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      # Launch NucliaDB in docker
+      - run: |
+          docker pull nuclia/nucliadb:latest
+          docker build -t nucliadb-server .
+          docker run -p 8080:8080 \
+              -v nucliadb-standalone:/data \
+              -e NUCLIA_PUBLIC_URL="https://{zone}.stashify.cloud" \
+              -e NUA_API_KEY=${{ secrets.NUA_KEY }} \
+              nucliadb-server &
+      
+      - name: Hack host file for gke-stage-1 test
+        run: |
+          echo "34.149.145.147 europe-1.stashify.cloud." >> /etc/hosts
+      # Install npm dependencies, cache them correctly and run all Cypress tests
+      - name: Cypress run
+        id: cypress
+        uses: cypress-io/github-action@v6
+        with:
+          install-command: yarn install
+        env:
+          CYPRESS_BASE_URL: https://stashify.cloud
+          CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY }}
+          CYPRESS_USER_NAME: ${{ secrets.USER_NAME }}
+          CYPRESS_USER_PWD: ${{ secrets.USER_PWD }}
+          CYPRESS_RUNNING_ENV: stage
+        # after the test run completes store reports and any screenshots
+      - name: Cypress reports
+        id: report
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
+        with:
+          name: cypress-reports
+          path: cypress/reports
+          if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+      - name: Slack notification
+        id: slack
+        uses: slackapi/slack-github-action@v1.25.0
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
+        with:
+          payload: |
+            {
+              "text": "⚠️ Cypress E2E failed on Stage\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
