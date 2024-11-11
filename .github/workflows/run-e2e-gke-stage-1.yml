@@ -3,6 +3,7 @@ run-name: Running Cypress e2e tests on GKE Stage 1
 on:
   workflow_call:
   workflow_dispatch:
+
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
@@ -24,7 +25,8 @@ jobs:
       
       - name: Hack host file for gke-stage-1 test
         run: |
-          echo "34.149.145.147 europe-1.stashify.cloud." >> /etc/hosts
+          echo "34.149.145.147 europe-1.stashify.cloud." | sudo tee -a /etc/hosts > /dev/null
+
       # Install npm dependencies, cache them correctly and run all Cypress tests
       - name: Cypress run
         id: cypress
