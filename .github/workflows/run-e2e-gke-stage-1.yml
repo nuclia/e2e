@@ -2,7 +2,7 @@ name: run-e2e-gke-stage-1
 run-name: Running Cypress e2e tests on GKE Stage 1
 on:
   workflow_call:
-
+  workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true

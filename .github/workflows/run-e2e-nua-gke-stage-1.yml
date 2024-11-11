@@ -2,6 +2,7 @@ name: run-nua-e2e-gke-stage-1
 run-name: Running e2e GKE-STAGE-1 NUA tests
 on:
   workflow_call:
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-22.04
