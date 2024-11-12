@@ -1,7 +1,6 @@
 ALL_LLMS = [  # Extracted from learning/libraries/learning_models/generative.py
     "chatgpt-azure-4o",
     "chatgpt-azure-4-turbo",
-    "chatgpt-azure-3",
     "claude-3",
     "claude-3-fast",
     "claude-3-5-fast",

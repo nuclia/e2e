@@ -27,7 +27,7 @@ In Australia the drink is referred to as a macchiato and has some variants.[6] A
 
 def test_summarize_chatgpt(nua_config):
     np = NucliaPredict()
-    embed = np.summarize(DATA, model="chatgpt-azure-3")
+    embed = np.summarize(DATA, model="chatgpt4o")
     assert "Manresa" in embed.summary
     assert "Barcelona" in embed.summary
 
