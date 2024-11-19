@@ -2,6 +2,9 @@ from pathlib import Path
 
 import pytest
 from nuclia.sdk.process import NucliaProcessing
+from nuclia.lib.nua import NuaClient
+
+from nuclia.data import get_auth
 
 FILE_PATH = f"{Path(__file__).parent.parent}/assets/"
 
@@ -20,6 +23,27 @@ def test_pdf(nua_config):
         "As the training data of LLMs often contains undesirable"
         in payload.extracted_text[0].body.text
     )
+
+
+@pytest.mark.timeout(660)
+def test_pptx(nua_config):
+    nc = NucliaProcessing()
+    path = define_path("sample.pptx")
+    payload = nc.process_file(path, kbid="kbid", timeout=300)
+    assert payload
+    assert "This is a test ppt" in payload.extracted_text[0].body.text
+
+
+@pytest.mark.timeout(660)
+def test_manual_split(nua_config):
+    auth = get_auth()
+    nua_id = auth._config.get_default_nua()
+    nua_obj = auth._config.get_nua(nua_id)
+    nc = NuaClient(region=nua_obj.region, account=nua_obj.account, token=nua_obj.token)
+    path = define_path("plaintext_manual_split.txt")
+    payload = nc.process_file(path, kbid="kbid", timeout=300)
+    assert payload
+    # TODO: Check extracted paragraphs
 
 
 @pytest.mark.timeout(360)
