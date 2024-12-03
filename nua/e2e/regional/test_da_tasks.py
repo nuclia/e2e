@@ -35,7 +35,7 @@ def test_da_labeler(nua_config):
 
     base_url = f"https://{nua_config}"
     nua_key = TOKENS[nua_config]
-    headers = {"X-NUCLIA-NUAKEY": nua_key}
+    headers = {"X-NUCLIA-NUAKEY": f"Bearer {nua_key}"}
 
     # step 1, create a dataset
     dataset_body = {
