@@ -1,11 +1,8 @@
 from pathlib import Path
 
 import pytest
-from nuclia.sdk.process import NucliaProcessing
-from nuclia import sdk
 from nuclia_models.worker.tasks import (
     TaskName,
-    ApplyOptions,
     DataAugmentation,
     TaskStart,
 )
@@ -57,9 +54,8 @@ def test_da_labeler(nua_config):
     assert resp.status_code == 204
 
     # step 3, create an agent for a dataset
-    account_id = ""  # TODO: ?
     resp = requests.post(
-        f"{base_url}/api/v1/account/{account_id}/dataset/{dataset_id}/task/start",
+        f"{base_url}/api/v1/dataset/{dataset_id}/task/start",
         headers=headers,
         json=TaskStart(
             name=TaskName.LABELER,
@@ -81,7 +77,7 @@ def test_da_labeler(nua_config):
                 ],
                 llm=LLMConfig(model="chatgpt-azure-4o-mini"),
             ),
-        ),
+        ).model_dump(),
     )
     assert resp.status_code == 200
     task_id = resp.json()["id"]
@@ -99,7 +95,7 @@ def test_da_labeler(nua_config):
             )
 
         resp = requests.post(
-            f"{base_url}/api/v1/account/{account_id}/dataset/{dataset_id}/task/{task_id}/inspect",
+            f"{base_url}/api/v1/dataset/{dataset_id}/task/{task_id}/inspect",
             headers=headers,
         )
         assert resp.status_code == 200
@@ -116,9 +112,7 @@ def test_da_labeler(nua_config):
     assert task_request["failed"] is False
 
     # step 5, check the output result
-    resp = requests.post(
-        f"{base_url}/api/v1/processing/pull", headers=headers
-    )  # TODO: check if this exists in the SDK
+    resp = requests.post(f"{base_url}/api/v1/processing/pull", headers=headers)
     assert resp.status_code == 200
     pull_response = resp.json()
     # TODO: check attributes pull response
