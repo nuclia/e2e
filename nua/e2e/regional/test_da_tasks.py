@@ -25,7 +25,7 @@ def define_path(file: str):
     return FILE_PATH + file
 
 
-def task_done(task_request: dict):
+def task_done(task_request: dict) -> bool:
     return task_request["failed"] or task_request["completed"]
 
 
@@ -38,7 +38,14 @@ def test_da_labeler(nua_config):
     headers = {"X-NUCLIA-NUAKEY": nua_key}
 
     # step 1, create a dataset
-    resp = requests.post(f"{base_url}/api/v1/datasets", headers=headers)
+    dataset_body = {
+        "name": "e2e-test-dataset",
+        "filter": {"labels": []},
+        "type": "FIELD_CLASSIFICATION",
+    }
+    resp = requests.post(
+        f"{base_url}/api/v1/datasets", headers=headers, json=dataset_body
+    )
     assert resp.status_code == 201
     dataset_id = resp.json()["id"]
 
@@ -94,7 +101,7 @@ def test_da_labeler(nua_config):
                 "Task {task_id} did not complete within the maximum allowed time of {max_duration} seconds."
             )
 
-        resp = requests.post(
+        resp = requests.get(
             f"{base_url}/api/v1/dataset/{dataset_id}/task/{task_id}/inspect",
             headers=headers,
         )
@@ -112,7 +119,7 @@ def test_da_labeler(nua_config):
     assert task_request["failed"] is False
 
     # step 5, check the output result
-    resp = requests.post(f"{base_url}/api/v1/processing/pull", headers=headers)
+    resp = requests.get(f"{base_url}/api/v1/processing/pull", headers=headers)
     assert resp.status_code == 200
     pull_response = resp.json()
     # TODO: check attributes pull response
