@@ -3,3 +3,5 @@ pytest
 pytest-timeout
 pytest-asyncio
 aiofiles
+nuclia-models
+requests
