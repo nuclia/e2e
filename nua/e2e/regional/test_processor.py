@@ -1,13 +1,6 @@
-from pathlib import Path
-
 import pytest
 from nuclia.sdk.process import NucliaProcessing
-
-FILE_PATH = f"{Path(__file__).parent.parent}/assets/"
-
-
-def define_path(file: str):
-    return FILE_PATH + file
+from regional.utils import define_path
 
 
 @pytest.mark.timeout(660)

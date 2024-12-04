@@ -4,4 +4,4 @@ pytest-timeout
 pytest-asyncio
 aiofiles
 nuclia-models
-requests
+httpx
