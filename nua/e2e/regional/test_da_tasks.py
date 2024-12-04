@@ -15,7 +15,6 @@ from nuclia_models.worker.proto import (
     GraphOperation,
     EntityDefinition,
 )
-import requests
 from conftest import TOKENS
 import time
 from regional.utils import define_path
