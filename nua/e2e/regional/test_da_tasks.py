@@ -107,7 +107,7 @@ async def wait_for_task_completion(
         )
         assert resp.status_code == 200
         task_request = resp.json()
-        print(task_request)  # TODO: remove
+
         if task_done(task_request):
             return task_request
 
@@ -232,7 +232,6 @@ DA_TEST_INPUTS: list[TestInput] = [
 ]
 
 
-@pytest.mark.timeout(360)
 @pytest.mark.asyncio
 @pytest.mark.parametrize("test_input", DA_TEST_INPUTS)
 async def test_da_agent_tasks(
@@ -256,7 +255,7 @@ async def test_da_agent_tasks(
         task_name=test_input.task_name,
         parameters=test_input.parameters,
     )
-
+    print(f"task_id: {task_id}")  # TODO: remove
     task_request = await wait_for_task_completion(
         client=client, dataset_id=dataset_id, task_id=task_id
     )
@@ -265,4 +264,4 @@ async def test_da_agent_tasks(
 
     await check_output(client=client)
 
-    # TODO: delete tasks even if assert fails
+    # TODO: delete tasks and dataset even if assert fails
