@@ -64,13 +64,13 @@ async def create_dataset(client: AsyncClient) -> str:
         "type": "FIELD_STREAMING",
     }
     resp = await client.post("/api/v1/datasets", json=dataset_body)
-    assert resp.status_code == 201
+    assert resp.status_code == 201, resp.text
     return resp.json()["id"]
 
 
 async def delete_dataset(client: AsyncClient, dataset_id: str):
     resp = await client.delete(f"/api/v1/dataset/{dataset_id}")
-    assert resp.status_code == 204
+    assert resp.status_code == 204, resp.text
 
 
 async def push_data_to_dataset(client: AsyncClient, dataset_id: str, filename: str):
@@ -80,7 +80,7 @@ async def push_data_to_dataset(client: AsyncClient, dataset_id: str, filename: s
         f"/api/v1/dataset/{dataset_id}/partition/1",
         data=content,
     )
-    assert resp.status_code == 204
+    assert resp.status_code == 204, resp.text
 
 
 async def start_task(
@@ -93,13 +93,13 @@ async def start_task(
         f"/api/v1/dataset/{dataset_id}/task/start",
         json=TaskStart(name=task_name, parameters=parameters).model_dump(),
     )
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     return resp.json()["id"]
 
 
 async def delete_task(client: AsyncClient, dataset_id: str, task_id: str):
     resp = await client.delete(f"/api/v1/dataset/{dataset_id}/task/{task_id}")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
 
 async def wait_for_task_completion(
@@ -119,7 +119,7 @@ async def wait_for_task_completion(
         resp = await client.get(
             f"/api/v1/dataset/{dataset_id}/task/{task_id}/inspect",
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 200, resp.text
         task_request = resp.json()
 
         if task_done(task_request):
@@ -138,9 +138,7 @@ async def get_last_message_id(client: AsyncClient) -> int:
                 "limit": 999999,  # TODO: refactor, this is not scalable
             },
         )
-        assert (
-            resp.status_code == 200
-        ), f"Request failed with status code {resp.status_code}"
+        assert resp.status_code == 200, resp.text
         pull_response = resp.json()
         cursor = pull_response["cursor"]
         if cursor is not None:
@@ -158,7 +156,7 @@ async def validate_task_output(
         resp = await client.get(
             "/api/v1/processing/pull", params={"from_cursor": from_cursor, "limit": 1}
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 200, resp.text
         pull_response = resp.json()
         if pull_response["payloads"]:
             assert len(pull_response["payloads"]) == 1
