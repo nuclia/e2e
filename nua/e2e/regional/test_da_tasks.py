@@ -129,7 +129,7 @@ async def wait_for_task_completion(
 
 
 async def get_last_message_id(client: AsyncClient) -> int:
-    max_retries = 5
+    max_retries = 20
     for _ in range(max_retries):
         resp = await client.get(
             "/api/v1/processing/pull",
@@ -151,7 +151,7 @@ async def get_last_message_id(client: AsyncClient) -> int:
 async def validate_task_output(
     client: AsyncClient, from_cursor: int, validation: Callable[[BrokerMessage], None]
 ):
-    max_retries = 5
+    max_retries = 20
     for _ in range(max_retries):
         resp = await client.get(
             "/api/v1/processing/pull", params={"from_cursor": from_cursor, "limit": 1}
