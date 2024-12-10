@@ -204,13 +204,29 @@ def validate_synthetic_questions_output(msg: BrokerMessage):
         "legal"
         in msg.question_answers[0]
         .question_answers.question_answers.question_answer[0]
-        .question
+        .question.text
     )
     assert (
         "legal"
         in msg.question_answers[0]
         .question_answers.question_answers.question_answer[0]
-        .answers
+        .answers[0]
+        .reason
+    )
+
+
+def validate_labeler_output_text_block(msg: BrokerMessage):
+    assert (
+        msg.field_metadata[0]
+        .metadata.metadata.paragraphs[0]
+        .classifications[0]
+        .labelset
+        == LABEL_OPERATION_IDENT
+    )
+
+    assert (
+        msg.field_metadata[0].metadata.metadata.paragraphs[0].classifications[0].label
+        == "TECH"
     )
 
 
@@ -358,6 +374,43 @@ DA_TEST_INPUTS: list[TestInput] = [
             llm=LLMConfig(model="chatgpt-azure-4o-mini"),
         ),
         validate_output=validate_synthetic_questions_output,
+    ),
+    TestInput(
+        filename="financial-new-kb.arrow",
+        task_name=TaskName.LABELER,
+        parameters=DataAugmentation(
+            name="e2e-test-labeler-text-block",
+            on=ApplyTo.TEXT_BLOCK,
+            filter=Filter(),
+            operations=[
+                Operation(
+                    label=LabelOperation(
+                        labels=[
+                            Label(
+                                label="TECH",
+                                description="Related to financial news in the TECH/IT industry",
+                            ),
+                            Label(
+                                label="HEALTH",
+                                description="Related to financial news in the HEALTHCARE industry",
+                            ),
+                            Label(
+                                label="FOOD",
+                                description="Related to financial news in the FOOD industry",
+                            ),
+                            Label(
+                                label="MEDIA",
+                                description="Related to financial news in the MEDIA industry",
+                            ),
+                        ],
+                        ident=LABEL_OPERATION_IDENT,
+                        description="label operation description",
+                    )
+                )
+            ],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+        validate_output=validate_labeler_output_text_block,
     ),
 ]
 
