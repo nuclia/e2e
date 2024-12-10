@@ -160,7 +160,7 @@ async def validate_task_output(
         )
         assert resp.status_code == 200
         pull_response = resp.json()
-        if pull_response["payloads"] != []:
+        if pull_response["payloads"]:
             assert len(pull_response["payloads"]) == 1
             message = BrokerMessage()
             message.ParseFromString(base64.b64decode(pull_response["payloads"][0]))
