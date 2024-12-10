@@ -416,7 +416,9 @@ DA_TEST_INPUTS: list[TestInput] = [
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("test_input", DA_TEST_INPUTS)
+@pytest.mark.parametrize(
+    "test_input", DA_TEST_INPUTS, ids=lambda test_input: test_input.parameters.name
+)
 async def test_da_agent_tasks(
     nua_config: str,
     httpx_client: AsyncGenerator[AsyncClient, None],
