@@ -129,31 +129,45 @@ async def wait_for_task_completion(
 
 
 async def get_last_message_id(client: AsyncClient) -> int:
-    resp = await client.get(
-        "/api/v1/processing/pull",
-        params={
-            "from_cursor": 0,
-            "limit": 999999,  # TODO: refactor, this is not scalable
-        },
-    )
-    assert resp.status_code == 200
-    pull_response = resp.json()
-    cursor = pull_response["cursor"]
-    return cursor or 0
+    max_retries = 5
+    for _ in range(max_retries):
+        resp = await client.get(
+            "/api/v1/processing/pull",
+            params={
+                "from_cursor": 0,
+                "limit": 999999,  # TODO: refactor, this is not scalable
+            },
+        )
+        assert (
+            resp.status_code == 200
+        ), f"Request failed with status code {resp.status_code}"
+        pull_response = resp.json()
+        cursor = pull_response["cursor"]
+        if cursor is not None:
+            return cursor
+        await asyncio.sleep(5)
+
+    raise ValueError(f"Failed to retrieve a valid cursor after {max_retries} attempts")
 
 
 async def validate_task_output(
     client: AsyncClient, from_cursor: int, validation: Callable[[BrokerMessage], None]
 ):
-    resp = await client.get(
-        "/api/v1/processing/pull", params={"from_cursor": from_cursor, "limit": 1}
-    )
-    assert resp.status_code == 200
-    pull_response = resp.json()
-    assert len(pull_response["payloads"]) == 1
-    message = BrokerMessage()
-    message.ParseFromString(base64.b64decode(pull_response["payloads"][0]))
-    validation(message)
+    max_retries = 5
+    for _ in range(max_retries):
+        resp = await client.get(
+            "/api/v1/processing/pull", params={"from_cursor": from_cursor, "limit": 1}
+        )
+        assert resp.status_code == 200
+        pull_response = resp.json()
+        if pull_response["payloads"] != []:
+            assert len(pull_response["payloads"]) == 1
+            message = BrokerMessage()
+            message.ParseFromString(base64.b64decode(pull_response["payloads"][0]))
+            validation(message)
+            return
+        await asyncio.sleep(5)
+    raise ValueError(f"Failed to retrieve a task output after {max_retries} attempts")
 
 
 LABEL_OPERATION_IDENT = "label-operation-ident-1"
@@ -181,7 +195,6 @@ def validate_llm_graph_output(msg: BrokerMessage):
 
 
 def validate_prompt_guard_output(msg: BrokerMessage):
-    breakpoint()
     pass
 
 
