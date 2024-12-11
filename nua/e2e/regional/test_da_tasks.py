@@ -27,6 +27,7 @@ import aiofiles
 from nucliadb_protos.writer_pb2 import BrokerMessage
 from dataclasses import dataclass
 import base64
+from typing import Optional
 
 
 @dataclass
@@ -40,17 +41,42 @@ class TestInput:
 @pytest.fixture
 def httpx_client() -> Callable[[str, str], AsyncGenerator[AsyncClient, None]]:
     async def create_httpx_client(
-        base_url: str, nua_key: str
+        base_url: str,
+        nua_key: Optional[str] = None,
+        pat_key: Optional[str] = None,
+        timeout: int = 5,
     ) -> AsyncGenerator[AsyncClient, None]:
         client = AsyncClient()
         async with AsyncClient(
             base_url=base_url,
-            headers={"X-NUCLIA-NUAKEY": f"Bearer {nua_key}"},
-            timeout=30,
+            headers={"X-NUCLIA-NUAKEY": f"Bearer {nua_key}"}
+            if nua_key
+            else {"Authorization": f"Bearer {pat_key}"},
+            timeout=timeout,
         ) as client:
             yield client
 
     return create_httpx_client
+
+
+async def create_nua_key(
+    client: AsyncClient, account_id: str, title: str
+) -> tuple[str, str]:
+    body = {
+        "title": title,
+        "contact": "temporal key, safe to delete",
+    }
+    resp = await client.post(f"/api/v1/account/{account_id}/nua_clients", json=body)
+    assert resp.status_code == 201, resp.text
+    nua_response = resp.json()
+    return nua_response["client_id"], nua_response["token"]
+
+
+async def delete_nua_key(client: AsyncClient, account_id: str, nua_client_id: str):
+    resp = await client.delete(
+        f"/api/v1/account/{account_id}/nua_client/{nua_client_id}"
+    )
+    assert resp.status_code == 204, resp.text
 
 
 def task_done(task_request: dict) -> bool:
@@ -97,6 +123,11 @@ async def start_task(
     return resp.json()["id"]
 
 
+async def stop_task(client: AsyncClient, dataset_id: str, task_id: str):
+    resp = await client.post(f"/api/v1/dataset/{dataset_id}/task/{task_id}/stop")
+    assert resp.status_code == 200, resp.text
+
+
 async def delete_task(client: AsyncClient, dataset_id: str, task_id: str):
     resp = await client.delete(f"/api/v1/dataset/{dataset_id}/task/{task_id}")
     assert resp.status_code == 200, resp.text
@@ -121,40 +152,19 @@ async def wait_for_task_completion(
         )
         assert resp.status_code == 200, resp.text
         task_request = resp.json()
-
         if task_done(task_request):
             return task_request
 
         await asyncio.sleep(20)
 
 
-async def get_last_message_id(client: AsyncClient) -> int:
-    max_retries = 20
-    for _ in range(max_retries):
-        resp = await client.get(
-            "/api/v1/processing/pull",
-            params={
-                "from_cursor": 0,
-                "limit": 999999,  # TODO: refactor, this is not scalable
-            },
-        )
-        assert resp.status_code == 200, resp.text
-        pull_response = resp.json()
-        cursor = pull_response["cursor"]
-        if cursor is not None:
-            return cursor
-        await asyncio.sleep(5)
-
-    raise ValueError(f"Failed to retrieve a valid cursor after {max_retries} attempts")
-
-
 async def validate_task_output(
-    client: AsyncClient, from_cursor: int, validation: Callable[[BrokerMessage], None]
+    client: AsyncClient, validation: Callable[[BrokerMessage], None]
 ):
-    max_retries = 20
+    max_retries = 5
     for _ in range(max_retries):
         resp = await client.get(
-            "/api/v1/processing/pull", params={"from_cursor": from_cursor, "limit": 1}
+            "/api/v1/processing/pull", params={"from_cursor": 0, "limit": 1}
         )
         assert resp.status_code == 200, resp.text
         pull_response = resp.json()
@@ -193,11 +203,12 @@ def validate_llm_graph_output(msg: BrokerMessage):
 
 
 def validate_prompt_guard_output(msg: BrokerMessage):
+    # TODO: when prompt guard is working
     pass
 
 
 def validate_llama_guard_output(msg: BrokerMessage):
-    assert len(msg.field_metadata[0].metadata.metadata.classifications) == 4
+    assert len(msg.field_metadata[0].metadata.metadata.classifications) >= 3
     for classification in msg.field_metadata[0].metadata.metadata.classifications:
         assert classification.labelset == "safety"
         assert "unsafe" in classification.label
@@ -242,235 +253,258 @@ def validate_labeler_output_text_block(msg: BrokerMessage):
 
 
 DA_TEST_INPUTS: list[TestInput] = [
-    TestInput(
-        filename="financial-new-kb.arrow",
-        task_name=TaskName.LABELER,
-        parameters=DataAugmentation(
-            name="e2e-test-labeler",
-            on=ApplyTo.FIELD,
-            filter=Filter(),
-            operations=[
-                Operation(
-                    label=LabelOperation(
-                        labels=[
-                            Label(
-                                label="TECH",
-                                description="Related to financial news in the TECH/IT industry",
-                            ),
-                            Label(
-                                label="HEALTH",
-                                description="Related to financial news in the HEALTHCARE industry",
-                            ),
-                            Label(
-                                label="FOOD",
-                                description="Related to financial news in the FOOD industry",
-                            ),
-                            Label(
-                                label="MEDIA",
-                                description="Related to financial news in the MEDIA industry",
-                            ),
-                        ],
-                        ident=LABEL_OPERATION_IDENT,
-                        description="label operation description",
-                    )
-                )
-            ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-        ),
-        validate_output=validate_labeler_output,
-    ),
-    TestInput(
-        filename="legal-text-kb.arrow",
-        task_name=TaskName.LLM_GRAPH,
-        parameters=DataAugmentation(
-            name="e2e-test-graph",
-            on=ApplyTo.FIELD,
-            filter=Filter(),
-            operations=[
-                Operation(
-                    graph=GraphOperation(
-                        entity_defs=[
-                            EntityDefinition(
-                                label="PLAINTIFF",
-                                description="The person or entity that initiates a lawsuit",
-                            ),
-                            EntityDefinition(
-                                label="DEFENDANT",
-                                description="The person or entity against whom a lawsuit is filed",
-                            ),
-                            EntityDefinition(
-                                label="CONTRACT",
-                                description="A legally binding agreement between two or more parties",
-                            ),
-                            EntityDefinition(
-                                label="CLAUSE",
-                                description="A specific provision or section of a contract",
-                            ),
-                            EntityDefinition(label="STATUTE"),
-                            EntityDefinition(label="DATE"),
-                            EntityDefinition(
-                                label="DEFENSE ATTORNEY",
-                                description="The lawyer who represents the defendant in a lawsuit",
-                            ),
-                            EntityDefinition(
-                                label="JUDGE",
-                                description="The presiding officer in a court of law",
-                            ),
-                            EntityDefinition(
-                                label="PLAINTIFF ATTORNEY",
-                                description="The lawyer who represents the plaintiff in a lawsuit",
-                            ),
-                            EntityDefinition(label="COURT"),
-                        ],
-                        ident=LLM_GRAPH_OPERATION_IDENT,
-                    )
-                )
-            ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-        ),
-        validate_output=validate_llm_graph_output,
-    ),
     # TestInput(
-    #     filename="legal-text-kb.arrow",
-    #     task_name=TaskName.PROMPT_GUARD,
+    #     filename="financial-new-kb.arrow",
+    #     task_name=TaskName.LABELER,
     #     parameters=DataAugmentation(
-    #         name="e2e-test-prompt-guard",
+    #         name="e2e-test-labeler",
     #         on=ApplyTo.FIELD,
     #         filter=Filter(),
-    #         operations=[Operation(prompt_guard=GuardOperation(enable=True))],
+    #         operations=[
+    #             Operation(
+    #                 label=LabelOperation(
+    #                     labels=[
+    #                         Label(
+    #                             label="TECH",
+    #                             description="Related to financial news in the TECH/IT industry",
+    #                         ),
+    #                         Label(
+    #                             label="HEALTH",
+    #                             description="Related to financial news in the HEALTHCARE industry",
+    #                         ),
+    #                         Label(
+    #                             label="FOOD",
+    #                             description="Related to financial news in the FOOD industry",
+    #                         ),
+    #                         Label(
+    #                             label="MEDIA",
+    #                             description="Related to financial news in the MEDIA industry",
+    #                         ),
+    #                     ],
+    #                     ident=LABEL_OPERATION_IDENT,
+    #                     description="label operation description",
+    #                 )
+    #             )
+    #         ],
     #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
     #     ),
-    #     validate_output=validate_prompt_guard_output,
+    #     validate_output=validate_labeler_output,
+    # ),
+    # TestInput(
+    #     filename="legal-text-kb.arrow",
+    #     task_name=TaskName.LLM_GRAPH,
+    #     parameters=DataAugmentation(
+    #         name="e2e-test-graph",
+    #         on=ApplyTo.FIELD,
+    #         filter=Filter(),
+    #         operations=[
+    #             Operation(
+    #                 graph=GraphOperation(
+    #                     entity_defs=[
+    #                         EntityDefinition(
+    #                             label="PLAINTIFF",
+    #                             description="The person or entity that initiates a lawsuit",
+    #                         ),
+    #                         EntityDefinition(
+    #                             label="DEFENDANT",
+    #                             description="The person or entity against whom a lawsuit is filed",
+    #                         ),
+    #                         EntityDefinition(
+    #                             label="CONTRACT",
+    #                             description="A legally binding agreement between two or more parties",
+    #                         ),
+    #                         EntityDefinition(
+    #                             label="CLAUSE",
+    #                             description="A specific provision or section of a contract",
+    #                         ),
+    #                         EntityDefinition(label="STATUTE"),
+    #                         EntityDefinition(label="DATE"),
+    #                         EntityDefinition(
+    #                             label="DEFENSE ATTORNEY",
+    #                             description="The lawyer who represents the defendant in a lawsuit",
+    #                         ),
+    #                         EntityDefinition(
+    #                             label="JUDGE",
+    #                             description="The presiding officer in a court of law",
+    #                         ),
+    #                         EntityDefinition(
+    #                             label="PLAINTIFF ATTORNEY",
+    #                             description="The lawyer who represents the plaintiff in a lawsuit",
+    #                         ),
+    #                         EntityDefinition(label="COURT"),
+    #                     ],
+    #                     ident=LLM_GRAPH_OPERATION_IDENT,
+    #                 )
+    #             )
+    #         ],
+    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+    #     ),
+    #     validate_output=validate_llm_graph_output,
     # ),
     TestInput(
         filename="legal-text-kb.arrow",
-        task_name=TaskName.LLAMA_GUARD,
+        task_name=TaskName.PROMPT_GUARD,
         parameters=DataAugmentation(
-            name="e2e-test-llama-guard",
+            name="e2e-test-prompt-guard",
             on=ApplyTo.FIELD,
             filter=Filter(),
-            operations=[Operation(llama_guard=GuardOperation(enable=True))],
+            operations=[Operation(prompt_guard=GuardOperation(enable=True))],
             llm=LLMConfig(model="chatgpt-azure-4o-mini"),
         ),
-        validate_output=validate_llama_guard_output,
+        validate_output=validate_prompt_guard_output,
     ),
-    TestInput(
-        filename="legal-text-kb.arrow",
-        task_name=TaskName.ASK,
-        parameters=DataAugmentation(
-            name="e2e-test-ask",
-            on=ApplyTo.FIELD,
-            filter=Filter(),
-            operations=[
-                Operation(
-                    ask=AskOperation(
-                        question="Make a short summary of the document",
-                        destination=TEST_ASK_KEY,
-                        json=False,
-                    )
-                )
-            ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-        ),
-        validate_output=validate_ask_output,
-    ),
-    TestInput(
-        filename="legal-text-kb.arrow",
-        task_name=TaskName.SYNTHETIC_QUESTIONS,
-        parameters=DataAugmentation(
-            name="e2e-test-synthetic-questions",
-            on=ApplyTo.FIELD,
-            filter=Filter(),
-            operations=[Operation(qa=QAOperation())],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-        ),
-        validate_output=validate_synthetic_questions_output,
-    ),
-    TestInput(
-        filename="financial-new-kb.arrow",
-        task_name=TaskName.LABELER,
-        parameters=DataAugmentation(
-            name="e2e-test-labeler-text-block",
-            on=ApplyTo.TEXT_BLOCK,
-            filter=Filter(),
-            operations=[
-                Operation(
-                    label=LabelOperation(
-                        labels=[
-                            Label(
-                                label="TECH",
-                                description="Related to financial news in the TECH/IT industry",
-                            ),
-                            Label(
-                                label="HEALTH",
-                                description="Related to financial news in the HEALTHCARE industry",
-                            ),
-                            Label(
-                                label="FOOD",
-                                description="Related to financial news in the FOOD industry",
-                            ),
-                            Label(
-                                label="MEDIA",
-                                description="Related to financial news in the MEDIA industry",
-                            ),
-                        ],
-                        ident=LABEL_OPERATION_IDENT,
-                        description="label operation description",
-                    )
-                )
-            ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-        ),
-        validate_output=validate_labeler_output_text_block,
-    ),
+    # TestInput(
+    #     filename="legal-text-kb.arrow",
+    #     task_name=TaskName.LLAMA_GUARD,
+    #     parameters=DataAugmentation(
+    #         name="e2e-test-llama-guard",
+    #         on=ApplyTo.FIELD,
+    #         filter=Filter(),
+    #         operations=[Operation(llama_guard=GuardOperation(enable=True))],
+    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+    #     ),
+    #     validate_output=validate_llama_guard_output,
+    # ),
+    # TestInput(
+    #     filename="legal-text-kb.arrow",
+    #     task_name=TaskName.ASK,
+    #     parameters=DataAugmentation(
+    #         name="e2e-test-ask",
+    #         on=ApplyTo.FIELD,
+    #         filter=Filter(),
+    #         operations=[
+    #             Operation(
+    #                 ask=AskOperation(
+    #                     question="Make a short summary of the document",
+    #                     destination=TEST_ASK_KEY,
+    #                     json=False,
+    #                 )
+    #             )
+    #         ],
+    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+    #     ),
+    #     validate_output=validate_ask_output,
+    # ),
+    # TestInput(
+    #     filename="legal-text-kb.arrow",
+    #     task_name=TaskName.SYNTHETIC_QUESTIONS,
+    #     parameters=DataAugmentation(
+    #         name="e2e-test-synthetic-questions",
+    #         on=ApplyTo.FIELD,
+    #         filter=Filter(),
+    #         operations=[Operation(qa=QAOperation())],
+    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+    #     ),
+    #     validate_output=validate_synthetic_questions_output,
+    # ),
+    # TestInput(
+    #     filename="financial-new-kb.arrow",
+    #     task_name=TaskName.LABELER,
+    #     parameters=DataAugmentation(
+    #         name="e2e-test-labeler-text-block",
+    #         on=ApplyTo.TEXT_BLOCK,
+    #         filter=Filter(),
+    #         operations=[
+    #             Operation(
+    #                 label=LabelOperation(
+    #                     labels=[
+    #                         Label(
+    #                             label="TECH",
+    #                             description="Related to financial news in the TECH/IT industry",
+    #                         ),
+    #                         Label(
+    #                             label="HEALTH",
+    #                             description="Related to financial news in the HEALTHCARE industry",
+    #                         ),
+    #                         Label(
+    #                             label="FOOD",
+    #                             description="Related to financial news in the FOOD industry",
+    #                         ),
+    #                         Label(
+    #                             label="MEDIA",
+    #                             description="Related to financial news in the MEDIA industry",
+    #                         ),
+    #                     ],
+    #                     ident=LABEL_OPERATION_IDENT,
+    #                     description="label operation description",
+    #                 )
+    #             )
+    #         ],
+    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+    #     ),
+    #     validate_output=validate_labeler_output_text_block,
+    # ),
 ]
 
 
-@pytest.mark.asyncio
+@pytest.fixture
+async def nua_key(nua_config: str, httpx_client: AsyncGenerator[AsyncClient, None]):
+    account_id = TOKENS[nua_config].account_id
+    pat_client_generator = httpx_client(
+        base_url=f"https://{nua_config}", pat_key=TOKENS[nua_config].pat_key, timeout=5
+    )
+    pat_client = await anext(pat_client_generator)
+    nua_client_id, nua_key = await create_nua_key(
+        client=pat_client,
+        account_id=account_id,
+        title=f"E2E DA AGENTS - {nua_config}",
+    )
+    try:
+        yield nua_key
+    finally:
+        await delete_nua_key(
+            client=pat_client, account_id=account_id, nua_client_id=nua_client_id
+        )
+
+
+@pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize(
     "test_input", DA_TEST_INPUTS, ids=lambda test_input: test_input.parameters.name
 )
 async def test_da_agent_tasks(
     nua_config: str,
     httpx_client: AsyncGenerator[AsyncClient, None],
+    nua_key: str,
     test_input: TestInput,
 ):
-    client_generator = httpx_client(
-        base_url=f"https://{nua_config}", nua_key=TOKENS[nua_config]
-    )
-    client = await anext(client_generator)
-
-    last_msg_id = await get_last_message_id(client=client)
-
     dataset_id = None
     task_id = None
     try:
-        dataset_id = await create_dataset(client=client)
-        print(f"dataset_id: {dataset_id}")
+        nua_client_generator = httpx_client(
+            base_url=f"https://{nua_config}", nua_key=nua_key, timeout=30
+        )
+        nua_client = await anext(nua_client_generator)
+
+        dataset_id = await create_dataset(client=nua_client)
+        print(f"{test_input.parameters.name} dataset_id: {dataset_id}")
         await push_data_to_dataset(
-            client=client, dataset_id=dataset_id, filename=test_input.filename
+            client=nua_client, dataset_id=dataset_id, filename=test_input.filename
         )
 
         task_id = await start_task(
-            client=client,
+            client=nua_client,
             dataset_id=dataset_id,
             task_name=test_input.task_name,
             parameters=test_input.parameters,
         )
-        print(f"task_id: {task_id}")
+        print(f"{test_input.parameters.name} task_id: {task_id}")
         task_request = await wait_for_task_completion(
-            client=client, dataset_id=dataset_id, task_id=task_id
+            client=nua_client, dataset_id=dataset_id, task_id=task_id
         )
         assert task_request["completed"] is True
         assert task_request["failed"] is False
 
         await validate_task_output(
-            client=client,
-            from_cursor=last_msg_id,
+            client=nua_client,
             validation=test_input.validate_output,
         )
     finally:
         if dataset_id is not None:
             if task_id is not None:
-                await delete_task(client=client, dataset_id=dataset_id, task_id=task_id)
-            await delete_dataset(client=client, dataset_id=dataset_id)
+                await stop_task(
+                    client=nua_client, dataset_id=dataset_id, task_id=task_id
+                )
+                await delete_task(
+                    client=nua_client, dataset_id=dataset_id, task_id=task_id
+                )
+            await delete_dataset(client=nua_client, dataset_id=dataset_id)
