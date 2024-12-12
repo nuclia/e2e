@@ -253,187 +253,187 @@ def validate_labeler_output_text_block(msg: BrokerMessage):
 
 
 DA_TEST_INPUTS: list[TestInput] = [
-    # TestInput(
-    #     filename="financial-new-kb.arrow",
-    #     task_name=TaskName.LABELER,
-    #     parameters=DataAugmentation(
-    #         name="e2e-test-labeler",
-    #         on=ApplyTo.FIELD,
-    #         filter=Filter(),
-    #         operations=[
-    #             Operation(
-    #                 label=LabelOperation(
-    #                     labels=[
-    #                         Label(
-    #                             label="TECH",
-    #                             description="Related to financial news in the TECH/IT industry",
-    #                         ),
-    #                         Label(
-    #                             label="HEALTH",
-    #                             description="Related to financial news in the HEALTHCARE industry",
-    #                         ),
-    #                         Label(
-    #                             label="FOOD",
-    #                             description="Related to financial news in the FOOD industry",
-    #                         ),
-    #                         Label(
-    #                             label="MEDIA",
-    #                             description="Related to financial news in the MEDIA industry",
-    #                         ),
-    #                     ],
-    #                     ident=LABEL_OPERATION_IDENT,
-    #                     description="label operation description",
-    #                 )
-    #             )
-    #         ],
-    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-    #     ),
-    #     validate_output=validate_labeler_output,
-    # ),
-    # TestInput(
-    #     filename="legal-text-kb.arrow",
-    #     task_name=TaskName.LLM_GRAPH,
-    #     parameters=DataAugmentation(
-    #         name="e2e-test-graph",
-    #         on=ApplyTo.FIELD,
-    #         filter=Filter(),
-    #         operations=[
-    #             Operation(
-    #                 graph=GraphOperation(
-    #                     entity_defs=[
-    #                         EntityDefinition(
-    #                             label="PLAINTIFF",
-    #                             description="The person or entity that initiates a lawsuit",
-    #                         ),
-    #                         EntityDefinition(
-    #                             label="DEFENDANT",
-    #                             description="The person or entity against whom a lawsuit is filed",
-    #                         ),
-    #                         EntityDefinition(
-    #                             label="CONTRACT",
-    #                             description="A legally binding agreement between two or more parties",
-    #                         ),
-    #                         EntityDefinition(
-    #                             label="CLAUSE",
-    #                             description="A specific provision or section of a contract",
-    #                         ),
-    #                         EntityDefinition(label="STATUTE"),
-    #                         EntityDefinition(label="DATE"),
-    #                         EntityDefinition(
-    #                             label="DEFENSE ATTORNEY",
-    #                             description="The lawyer who represents the defendant in a lawsuit",
-    #                         ),
-    #                         EntityDefinition(
-    #                             label="JUDGE",
-    #                             description="The presiding officer in a court of law",
-    #                         ),
-    #                         EntityDefinition(
-    #                             label="PLAINTIFF ATTORNEY",
-    #                             description="The lawyer who represents the plaintiff in a lawsuit",
-    #                         ),
-    #                         EntityDefinition(label="COURT"),
-    #                     ],
-    #                     ident=LLM_GRAPH_OPERATION_IDENT,
-    #                 )
-    #             )
-    #         ],
-    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-    #     ),
-    #     validate_output=validate_llm_graph_output,
-    # ),
     TestInput(
-        filename="legal-text-kb.arrow",
-        task_name=TaskName.PROMPT_GUARD,
+        filename="financial-new-kb.arrow",
+        task_name=TaskName.LABELER,
         parameters=DataAugmentation(
-            name="e2e-test-prompt-guard",
+            name="e2e-test-labeler",
             on=ApplyTo.FIELD,
             filter=Filter(),
-            operations=[Operation(prompt_guard=GuardOperation(enable=True))],
+            operations=[
+                Operation(
+                    label=LabelOperation(
+                        labels=[
+                            Label(
+                                label="TECH",
+                                description="Related to financial news in the TECH/IT industry",
+                            ),
+                            Label(
+                                label="HEALTH",
+                                description="Related to financial news in the HEALTHCARE industry",
+                            ),
+                            Label(
+                                label="FOOD",
+                                description="Related to financial news in the FOOD industry",
+                            ),
+                            Label(
+                                label="MEDIA",
+                                description="Related to financial news in the MEDIA industry",
+                            ),
+                        ],
+                        ident=LABEL_OPERATION_IDENT,
+                        description="label operation description",
+                    )
+                )
+            ],
             llm=LLMConfig(model="chatgpt-azure-4o-mini"),
         ),
-        validate_output=validate_prompt_guard_output,
+        validate_output=validate_labeler_output,
+    ),
+    TestInput(
+        filename="legal-text-kb.arrow",
+        task_name=TaskName.LLM_GRAPH,
+        parameters=DataAugmentation(
+            name="e2e-test-graph",
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[
+                Operation(
+                    graph=GraphOperation(
+                        entity_defs=[
+                            EntityDefinition(
+                                label="PLAINTIFF",
+                                description="The person or entity that initiates a lawsuit",
+                            ),
+                            EntityDefinition(
+                                label="DEFENDANT",
+                                description="The person or entity against whom a lawsuit is filed",
+                            ),
+                            EntityDefinition(
+                                label="CONTRACT",
+                                description="A legally binding agreement between two or more parties",
+                            ),
+                            EntityDefinition(
+                                label="CLAUSE",
+                                description="A specific provision or section of a contract",
+                            ),
+                            EntityDefinition(label="STATUTE"),
+                            EntityDefinition(label="DATE"),
+                            EntityDefinition(
+                                label="DEFENSE ATTORNEY",
+                                description="The lawyer who represents the defendant in a lawsuit",
+                            ),
+                            EntityDefinition(
+                                label="JUDGE",
+                                description="The presiding officer in a court of law",
+                            ),
+                            EntityDefinition(
+                                label="PLAINTIFF ATTORNEY",
+                                description="The lawyer who represents the plaintiff in a lawsuit",
+                            ),
+                            EntityDefinition(label="COURT"),
+                        ],
+                        ident=LLM_GRAPH_OPERATION_IDENT,
+                    )
+                )
+            ],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+        validate_output=validate_llm_graph_output,
     ),
     # TestInput(
     #     filename="legal-text-kb.arrow",
-    #     task_name=TaskName.LLAMA_GUARD,
+    #     task_name=TaskName.PROMPT_GUARD,
     #     parameters=DataAugmentation(
-    #         name="e2e-test-llama-guard",
+    #         name="e2e-test-prompt-guard",
     #         on=ApplyTo.FIELD,
     #         filter=Filter(),
-    #         operations=[Operation(llama_guard=GuardOperation(enable=True))],
+    #         operations=[Operation(prompt_guard=GuardOperation(enable=True))],
     #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
     #     ),
-    #     validate_output=validate_llama_guard_output,
+    #     validate_output=validate_prompt_guard_output,
     # ),
-    # TestInput(
-    #     filename="legal-text-kb.arrow",
-    #     task_name=TaskName.ASK,
-    #     parameters=DataAugmentation(
-    #         name="e2e-test-ask",
-    #         on=ApplyTo.FIELD,
-    #         filter=Filter(),
-    #         operations=[
-    #             Operation(
-    #                 ask=AskOperation(
-    #                     question="Make a short summary of the document",
-    #                     destination=TEST_ASK_KEY,
-    #                     json=False,
-    #                 )
-    #             )
-    #         ],
-    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-    #     ),
-    #     validate_output=validate_ask_output,
-    # ),
-    # TestInput(
-    #     filename="legal-text-kb.arrow",
-    #     task_name=TaskName.SYNTHETIC_QUESTIONS,
-    #     parameters=DataAugmentation(
-    #         name="e2e-test-synthetic-questions",
-    #         on=ApplyTo.FIELD,
-    #         filter=Filter(),
-    #         operations=[Operation(qa=QAOperation())],
-    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-    #     ),
-    #     validate_output=validate_synthetic_questions_output,
-    # ),
-    # TestInput(
-    #     filename="financial-new-kb.arrow",
-    #     task_name=TaskName.LABELER,
-    #     parameters=DataAugmentation(
-    #         name="e2e-test-labeler-text-block",
-    #         on=ApplyTo.TEXT_BLOCK,
-    #         filter=Filter(),
-    #         operations=[
-    #             Operation(
-    #                 label=LabelOperation(
-    #                     labels=[
-    #                         Label(
-    #                             label="TECH",
-    #                             description="Related to financial news in the TECH/IT industry",
-    #                         ),
-    #                         Label(
-    #                             label="HEALTH",
-    #                             description="Related to financial news in the HEALTHCARE industry",
-    #                         ),
-    #                         Label(
-    #                             label="FOOD",
-    #                             description="Related to financial news in the FOOD industry",
-    #                         ),
-    #                         Label(
-    #                             label="MEDIA",
-    #                             description="Related to financial news in the MEDIA industry",
-    #                         ),
-    #                     ],
-    #                     ident=LABEL_OPERATION_IDENT,
-    #                     description="label operation description",
-    #                 )
-    #             )
-    #         ],
-    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-    #     ),
-    #     validate_output=validate_labeler_output_text_block,
-    # ),
+    TestInput(
+        filename="legal-text-kb.arrow",
+        task_name=TaskName.LLAMA_GUARD,
+        parameters=DataAugmentation(
+            name="e2e-test-llama-guard",
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[Operation(llama_guard=GuardOperation(enable=True))],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+        validate_output=validate_llama_guard_output,
+    ),
+    TestInput(
+        filename="legal-text-kb.arrow",
+        task_name=TaskName.ASK,
+        parameters=DataAugmentation(
+            name="e2e-test-ask",
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[
+                Operation(
+                    ask=AskOperation(
+                        question="Make a short summary of the document",
+                        destination=TEST_ASK_KEY,
+                        json=False,
+                    )
+                )
+            ],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+        validate_output=validate_ask_output,
+    ),
+    TestInput(
+        filename="legal-text-kb.arrow",
+        task_name=TaskName.SYNTHETIC_QUESTIONS,
+        parameters=DataAugmentation(
+            name="e2e-test-synthetic-questions",
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[Operation(qa=QAOperation())],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+        validate_output=validate_synthetic_questions_output,
+    ),
+    TestInput(
+        filename="financial-new-kb.arrow",
+        task_name=TaskName.LABELER,
+        parameters=DataAugmentation(
+            name="e2e-test-labeler-text-block",
+            on=ApplyTo.TEXT_BLOCK,
+            filter=Filter(),
+            operations=[
+                Operation(
+                    label=LabelOperation(
+                        labels=[
+                            Label(
+                                label="TECH",
+                                description="Related to financial news in the TECH/IT industry",
+                            ),
+                            Label(
+                                label="HEALTH",
+                                description="Related to financial news in the HEALTHCARE industry",
+                            ),
+                            Label(
+                                label="FOOD",
+                                description="Related to financial news in the FOOD industry",
+                            ),
+                            Label(
+                                label="MEDIA",
+                                description="Related to financial news in the MEDIA industry",
+                            ),
+                        ],
+                        ident=LABEL_OPERATION_IDENT,
+                        description="label operation description",
+                    )
+                )
+            ],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+        validate_output=validate_labeler_output_text_block,
+    ),
 ]
 
 
