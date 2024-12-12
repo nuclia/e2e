@@ -208,8 +208,24 @@ def validate_llm_graph_output(msg: BrokerMessage):
 
 
 def validate_prompt_guard_output(msg: BrokerMessage):
-    # TODO: when prompt guard is working
-    pass
+    assert len(msg.field_metadata[0].metadata.metadata.classifications) >= 1
+    for classification in msg.field_metadata[0].metadata.metadata.classifications:
+        assert classification.labelset == "jailbreak_safety"
+        assert "JAILBREAK" in classification.label
+
+
+def validate_prompt_guard_output_text_block(msg: BrokerMessage):
+    assert (
+        msg.field_metadata[0]
+        .metadata.metadata.paragraphs[0]
+        .classifications[0]
+        .labelset
+        == "jailbreak_safety"
+    )
+    assert (
+        msg.field_metadata[0].metadata.metadata.paragraphs[0].classifications[0].label
+        == "JAILBREAK"
+    )
 
 
 def validate_llama_guard_output(msg: BrokerMessage):
@@ -217,6 +233,23 @@ def validate_llama_guard_output(msg: BrokerMessage):
     for classification in msg.field_metadata[0].metadata.metadata.classifications:
         assert classification.labelset == "safety"
         assert "unsafe" in classification.label
+
+
+def validate_llama_guard_output_text_block(msg: BrokerMessage):
+    assert (
+        msg.field_metadata[0]
+        .metadata.metadata.paragraphs[0]
+        .classifications[0]
+        .labelset
+        == "safety"
+    )
+    assert (
+        "unsafe"
+        in msg.field_metadata[0]
+        .metadata.metadata.paragraphs[0]
+        .classifications[0]
+        .label
+    )
 
 
 def validate_ask_output(msg: BrokerMessage):
@@ -345,20 +378,20 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
         validate_output=validate_llm_graph_output,
     ),
-    # TestInput(
-    #     filename="legal-text-kb.arrow",
-    #     task_name=TaskName.PROMPT_GUARD,
-    #     parameters=DataAugmentation(
-    #         name="e2e-test-prompt-guard",
-    #         on=ApplyTo.FIELD,
-    #         filter=Filter(),
-    #         operations=[Operation(prompt_guard=GuardOperation(enable=True))],
-    #         llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-    #     ),
-    #     validate_output=validate_prompt_guard_output,
-    # ),
     TestInput(
-        filename="legal-text-kb.arrow",
+        filename="jailbreak-kb.arrow",
+        task_name=TaskName.PROMPT_GUARD,
+        parameters=DataAugmentation(
+            name="e2e-test-prompt-guard",
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[Operation(prompt_guard=GuardOperation(enable=True))],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+        validate_output=validate_prompt_guard_output,
+    ),
+    TestInput(
+        filename="toxic-kb.arrow",
         task_name=TaskName.LLAMA_GUARD,
         parameters=DataAugmentation(
             name="e2e-test-llama-guard",
@@ -437,6 +470,30 @@ DA_TEST_INPUTS: list[TestInput] = [
             llm=LLMConfig(model="chatgpt-azure-4o-mini"),
         ),
         validate_output=validate_labeler_output_text_block,
+    ),
+    TestInput(
+        filename="jailbreak-kb.arrow",
+        task_name=TaskName.PROMPT_GUARD,
+        parameters=DataAugmentation(
+            name="e2e-test-prompt-guard-text-block",
+            on=ApplyTo.TEXT_BLOCK,
+            filter=Filter(),
+            operations=[Operation(prompt_guard=GuardOperation(enable=True))],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+        validate_output=validate_prompt_guard_output_text_block,
+    ),
+    TestInput(
+        filename="toxic-kb.arrow",
+        task_name=TaskName.LLAMA_GUARD,
+        parameters=DataAugmentation(
+            name="e2e-test-llama-guard-text-block",
+            on=ApplyTo.TEXT_BLOCK,
+            filter=Filter(),
+            operations=[Operation(llama_guard=GuardOperation(enable=True))],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+        validate_output=validate_llama_guard_output_text_block,
     ),
 ]
 
