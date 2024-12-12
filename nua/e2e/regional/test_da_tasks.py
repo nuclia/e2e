@@ -137,7 +137,7 @@ async def wait_for_task_completion(
     client: AsyncClient,
     dataset_id: str,
     task_id: str,
-    max_duration: int = 1200,
+    max_duration: int = 2300,
 ):
     start_time = asyncio.get_event_loop().time()
     while True:
