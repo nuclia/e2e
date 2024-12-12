@@ -30,11 +30,10 @@ jobs:
       - name: Run tests
         env: # Or as an environment variable
           TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}
-          TEST_EUROPE1_STASHIFY_PAT: ${{ secrets.TEST_EUROPE1_STASHIFY_PAT }}
+          STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           TEST_EUROPE1_NUCLIA_NUA: ${{ secrets.TEST_EUROPE1_NUCLIA_NUA }}
-          TEST_EUROPE1_NUCLIA_PAT: ${{ secrets.TEST_EUROPE1_NUCLIA_PAT }}
           TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
-          TEST_AWS_US_EAST_2_1_NUCLIA_PAT: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_PAT }}
+          PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
         run: |
           pytest nua/e2e --durations=0 --junitxml nua.xml   
 

@@ -24,17 +24,17 @@ PROD_ACCOUNT_ID = "5cec111b-ea23-4b0c-a82a-d1a666dd1fd2"
 TOKENS: dict[str, Tokens] = {
     "europe-1.stashify.cloud": Tokens(
         nua_key=os.environ.get("TEST_EUROPE1_STASHIFY_NUA"),
-        pat_key=os.environ.get("TEST_EUROPE1_STASHIFY_PAT"),
+        pat_key=os.environ.get("STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
         account_id=os.environ.get("TEST_EUROPE1_STASHIFY_ACCOUNT", STAGE_ACCOUNT_ID),
     ),
     "europe-1.nuclia.cloud": Tokens(
         nua_key=os.environ.get("TEST_EUROPE1_NUCLIA_NUA"),
-        pat_key=os.environ.get("TEST_EUROPE1_NUCLIA_PAT"),
+        pat_key=os.environ.get("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
         account_id=PROD_ACCOUNT_ID,
     ),
     "aws-us-east-2-1.nuclia.cloud": Tokens(
         nua_key=os.environ.get("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
-        pat_key=os.environ.get("TEST_AWS_US_EAST_2_1_NUCLIA_PAT"),
+        pat_key=os.environ.get("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
         account_id=PROD_ACCOUNT_ID,
     ),
 }
@@ -44,8 +44,8 @@ TOKENS: dict[str, Tokens] = {
     scope="function",
     params=[
         "europe-1.stashify.cloud",
-        # "europe-1.nuclia.cloud",
-        # "aws-us-east-2-1.nuclia.cloud",
+        "europe-1.nuclia.cloud",
+        "aws-us-east-2-1.nuclia.cloud",
     ],
 )
 def nua_config(request):

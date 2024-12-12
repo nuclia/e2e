@@ -30,7 +30,7 @@ jobs:
       - name: Run tests
         env: # Or as an environment variable
           TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}
-          TEST_EUROPE1_STASHIFY_PAT: ${{ secrets.TEST_EUROPE1_STASHIFY_PAT }}
+          STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
         run: |
           TEST_ENV=stage pytest nua/e2e --durations=0 --junitxml nua.xml   
 
