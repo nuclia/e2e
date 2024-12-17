@@ -14,6 +14,10 @@ describe('UI Starter', () => {
     } else {
       cy.visit('http://localhost:4173');
       cy.get('.nuclia-widget .sw-search-input').should('exist');
+      cy.get('.sw-textarea textarea').click();
+      cy.get('.sw-textarea textarea').type(`Gold price evolution in 2023\n`, { force: true });
+      cy.get('.sw-initial-answer').should('exist');
+      cy.get('h3.result-title').should('exist');
     }
   });
 });
