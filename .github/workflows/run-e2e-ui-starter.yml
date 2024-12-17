@@ -1,0 +1,64 @@
+name: run-e2e-stage
+run-name: Running Cypress e2e tests on Stage
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+    branches:
+      - main
+  schedule:
+    # Run at 00:25 and 12:25 on saturday and sunday
+    - cron: '25 0,12 * * 0,6'
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+jobs:
+  cypress-run:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      # Run ui-starter
+      - run: |
+          git clone https://github.com/nuclia/ui-starter.git
+          cd ./ui-starter
+          npm install
+          npm run missdev
+          npm run preview &
+      # Install npm dependencies, cache them correctly and run all Cypress tests
+      - name: Cypress run
+        id: cypress
+        uses: cypress-io/github-action@v6
+        with:
+          install-command: yarn install
+          spec: cypress/e2e/5-ui-starter/ui-starter.cy.js
+        env:
+          CYPRESS_BASE_URL: https://stashify.cloud
+          CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY }}
+          CYPRESS_USER_NAME: ${{ secrets.USER_NAME }}
+          CYPRESS_USER_PWD: ${{ secrets.USER_PWD }}
+          CYPRESS_RUNNING_ENV: stage
+          CYPRESS_UI_STARTER: true
+        # after the test run completes store reports and any screenshots
+      - name: Cypress reports
+        id: report
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
+        with:
+          name: cypress-reports
+          path: cypress/reports
+          if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+      - name: Slack notification
+        id: slack
+        uses: slackapi/slack-github-action@v1.25.0
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
+        with:
+          payload: |
+            {
+              "text": "⚠️ UI Starter E2E failed on Stage\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
