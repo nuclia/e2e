@@ -8,11 +8,10 @@ from nuclia.sdk.predict import AsyncNucliaPredict
 async def test_llm_config_nua(nua_config):
     np = AsyncNucliaPredict()
 
-    # TODO: uncomment this code before merging PR
-    # try:
-    #     await np.del_config("kbid")
-    # except NuaAPIException:
-    #     pass
+    try:
+        await np.del_config("kbid")
+    except NuaAPIException:
+        pass
 
     with pytest.raises(NuaAPIException):
         config = np.config("kbid")
