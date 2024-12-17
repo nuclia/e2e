@@ -1,5 +1,5 @@
-name: run-e2e-stage
-run-name: Running Cypress e2e tests on Stage
+name: run-e2e-ui-starter
+run-name: Checking UI Starter
 on:
   push:
     branches:
@@ -57,7 +57,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ UI Starter E2E failed on Stage\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
+              "text": "⚠️ UI Starter E2E failed\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
