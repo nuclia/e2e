@@ -134,6 +134,8 @@ export const user = {
   password: `${Cypress.env('USER_PWD')}`,
 };
 
+export const UI_STARTER = !!Cypress.env('UI_STARTER');
+
 export function getAuthHeader(synchronous = true) {
   const headers = { Authorization: `Bearer ${Cypress.env('BEARER_TOKEN')}` };
   if (synchronous) {
