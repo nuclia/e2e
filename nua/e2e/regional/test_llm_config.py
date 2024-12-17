@@ -14,7 +14,7 @@ async def test_llm_config_nua(nua_config):
         pass
 
     with pytest.raises(NuaAPIException):
-        config = np.config("kbid")
+        config = await np.config("kbid")
 
     lcc = LearningConfigurationCreation()
     await np.set_config("kbid", lcc)
