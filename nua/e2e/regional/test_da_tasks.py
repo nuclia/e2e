@@ -504,7 +504,7 @@ async def tmp_nua_key(
 ) -> AsyncGenerator[str, None]:
     account_id = TOKENS[nua_config].account_id
     pat_client_generator = httpx_client(
-        base_url=f"https://{nua_config}", pat_key=TOKENS[nua_config].pat_key, timeout=5
+        base_url=f"https://{nua_config}", pat_key=TOKENS[nua_config].pat_key, timeout=30
     )
     pat_client = await anext(pat_client_generator)
     nua_client_id, nua_key = await create_nua_key(
@@ -532,6 +532,7 @@ async def test_da_agent_tasks(
 ):
     dataset_id = None
     task_id = None
+    start_time = asyncio.get_event_loop().time()
     try:
         nua_client_generator = httpx_client(
             base_url=f"https://{nua_config}", nua_key=tmp_nua_key, timeout=30
@@ -539,7 +540,6 @@ async def test_da_agent_tasks(
         nua_client = await anext(nua_client_generator)
 
         dataset_id = await create_dataset(client=nua_client)
-        print(f"{test_input.parameters.name} dataset_id: {dataset_id}")
         await push_data_to_dataset(
             client=nua_client, dataset_id=dataset_id, filename=test_input.filename
         )
@@ -571,3 +571,8 @@ async def test_da_agent_tasks(
                     client=nua_client, dataset_id=dataset_id, task_id=task_id
                 )
             await delete_dataset(client=nua_client, dataset_id=dataset_id)
+        end_time = asyncio.get_event_loop().time()
+        elapsed_time = end_time - start_time
+        print(
+            f"Test {test_input.parameters.name} completed in {elapsed_time:.2f} seconds."
+        )
