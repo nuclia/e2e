@@ -499,7 +499,9 @@ DA_TEST_INPUTS: list[TestInput] = [
 
 
 @pytest.fixture
-async def nua_key(nua_config: str, httpx_client: AsyncGenerator[AsyncClient, None]):
+async def tmp_nua_key(
+    nua_config: str, httpx_client: AsyncGenerator[AsyncClient, None]
+) -> AsyncGenerator[str, None]:
     account_id = TOKENS[nua_config].account_id
     pat_client_generator = httpx_client(
         base_url=f"https://{nua_config}", pat_key=TOKENS[nua_config].pat_key, timeout=5
@@ -525,14 +527,14 @@ async def nua_key(nua_config: str, httpx_client: AsyncGenerator[AsyncClient, Non
 async def test_da_agent_tasks(
     nua_config: str,
     httpx_client: AsyncGenerator[AsyncClient, None],
-    nua_key: str,
+    tmp_nua_key,
     test_input: TestInput,
 ):
     dataset_id = None
     task_id = None
     try:
         nua_client_generator = httpx_client(
-            base_url=f"https://{nua_config}", nua_key=nua_key, timeout=30
+            base_url=f"https://{nua_config}", nua_key=tmp_nua_key, timeout=30
         )
         nua_client = await anext(nua_client_generator)
 
