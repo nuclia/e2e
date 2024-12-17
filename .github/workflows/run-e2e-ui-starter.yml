@@ -25,6 +25,7 @@ jobs:
           cd ./ui-starter
           npm install
           npm run missdev
+          npm run build
           npm run preview &
       # Install npm dependencies, cache them correctly and run all Cypress tests
       - name: Cypress run
