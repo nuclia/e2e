@@ -1,24 +1,26 @@
 import pytest
 from nuclia.exceptions import NuaAPIException
 from nuclia.lib.nua_responses import LearningConfigurationCreation
-from nuclia.sdk.predict import NucliaPredict
+from nuclia.sdk.predict import AsyncNucliaPredict
 
 
-def test_llm_config_nua(nua_config):
-    np = NucliaPredict()
+@pytest.mark.asyncio_cooperative
+async def test_llm_config_nua(nua_config):
+    np = AsyncNucliaPredict()
 
-    try:
-        np.del_config("kbid")
-    except NuaAPIException:
-        pass
+    # TODO: uncomment this code before merging PR
+    # try:
+    #     await np.del_config("kbid")
+    # except NuaAPIException:
+    #     pass
 
     with pytest.raises(NuaAPIException):
         config = np.config("kbid")
 
     lcc = LearningConfigurationCreation()
-    np.set_config("kbid", lcc)
+    await np.set_config("kbid", lcc)
 
-    config = np.config("kbid")
+    config = await np.config("kbid")
 
     assert config.resource_labelers_models is None
     assert config.ner_model == "multilingual"
