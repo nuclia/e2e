@@ -1,4 +1,5 @@
-from nuclia.sdk.predict import NucliaPredict
+from nuclia.sdk.predict import AsyncNucliaPredict
+import pytest
 
 DATA = {
     "barcelona": "Barcelona (pronunciat en català central, [bərsəˈlonə]) és una ciutat i metròpoli a la costa mediterrània de la península Ibèrica. És la capital de Catalunya,[1] així com de la comarca del Barcelonès i de la província de Barcelona, i la segona ciutat en població i pes econòmic de la península Ibèrica,[2][3] després de Madrid. El municipi creix sobre una plana encaixada entre la serralada Litoral, el mar Mediterrani, el riu Besòs i la muntanya de Montjuïc. La ciutat acull les seus de les institucions d'autogovern més importants de la Generalitat de Catalunya: el Parlament de Catalunya, el President i el Govern de la Generalitat. Pel fet d'haver estat capital del Comtat de Barcelona, rep sovint el sobrenom de Ciutat Comtal. També, com que ha estat la ciutat més important del Principat de Catalunya des d'època medieval, rep sovint el sobrenom o títol de cap i casal.[4]",  # noqa
@@ -25,23 +26,26 @@ In Australia the drink is referred to as a macchiato and has some variants.[6] A
 }
 
 
-def test_summarize_chatgpt(nua_config):
-    np = NucliaPredict()
-    embed = np.summarize(DATA, model="chatgpt4o")
+@pytest.mark.asyncio_cooperative
+async def test_summarize_chatgpt(nua_config):
+    np = AsyncNucliaPredict()
+    embed = await np.summarize(DATA, model="chatgpt4o")
     assert "Manresa" in embed.summary
     assert "Barcelona" in embed.summary
 
 
-def test_summarize_azure_chatgpt(nua_config):
-    np = NucliaPredict()
-    embed = np.summarize(DATA, model="chatgpt-azure-4o")
+@pytest.mark.asyncio_cooperative
+async def test_summarize_azure_chatgpt(nua_config):
+    np = AsyncNucliaPredict()
+    embed = await np.summarize(DATA, model="chatgpt-azure-4o")
     assert "Manresa" in embed.summary
     assert "Barcelona" in embed.summary
 
 
-def test_summarize_claude(nua_config):
-    np = NucliaPredict()
-    embed = np.summarize(DATA_COFFEE, model="claude-3-fast")
+@pytest.mark.asyncio_cooperative
+async def test_summarize_claude(nua_config):
+    np = AsyncNucliaPredict()
+    embed = await np.summarize(DATA_COFFEE, model="claude-3-fast")
     # changed to partial summaries since anthropic is not consistent in the global summary at all
     assert "flat white" in embed.resources["Flat white"].summary.lower()
     assert "macchiato" in embed.resources["Macchiato"].summary.lower()

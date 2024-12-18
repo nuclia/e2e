@@ -48,7 +48,7 @@ TOKENS: dict[str, Tokens] = {
         "aws-us-east-2-1.nuclia.cloud",
     ],
 )
-def nua_config(request):
+async def nua_config(request):
     if (
         os.environ.get("TEST_ENV") == "stage" and "stashify.cloud" not in request.param  # noqa
     ):  # noqa
@@ -71,6 +71,5 @@ def nua_config(request):
         client_id = nuclia_auth.nua(token.nua_key)
         assert client_id
         nuclia_auth._config.set_default_nua(client_id)
-
         yield request.param
         reset_config_file()
