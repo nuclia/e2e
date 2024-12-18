@@ -1,4 +1,4 @@
-nuclia>=4.3.10
+nuclia>=4.3.11
 pytest
 pytest-timeout
 aiofiles
