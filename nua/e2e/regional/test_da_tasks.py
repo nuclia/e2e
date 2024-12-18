@@ -21,7 +21,7 @@ from nuclia_models.worker.proto import (
 from conftest import TOKENS
 from regional.utils import define_path
 from typing import Callable, AsyncGenerator
-from httpx import AsyncClient
+from httpx import AsyncClient, Limits
 import asyncio
 import aiofiles
 from nucliadb_protos.writer_pb2 import BrokerMessage
@@ -53,6 +53,7 @@ def httpx_client() -> Callable[[str, str], AsyncGenerator[AsyncClient, None]]:
             if nua_key
             else {"Authorization": f"Bearer {pat_key}"},
             timeout=timeout,
+            limits=Limits(max_connections=1000, max_keepalive_connections=200),
         ) as client:
             yield client
 
