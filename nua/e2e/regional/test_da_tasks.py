@@ -28,6 +28,7 @@ from nucliadb_protos.writer_pb2 import BrokerMessage
 from dataclasses import dataclass
 import base64
 from typing import Optional
+import aiohttp
 
 
 @dataclass
@@ -36,6 +37,33 @@ class TestInput:
     task_name: TaskName
     parameters: PARAMETERS_TYPING
     validate_output: Callable[[BrokerMessage], None]
+
+
+@pytest.fixture(scope="session")
+def aiohttp_client() -> (
+    Callable[[str, str], AsyncGenerator[aiohttp.ClientSession, None]]
+):
+    async def create_aiohttp_client(
+        base_url: str,
+        nua_key: Optional[str] = None,
+        pat_key: Optional[str] = None,
+        timeout: int = 30,
+    ) -> AsyncGenerator[aiohttp.ClientSession, None]:
+        headers = (
+            {"X-NUCLIA-NUAKEY": f"Bearer {nua_key}"}
+            if nua_key
+            else {"Authorization": f"Bearer {pat_key}"}
+        )
+        timeout_config = aiohttp.ClientTimeout(total=timeout)
+
+        async with aiohttp.ClientSession(
+            base_url=base_url,
+            headers=headers,
+            timeout=timeout_config,
+        ) as session:
+            yield session
+
+    return create_aiohttp_client
 
 
 @pytest.fixture(scope="session")
@@ -61,57 +89,61 @@ def httpx_client() -> Callable[[str, str], AsyncGenerator[AsyncClient, None]]:
 
 
 async def create_nua_key(
-    client: AsyncClient, account_id: str, title: str
+    client: aiohttp.ClientSession, account_id: str, title: str
 ) -> tuple[str, str]:
     body = {
         "title": title,
         "contact": "temporal key, safe to delete",
     }
     resp = await client.post(f"/api/v1/account/{account_id}/nua_clients", json=body)
-    assert resp.status_code == 201, resp.text
-    nua_response = resp.json()
+    assert resp.status == 201, await resp.text()
+    nua_response = await resp.json()
     return nua_response["client_id"], nua_response["token"]
 
 
-async def delete_nua_key(client: AsyncClient, account_id: str, nua_client_id: str):
+async def delete_nua_key(
+    client: aiohttp.ClientSession, account_id: str, nua_client_id: str
+):
     resp = await client.delete(
         f"/api/v1/account/{account_id}/nua_client/{nua_client_id}"
     )
-    assert resp.status_code == 204, resp.text
+    assert resp.status == 204, await resp.text()
 
 
 def task_done(task_request: dict) -> bool:
     return task_request["failed"] or task_request["completed"]
 
 
-async def create_dataset(client: AsyncClient) -> str:
+async def create_dataset(client: aiohttp.ClientSession) -> str:
     dataset_body = {
         "name": "e2e-test-dataset",
         "filter": {"labels": []},
         "type": "FIELD_STREAMING",
     }
     resp = await client.post("/api/v1/datasets", json=dataset_body)
-    assert resp.status_code == 201, resp.text
-    return resp.json()["id"]
+    assert resp.status == 201, await resp.text()
+    return (await resp.json())["id"]
 
 
-async def delete_dataset(client: AsyncClient, dataset_id: str):
+async def delete_dataset(client: aiohttp.ClientSession, dataset_id: str):
     resp = await client.delete(f"/api/v1/dataset/{dataset_id}")
-    assert resp.status_code == 204, resp.text
+    assert resp.status == 204, await resp.text()
 
 
-async def push_data_to_dataset(client: AsyncClient, dataset_id: str, filename: str):
+async def push_data_to_dataset(
+    client: aiohttp.ClientSession, dataset_id: str, filename: str
+):
     async with aiofiles.open(define_path(filename), "rb") as f:
         content = await f.read()
     resp = await client.put(
         f"/api/v1/dataset/{dataset_id}/partition/1",
         data=content,
     )
-    assert resp.status_code == 204, resp.text
+    assert resp.status == 204, await resp.text()
 
 
 async def start_task(
-    client: AsyncClient,
+    client: aiohttp.ClientSession,
     dataset_id: str,
     task_name: str,
     parameters: PARAMETERS_TYPING,
@@ -120,22 +152,22 @@ async def start_task(
         f"/api/v1/dataset/{dataset_id}/task/start",
         json=TaskStart(name=task_name, parameters=parameters).model_dump(),
     )
-    assert resp.status_code == 200, resp.text
-    return resp.json()["id"]
+    assert resp.status == 200, await resp.text()
+    return (await resp.json())["id"]
 
 
-async def stop_task(client: AsyncClient, dataset_id: str, task_id: str):
+async def stop_task(client: aiohttp.ClientSession, dataset_id: str, task_id: str):
     resp = await client.post(f"/api/v1/dataset/{dataset_id}/task/{task_id}/stop")
-    assert resp.status_code == 200, resp.text
+    assert resp.status == 200, await resp.text()
 
 
-async def delete_task(client: AsyncClient, dataset_id: str, task_id: str):
+async def delete_task(client: aiohttp.ClientSession, dataset_id: str, task_id: str):
     resp = await client.delete(f"/api/v1/dataset/{dataset_id}/task/{task_id}")
-    assert resp.status_code == 200, resp.text
+    assert resp.status == 200, await resp.text()
 
 
 async def wait_for_task_completion(
-    client: AsyncClient,
+    client: aiohttp.ClientSession,
     dataset_id: str,
     task_id: str,
     max_duration: int = 2300,
@@ -151,8 +183,8 @@ async def wait_for_task_completion(
         resp = await client.get(
             f"/api/v1/dataset/{dataset_id}/task/{task_id}/inspect",
         )
-        assert resp.status_code == 200, resp.text
-        task_request = resp.json()
+        assert resp.status == 200, await resp.text()
+        task_request = await resp.json()
         if task_done(task_request):
             return task_request
 
@@ -160,15 +192,15 @@ async def wait_for_task_completion(
 
 
 async def validate_task_output(
-    client: AsyncClient, validation: Callable[[BrokerMessage], None]
+    client: aiohttp.ClientSession, validation: Callable[[BrokerMessage], None]
 ):
     max_retries = 5
     for _ in range(max_retries):
         resp = await client.get(
             "/api/v1/processing/pull", params={"from_cursor": 0, "limit": 1}
         )
-        assert resp.status_code == 200, resp.text
-        pull_response = resp.json()
+        assert resp.status == 200, await resp.text()
+        pull_response = await resp.json()
         if pull_response["payloads"]:
             assert len(pull_response["payloads"]) == 1
             message = BrokerMessage()
@@ -501,10 +533,10 @@ DA_TEST_INPUTS: list[TestInput] = [
 
 @pytest.fixture
 async def tmp_nua_key(
-    nua_config: str, httpx_client: AsyncGenerator[AsyncClient, None]
+    nua_config: str, aiohttp_client: AsyncGenerator[aiohttp.ClientSession, None]
 ) -> AsyncGenerator[str, None]:
     account_id = TOKENS[nua_config].account_id
-    pat_client_generator = httpx_client(
+    pat_client_generator = aiohttp_client(
         base_url=f"https://{nua_config}", pat_key=TOKENS[nua_config].pat_key, timeout=30
     )
     pat_client = await anext(pat_client_generator)
@@ -527,15 +559,15 @@ async def tmp_nua_key(
 )
 async def test_da_agent_tasks(
     nua_config: str,
-    httpx_client: AsyncGenerator[AsyncClient, None],
-    tmp_nua_key,
+    aiohttp_client: AsyncGenerator[aiohttp.ClientSession, None],
+    tmp_nua_key: str,
     test_input: TestInput,
 ):
     dataset_id = None
     task_id = None
     start_time = asyncio.get_event_loop().time()
     try:
-        nua_client_generator = httpx_client(
+        nua_client_generator = aiohttp_client(
             base_url=f"https://{nua_config}", nua_key=tmp_nua_key, timeout=30
         )
         nua_client = await anext(nua_client_generator)

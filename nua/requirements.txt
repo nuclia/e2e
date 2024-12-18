@@ -6,3 +6,4 @@ nuclia-models
 httpx
 nucliadb_protos
 pytest-asyncio-cooperative # not compatible with pytest-asyncio
+aiohttp
