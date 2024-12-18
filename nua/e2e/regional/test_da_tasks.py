@@ -21,7 +21,6 @@ from nuclia_models.worker.proto import (
 from conftest import TOKENS
 from regional.utils import define_path
 from typing import Callable, AsyncGenerator
-from httpx import AsyncClient, Limits
 import asyncio
 import aiofiles
 from nucliadb_protos.writer_pb2 import BrokerMessage
@@ -64,28 +63,6 @@ def aiohttp_client() -> (
             yield session
 
     return create_aiohttp_client
-
-
-@pytest.fixture(scope="session")
-def httpx_client() -> Callable[[str, str], AsyncGenerator[AsyncClient, None]]:
-    async def create_httpx_client(
-        base_url: str,
-        nua_key: Optional[str] = None,
-        pat_key: Optional[str] = None,
-        timeout: int = 30,
-    ) -> AsyncGenerator[AsyncClient, None]:
-        client = AsyncClient()
-        async with AsyncClient(
-            base_url=base_url,
-            headers={"X-NUCLIA-NUAKEY": f"Bearer {nua_key}"}
-            if nua_key
-            else {"Authorization": f"Bearer {pat_key}"},
-            timeout=timeout,
-            limits=Limits(max_connections=10, max_keepalive_connections=5),
-        ) as client:
-            yield client
-
-    return create_httpx_client
 
 
 async def create_nua_key(
@@ -324,7 +301,7 @@ def validate_labeler_output_text_block(msg: BrokerMessage):
 
 DA_TEST_INPUTS: list[TestInput] = [
     TestInput(
-        filename="financial-new-kb.arrow",
+        filename="financial-news-kb.arrow",
         task_name=TaskName.LABELER,
         parameters=DataAugmentation(
             name="e2e-test-labeler",
@@ -468,7 +445,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         validate_output=validate_synthetic_questions_output,
     ),
     TestInput(
-        filename="financial-new-kb.arrow",
+        filename="financial-news-kb.arrow",
         task_name=TaskName.LABELER,
         parameters=DataAugmentation(
             name="e2e-test-labeler-text-block",
