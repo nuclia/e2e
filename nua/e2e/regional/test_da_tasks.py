@@ -38,13 +38,13 @@ class TestInput:
     validate_output: Callable[[BrokerMessage], None]
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def httpx_client() -> Callable[[str, str], AsyncGenerator[AsyncClient, None]]:
     async def create_httpx_client(
         base_url: str,
         nua_key: Optional[str] = None,
         pat_key: Optional[str] = None,
-        timeout: int = 5,
+        timeout: int = 30,
     ) -> AsyncGenerator[AsyncClient, None]:
         client = AsyncClient()
         async with AsyncClient(
@@ -53,7 +53,7 @@ def httpx_client() -> Callable[[str, str], AsyncGenerator[AsyncClient, None]]:
             if nua_key
             else {"Authorization": f"Bearer {pat_key}"},
             timeout=timeout,
-            limits=Limits(max_connections=1000, max_keepalive_connections=200),
+            limits=Limits(max_connections=10, max_keepalive_connections=5),
         ) as client:
             yield client
 
