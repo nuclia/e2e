@@ -2,6 +2,7 @@ import pytest
 from nuclia.sdk.predict import AsyncNucliaPredict
 
 from regional.models import ALL_ENCODERS, ALL_LLMS
+from nuclia_models.predict.remi import RemiRequest
 
 
 @pytest.mark.asyncio_cooperative
@@ -55,3 +56,27 @@ async def test_predict_rephrase(nua_config, model):
     # TODO: Test that custom rephrase prompt works once SDK supports it
     rephrased = await np.rephrase(question="Barcelona best coffe", model=model)
     assert rephrased != "Barcelona best coffe" and rephrased != ""
+
+
+@pytest.mark.asyncio_cooperative
+async def test_predict_remi(nua_config):
+    # Check that rephrase is working for all models
+    np = AsyncNucliaPredict()
+    results = await np.remi(
+        RemiRequest(
+            user_id="NUA E2E",
+            question="What is the capital of France?",
+            answer="Paris is the capital of france!",
+            contexts=[
+                "Paris is the capital of France.",
+                "Berlin is the capital of Germany.",
+            ],
+        )
+    )
+    assert results.answer_relevance.score >= 4
+
+    assert results.context_relevance[0] >= 4
+    assert results.groundedness[0] >= 4
+
+    assert results.context_relevance[1] < 2
+    assert results.groundedness[1] < 2
