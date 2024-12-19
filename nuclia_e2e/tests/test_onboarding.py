@@ -1,4 +1,5 @@
 import pytest
+from .data import TEST_ONBOARD_INQUIRY
 
 
 @pytest.mark.asyncio_cooperative
@@ -23,7 +24,6 @@ async def test_onboarding(
 
     # Create the account
     global_api.set_access_token(access_token)
-    # the email used on this tests is filtered on the platform to avoid spamming attio, so we don't care about the actual
-    # data sent here, as is only a proxy for attio, and all data is optional
-    await global_api.send_onboard_inquiry({})
+    # the email used on this tests is filtered on the platform to avoid spamming attio
+    await global_api.send_onboard_inquiry(TEST_ONBOARD_INQUIRY)
     await global_api.create_account(test_config["test_account_slug"])

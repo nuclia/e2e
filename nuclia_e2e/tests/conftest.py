@@ -19,6 +19,10 @@ import re
 import string
 import tempfile
 
+from .data import TEST_ACCOUNT_SLUG
+
+TEST_ENV = os.environ.get("TEST_ENV")
+
 # All tests that needs some existing account will use the one configured in the global "permanent_account_slug"
 # with some predefined user credentials without expiration:
 # "permanent_account_owner_pat": PAT token for `testing_sdk@nuclia.com` on the suitable account
@@ -72,21 +76,6 @@ CLUSTERS_CONFIG = {
         ],
     },
 }
-TEST_ACCOUNT_SLUG = "test-e2e-creation"
-TEST_ENV = os.environ.get("TEST_ENV")
-TEST_ONBOARD_INQUIRY = {
-    "company": "Nuclia e2e",
-    "use_case": "Other",
-    "role": "Other",
-    "organization_size": "1-50",
-    "phone": "+34 111 222 333",
-    "receive_updates": False,
-}
-
-
-@pytest.fixture(scope="session")
-def test_config():
-    return {"test_account_slug": TEST_ACCOUNT_SLUG}
 
 
 class ManagerAPI:
