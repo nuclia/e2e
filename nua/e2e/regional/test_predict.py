@@ -60,7 +60,6 @@ async def test_predict_rephrase(nua_config, model):
 
 @pytest.mark.asyncio_cooperative
 async def test_predict_remi(nua_config):
-    # Check that rephrase is working for all models
     np = AsyncNucliaPredict()
     results = await np.remi(
         RemiRequest(
