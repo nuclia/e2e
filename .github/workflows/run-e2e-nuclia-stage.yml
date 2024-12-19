@@ -33,6 +33,7 @@ jobs:
         env: # Or as an environment variable
           STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           STAGE_ROOT_PAT_TOKEN: ${{ secrets.STAGE_ROOT_PAT_TOKEN }}
+          STAGE_GLOBAL_RECAPTCHA: ${{ secrets.STAGE_GLOBAL_RECAPTCHA }}
 
         run: |
           TEST_ENV=stage pytest nuclia_e2e/tests --durations=0 --junitxml nua.xml
