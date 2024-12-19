@@ -1,10 +1,10 @@
 import pytest
-from .data import TEST_ONBOARD_INQUIRY
+from .data import TEST_ONBOARD_INQUIRY, TEST_ACCOUNT_SLUG
 
 
 @pytest.mark.asyncio_cooperative
 async def test_onboarding(
-    request, global_api, email_util, test_config, cleanup_test_account, aiohttp_session
+    request, global_api, email_util, cleanup_test_account, aiohttp_session
 ):
     # Request signup using a random alias email
     test_alias_email = email_util.generate_email_address()
@@ -26,4 +26,4 @@ async def test_onboarding(
     global_api.set_access_token(access_token)
     # the email used on this tests is filtered on the platform to avoid spamming attio
     await global_api.send_onboard_inquiry(TEST_ONBOARD_INQUIRY)
-    await global_api.create_account(test_config["test_account_slug"])
+    await global_api.create_account(TEST_ACCOUNT_SLUG)
