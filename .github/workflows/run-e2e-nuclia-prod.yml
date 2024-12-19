@@ -36,7 +36,7 @@ jobs:
           PROD_ROOT_PAT_TOKEN: ${{ secrets.PROD_ROOT_PAT_TOKEN }}
 
         run: |
-          TEST_ENV=prod pytest nuclia/e2e --durations=0 --junitxml nuclia.xml
+          TEST_ENV=prod pytest nuclia/tests --durations=0 --junitxml nuclia.xml
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
