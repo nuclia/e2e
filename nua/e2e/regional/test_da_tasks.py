@@ -28,6 +28,7 @@ from dataclasses import dataclass
 import base64
 from typing import Optional
 import aiohttp
+from nuclia.lib.nua import AsyncNuaClient
 
 
 @dataclass
@@ -510,17 +511,20 @@ DA_TEST_INPUTS: list[TestInput] = [
 
 @pytest.fixture
 async def tmp_nua_key(
-    nua_config: str, aiohttp_client: AsyncGenerator[aiohttp.ClientSession, None]
+    nua_config: AsyncNuaClient,
+    aiohttp_client: AsyncGenerator[aiohttp.ClientSession, None],
 ) -> AsyncGenerator[str, None]:
-    account_id = TOKENS[nua_config].account_id
+    account_id = TOKENS[nua_config.region].account_id
     pat_client_generator = aiohttp_client(
-        base_url=f"https://{nua_config}", pat_key=TOKENS[nua_config].pat_key, timeout=30
+        base_url=nua_config.url,
+        pat_key=TOKENS[nua_config.url].pat_key,
+        timeout=30,
     )
     pat_client = await anext(pat_client_generator)
     nua_client_id, nua_key = await create_nua_key(
         client=pat_client,
         account_id=account_id,
-        title=f"E2E DA AGENTS - {nua_config}",
+        title=f"E2E DA AGENTS - {nua_config.region}",
     )
     try:
         yield nua_key
@@ -535,7 +539,7 @@ async def tmp_nua_key(
     "test_input", DA_TEST_INPUTS, ids=lambda test_input: test_input.parameters.name
 )
 async def test_da_agent_tasks(
-    nua_config: str,
+    nua_config: AsyncNuaClient,
     aiohttp_client: AsyncGenerator[aiohttp.ClientSession, None],
     tmp_nua_key: str,
     test_input: TestInput,
@@ -545,7 +549,7 @@ async def test_da_agent_tasks(
     start_time = asyncio.get_event_loop().time()
     try:
         nua_client_generator = aiohttp_client(
-            base_url=f"https://{nua_config}", nua_key=tmp_nua_key, timeout=30
+            base_url=nua_config.url, nua_key=tmp_nua_key, timeout=30
         )
         nua_client = await anext(nua_client_generator)
 
