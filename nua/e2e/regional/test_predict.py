@@ -3,13 +3,14 @@ from nuclia.sdk.predict import AsyncNucliaPredict
 
 from regional.models import ALL_ENCODERS, ALL_LLMS
 from nuclia_models.predict.remi import RemiRequest
+from nuclia.lib.nua import AsyncNuaClient
 
 
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("model", ALL_ENCODERS.keys())
-async def test_predict_sentence(nua_config, model):
+async def test_predict_sentence(nua_config: AsyncNuaClient, model):
     np = AsyncNucliaPredict()
-    embed = await np.sentence(text="This is my text", model=model)
+    embed = await np.sentence(text="This is my text", model=model, nc=nua_config)
     assert embed.time > 0
     # Deprecated field (data)
     assert len(embed.data) == ALL_ENCODERS[model]
@@ -20,9 +21,9 @@ async def test_predict_sentence(nua_config, model):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_predict_query(nua_config):
+async def test_predict_query(nua_config: AsyncNuaClient):
     np = AsyncNucliaPredict()
-    embed = await np.query(text="I love Barcelona")
+    embed = await np.query(text="I love Barcelona", nc=nua_config)
     # Semantic
     assert embed.semantic_threshold > 0
     assert len(embed.sentence.data) > 128
@@ -39,9 +40,9 @@ async def test_predict_query(nua_config):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_predict_tokens(nua_config):
+async def test_predict_tokens(nua_config: AsyncNuaClient):
     np = AsyncNucliaPredict()
-    embed = await np.tokens(text="I love Barcelona")
+    embed = await np.tokens(text="I love Barcelona", nc=nua_config)
     assert embed.tokens[0].text == "Barcelona"
     assert embed.tokens[0].start == 7
     assert embed.tokens[0].end == 16
@@ -50,16 +51,18 @@ async def test_predict_tokens(nua_config):
 
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("model", ALL_LLMS)
-async def test_predict_rephrase(nua_config, model):
+async def test_predict_rephrase(nua_config: AsyncNuaClient, model):
     # Check that rephrase is working for all models
     np = AsyncNucliaPredict()
     # TODO: Test that custom rephrase prompt works once SDK supports it
-    rephrased = await np.rephrase(question="Barcelona best coffe", model=model)
+    rephrased = await np.rephrase(
+        question="Barcelona best coffe", model=model, nc=nua_config
+    )
     assert rephrased != "Barcelona best coffe" and rephrased != ""
 
 
 @pytest.mark.asyncio_cooperative
-async def test_predict_remi(nua_config):
+async def test_predict_remi(nua_config: AsyncNuaClient):
     np = AsyncNucliaPredict()
     results = await np.remi(
         RemiRequest(
@@ -70,7 +73,8 @@ async def test_predict_remi(nua_config):
                 "Paris is the capital of France.",
                 "Berlin is the capital of Germany.",
             ],
-        )
+        ),
+        nc=nua_config,
     )
     assert results.answer_relevance.score >= 4
 

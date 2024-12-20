@@ -1,12 +1,12 @@
 from nuclia.lib.nua_responses import ChatModel, UserPrompt
 from nuclia.sdk.predict import AsyncNucliaPredict
-
+from nuclia.lib.nua import AsyncNuaClient
 from regional.models import ALL_LLMS
 import pytest
 
 
 @pytest.mark.asyncio_cooperative
-async def test_llm_chat(nua_config):
+async def test_llm_chat(nua_config: AsyncNuaClient):
     # Validate that other features such as
     # * citations
     # * custom prompts
@@ -29,6 +29,7 @@ async def test_llm_chat(nua_config):
     generated = await np.generate(
         text=chat_model,
         model=ALL_LLMS[0],
+        nc=nua_config,
     )
     # Check that system + user prompt worked
     assert generated.answer.startswith("ITALIAN")
