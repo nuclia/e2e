@@ -10,6 +10,7 @@ cypress.env.*.json
 /cypress/videos
 /cypress/reports
 /cypress/downloads
+/ui-starter
 
 # dependencies
 node_modules

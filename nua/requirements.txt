@@ -1,8 +1,8 @@
-nuclia>=3.1.2
+nuclia>=4.4.2
 pytest
 pytest-timeout
 aiofiles
 nuclia-models
-httpx
 nucliadb_protos
 pytest-asyncio-cooperative # not compatible with pytest-asyncio
+aiohttp
