@@ -1,3 +1,4 @@
+from collections.abc import Coroutine
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -23,7 +24,6 @@ from nucliadb_sdk.v2.exceptions import NotFoundError
 from pathlib import Path
 from time import monotonic
 from typing import Any
-from typing import Coroutine
 
 import asyncio
 import backoff
@@ -189,7 +189,8 @@ async def run_test_check_da_labeller_output(regional_api_config):
                     continue
                 for fc in res.computedmetadata.field_classifications:
                     if fc.field.field_type.name == "GENERIC":
-                        # in case only generic fields are found, result won't be ever trur and condition will fail.
+                        # in case only generic fields are found,
+                        # result won't be ever true and condition will fail.
                         continue
 
                     # heuristic, but si@pytest.mark.asynciomple enough for now,
@@ -310,13 +311,13 @@ async def run_test_activity_log(regional_api_config):
                 partial(
                     kb.logs.query,
                     type=EventType.CHAT,
-                    query=ActivityLogsChatQuery(year_month="{dt.year}-{dt.month}".format(dt=now), filters={}),
+                    query=ActivityLogsChatQuery(year_month=f"{now.year}-{now.month}", filters={}),
                 )
             )
             if len(logs.data) >= 2:
                 # as the asks may be retried more than once (because some times rephrase doesn't always work)
-                # we need to check the last logs. The way the tests are setup if we reach here is because we validated
-                # that we got the expected results on ask, so the log should match this reasoning.
+                # we need to check the last logs. The way the tests are setup if we reach here is because we
+                # validated that we got the expected results on ask, so the log should match this reasoning.
                 if logs.data[-2].question == "why cocoa prices high?" and logs.data[-1].question == "when?":
                     return (True, logs)
             return (False, None)
@@ -331,7 +332,7 @@ async def run_test_activity_log(regional_api_config):
         partial(
             kb.logs.query,
             type=EventType.SEARCH,
-            query=ActivityLogsSearchQuery(year_month="{dt.year}-{dt.month}".format(dt=now), filters={}),
+            query=ActivityLogsSearchQuery(year_month=f"{now.year}-{now.month}", filters={}),
         )
     )
     assert logs.data[-1].question == "why cocoa prices high?"
@@ -346,7 +347,7 @@ async def run_test_kb_deletion(regional_api_config):
     assert kbid is None
 
 
-@pytest.mark.asyncio_cooperative
+@pytest.mark.asyncio_cooperative()
 async def test_kb(regional_api_config, clean_kb_test):
     """
     Test a chain of operations that simulates a normal use of a knowledgebox, just concentrated
@@ -375,9 +376,9 @@ async def test_kb(regional_api_config, clean_kb_test):
     # Upload a new resource and validate that is correctly processed and stored in nuclia
     (await run_test_upload_and_process(regional_api_config),)
 
-    # Wait for both labeller task results to be consolidated in nucliadb while we also run  semantic search
-    # and a generative question. This /find and /ask requests are crafted so they trigger all the existing calls
-    # to predict features
+    # Wait for both labeller task results to be consolidated in nucliadb while we also run semantic search
+    # and a generative question. This /find and /ask requests are crafted so they trigger
+    # all the existing calls to predict features
     await asyncio.gather(
         run_test_check_da_labeller_output(regional_api_config),
         run_test_find(regional_api_config),

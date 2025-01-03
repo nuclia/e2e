@@ -6,6 +6,7 @@ from nuclia.config import set_config_file
 from nuclia.data import get_auth
 from nuclia.data import get_config
 from nuclia.sdk.kbs import NucliaKBS
+from nuclia_e2e.tests.data import TEST_ACCOUNT_SLUG
 
 import aiohttp
 import asyncio
@@ -19,12 +20,10 @@ import re
 import string
 import tempfile
 
-from .data import TEST_ACCOUNT_SLUG
-
 TEST_ENV = os.environ.get("TEST_ENV")
 
-# All tests that needs some existing account will use the one configured in the global "permanent_account_slug"
-# with some predefined user credentials without expiration:
+# All tests that needs some existing account will use the one configured in
+# the global "permanent_account_slug" with some predefined user credentials without expiration:
 # "permanent_account_owner_pat": PAT token for `testing_sdk@nuclia.com` on the suitable account
 
 CLUSTERS_CONFIG = {
@@ -136,7 +135,8 @@ class GlobalAPI:
 
     async def create_account(self, slug):
         if not self.access_token:
-            raise ValueError("Access token is not set. Please provide an access token.")
+            msg = "Access token is not set. Please provide an access token."
+            raise ValueError(msg)
         url = f"{self.base_url}/api/v1/accounts"
         async with self.session.post(
             url, json={"slug": slug, "title": slug}, headers=self.auth_headers
@@ -168,7 +168,7 @@ def global_api(aiohttp_session):
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def global_api_config():
     global_config = CLUSTERS_CONFIG[TEST_ENV]["global"]
     nuclia.BASE = global_config["base_url"]
@@ -182,7 +182,6 @@ def global_api_config():
 
 
 @pytest.fixture(
-    scope="function",
     params=[pytest.param(zone, id=zone["name"]) for zone in CLUSTERS_CONFIG[TEST_ENV]["zones"]],
 )
 def regional_api_config(request, global_api_config):
@@ -194,7 +193,7 @@ def regional_api_config(request, global_api_config):
     config.set_default_account(global_api_config["permanent_account_slug"])
     config.set_default_zone(zone_config["zone_slug"])
     zone_config["test_kb_slug"] = "{test_kb_slug}-{name}".format(**zone_config)
-    yield zone_config
+    return zone_config
 
 
 class EmailUtil:
@@ -261,7 +260,7 @@ class EmailUtil:
     async def wait_for_email_signup_link(self, email_address, max_wait_time=20):
         print(f"waiting 10 seconds for signup email at {email_address}")
         signup_url = None
-        for i in range(max_wait_time):
+        for _ in range(max_wait_time):
             print("still waiting...")
             await asyncio.sleep(1)
             body = await self.get_last_email_body(email_address)
@@ -276,11 +275,10 @@ class EmailUtil:
 
 @pytest.fixture(scope="session")
 def email_util():
-    util = EmailUtil("carles@nuclia.com", "oynpctapnzwqjxol")
-    return util
+    return EmailUtil("carles@nuclia.com", "oynpctapnzwqjxol")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 async def cleanup_test_account(global_api: GlobalAPI):
     await global_api.manager.delete_account(TEST_ACCOUNT_SLUG)
 
@@ -289,7 +287,7 @@ async def cleanup_test_account(global_api: GlobalAPI):
     await global_api.manager.delete_account(TEST_ACCOUNT_SLUG)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 async def clean_kb_test(request, regional_api_config):
     kbs = NucliaKBS()
     try:
@@ -297,5 +295,3 @@ async def clean_kb_test(request, regional_api_config):
     except ValueError:
         # Raised by sdk when kb not found
         pass
-
-    yield
