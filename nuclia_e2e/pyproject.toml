@@ -74,6 +74,7 @@ lint.ignore = [
     "COM819", #prohibited-trailing-comma ()
     "ISC001", # single-line-implicit-string-concatenation ()
     "ISC002", # multi-line-implicit-string-concatenation ()
+    "S",
 
     # TODO: Remove these rules from ignore list after fixing them
     "ERA001",
@@ -101,16 +102,6 @@ from-first = true
 lines-between-types = 1
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = [
-    "ARG", # Unused function args -> fixtures nevertheless are functionally relevant...
-    "FBT", # Don't care about booleans as positional arguments in tests, e.g. via @pytest.mark.parametrize()
-    "SLF001", # Private member accessed
-    "S", # asserts allowed in tests...
-
-    # TODO: Remove these rules from ignore list after fixing them
-    "PT006", # Wrong name(s) type in `@pytest.mark.parametrize`
-    "RUF001", # String contains ambiguous symbol
-]
 "**/__init__.py" = ["PLC0414",]
 
 [tool.ruff.lint.flake8-tidy-imports]
