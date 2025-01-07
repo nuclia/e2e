@@ -5,8 +5,10 @@ from nuclia.config import reset_config_file
 from nuclia.config import set_config_file
 from nuclia.data import get_auth
 from nuclia.data import get_config
+from nuclia.lib.kb import AsyncNucliaDBClient
+from nuclia.lib.kb import Environment
 from nuclia.sdk.kbs import NucliaKBS
-from nuclia_e2e.tests.data import TEST_ACCOUNT_SLUG
+from tests.data import TEST_ACCOUNT_SLUG
 
 import aiohttp
 import asyncio
@@ -193,6 +195,12 @@ def regional_api_config(request, global_api_config):
     config.set_default_account(global_api_config["permanent_account_slug"])
     config.set_default_zone(zone_config["zone_slug"])
     zone_config["test_kb_slug"] = "{test_kb_slug}-{name}".format(**zone_config)
+    zone_config["ndb"] = AsyncNucliaDBClient(
+        environment=Environment.CLOUD,
+        url=regional_api_config["base_url"],
+        user_token=regional_api_config["user_token"],
+        region=regional_api_config["name"],
+    )
     return zone_config
 
 

@@ -249,9 +249,10 @@ async def run_test_ask(regional_api_config):
         features=["keyword", "semantic", "relations"],
         query="why cocoa prices high?",
         model="chatgpt4o",
+        ndb=regional_api_config["ndb"],
     )
-
     assert "climate change" in ask_result.answer.decode().lower()
+
     ask_more_result = await kb.search.ask(
         autofilter=True,
         rephrase=True,
@@ -263,6 +264,7 @@ async def run_test_ask(regional_api_config):
         ],
         query="when?",
         model="chatgpt4o",
+        ndb=regional_api_config["ndb"],
     )
     assert "earlier" in ask_more_result.answer.decode().lower()
 
@@ -341,7 +343,14 @@ async def run_test_activity_log(regional_api_config):
 async def run_test_kb_deletion(regional_api_config):
     kbs = NucliaKBS()
     print("deleting " + regional_api_config["test_kb_slug"])
-    await asyncio.to_thread(partial(kbs.delete, slug=regional_api_config["test_kb_slug"]))
+    await asyncio.to_thread(
+        partial(
+            kbs.delete,
+            slug=regional_api_config["test_kb_slug"],
+            zone=regional_api_config["name"],
+            account=regional_api_config["permanent_account_slug"],
+        )
+    )
 
     kbid = await get_kbid_from_slug(regional_api_config["test_kb_slug"])
     assert kbid is None

@@ -1,5 +1,5 @@
-from nuclia_e2e.tests.data import TEST_ACCOUNT_SLUG
-from nuclia_e2e.tests.data import TEST_ONBOARD_INQUIRY
+from tests.data import TEST_ACCOUNT_SLUG
+from tests.data import TEST_ONBOARD_INQUIRY
 
 import pytest
 
