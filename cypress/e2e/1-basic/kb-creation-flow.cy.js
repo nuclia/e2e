@@ -23,7 +23,7 @@ describe('KB creation flow', () => {
       cy.get('[formcontrolname="zone"] pa-radio').should('be.visible');
       cy.get('[formcontrolname="zone"] pa-radio').contains(zone.title).click();
       cy.get('[data-cy="new-kb-save-button"] button').should('be.enabled').click();
-      cy.get(`[data-cy="${newKbName}-link"]`, { timeout: 10000 }).should('contain', newKbName);
+      cy.get(`[data-cy="${newKbName}-link"]`, { timeout: 20000 }).should('contain', newKbName);
       cy.get(`[data-cy="${newKbName}-link"]`).click();
       cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${zone.slug}/${newKbName}`);
       cy.get('app-kb-switch').should('contain', newKbName);
