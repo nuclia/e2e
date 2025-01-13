@@ -548,7 +548,6 @@ async def test_da_agent_tasks(
     test_input: TestInput,
 ):
     logger.warning("This is a test log")
-    breakpoint()
     dataset_id = None
     task_id = None
     start_time = asyncio.get_event_loop().time()
