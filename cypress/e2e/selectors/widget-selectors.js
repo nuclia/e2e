@@ -6,7 +6,7 @@ export const nucliaSearchResultsSelector = 'nuclia-search-results';
 export const suggestionResultSelector = '.sw-suggestions-container .sw-suggestions .paragraph';
 
 // search results selectors
-export const searchResultContainerSelector = '.results > .search-results';
+export const searchResultContainerSelector = '.results .search-results';
 export const searchResultLiSelector = '.sw-paragraphs-container li';
 export const searchResultTitle = '.sw-result-row .title-m';
 
