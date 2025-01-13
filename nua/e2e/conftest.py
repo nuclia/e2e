@@ -67,3 +67,36 @@ async def nua_config(request) -> AsyncGenerator[AsyncNuaClient, None]:
     yield AsyncNuaClient(
         region=request.param, account=token.account_id, token=token.nua_key
     )
+
+
+import logging
+import contextvars
+
+test_name_var = contextvars.ContextVar("test_name", default="unknown")
+
+
+class TestNameFilter(logging.Filter):
+    def filter(self, record):
+        record.test_name = test_name_var.get()
+        return True
+
+
+logger = logging.getLogger(__name__)
+
+
+def pytest_configure(config):
+    logging.basicConfig(
+        level=logging.WARNING,
+        format="%(asctime)s [%(test_name)s] %(levelname)s: %(message)s",
+    )
+    logger = logging.getLogger(__name__)
+    logger.addFilter(TestNameFilter())
+
+
+@pytest.fixture(autouse=True)
+def log_test_name(request):
+    # Set the test name in the context variable
+    token = test_name_var.set(request.node.name)
+    yield
+    # Reset the context variable after the test
+    test_name_var.reset(token)

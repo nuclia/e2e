@@ -534,6 +534,9 @@ async def tmp_nua_key(
         )
 
 
+from conftest import logger
+
+
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize(
     "test_input", DA_TEST_INPUTS, ids=lambda test_input: test_input.parameters.name
@@ -544,6 +547,8 @@ async def test_da_agent_tasks(
     tmp_nua_key: str,
     test_input: TestInput,
 ):
+    logger.warning("This is a test log")
+    breakpoint()
     dataset_id = None
     task_id = None
     start_time = asyncio.get_event_loop().time()
