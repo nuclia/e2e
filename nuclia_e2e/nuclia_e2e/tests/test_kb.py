@@ -24,63 +24,86 @@ from pathlib import Path
 from time import monotonic
 from typing import Any
 from typing import Coroutine
-
+from nuclia import REGIONAL
 import asyncio
 import backoff
 import pytest
+from nuclia.lib.kb import AsyncNucliaDBClient, NucliaDBClient, Environment
+from nuclia.data import get_auth
+from textwrap import dedent
 
+NUCLIADB_KB_ENDPOINT = "/api/v1/kb/{kb}"
 ASSETS_FILE_PATH = f"{Path(__file__).parent.parent}/assets"
 
 
-async def wait_for(condition: Coroutine, max_wait: int = 60, interval: int = 1) -> tuple[bool, Any]:
+async def wait_for(condition: Coroutine, max_wait: int = 60, interval: int = 1, logger=None) -> tuple[bool, Any]:
     func_name = condition.__name__
-    print(f"start wait_for '{func_name}', max_wait={max_wait}s")
+    logger(f"start wait_for '{func_name}', max_wait={max_wait}s")
     start = monotonic()
     success, data = await condition()
     while not success and monotonic() - start < max_wait:
         await asyncio.sleep(interval)
         success, data = await condition()
-    print(f"wait_for '{func_name}' success={success} in {monotonic()-start} seconds")
+    logger(f"wait_for '{func_name}' success={success} in {monotonic()-start} seconds")
     return success, data
 
 
-async def get_kbid_from_slug(slug: str) -> str:
+async def get_kbid_from_slug(zone: str, slug: str) -> str:
     kbs = NucliaKBS()
-    all_kbs = await asyncio.to_thread(kbs.list)
+    all_kbs = await asyncio.to_thread(partial(kbs.list, zone=zone))
     kbids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kbid = kbids_by_slug.get(slug)
     return kbid
 
+def get_kb_ndb_client(zone, account, kbid, user_token, sync=False):
+    kb_path = NUCLIADB_KB_ENDPOINT.format(zone=zone, account=account, kb=kbid)
+    base_url = REGIONAL.format(region=zone)
+    kb_base_url = f"{base_url}{kb_path}"
 
-async def run_test_kb_creation(regional_api_config):
+    if sync:
+        NDBClientClass = NucliaDBClient
+    else:
+        NDBClientClass = AsyncNucliaDBClient
+
+    ndb = NDBClientClass(
+        environment=Environment.CLOUD,
+        url=kb_base_url,
+        user_token=user_token,
+        region=zone,
+    )
+    return ndb
+
+async def run_test_kb_creation(regional_api_config, logger) -> str:
     kbs = NucliaKBS()
     new_kb = await asyncio.to_thread(
         partial(
             kbs.add,
+            zone=regional_api_config["zone_slug"],
             slug=regional_api_config["test_kb_slug"],
             sentence_embedder="en-2024-04-24",
         )
     )
 
-    kbid = await get_kbid_from_slug(regional_api_config["test_kb_slug"])
+    kbid = await get_kbid_from_slug(regional_api_config["zone_slug"], regional_api_config["test_kb_slug"])
     assert kbid is not None
-    kbs.default(kbid)
-    print(f"Created kb {new_kb['id']}")
+    logger(f"Created kb {new_kb['id']}")
+    return kbid
 
 
-async def run_test_upload_and_process(regional_api_config):
+async def run_test_upload_and_process(regional_api_config, ndb, logger):
     kb = AsyncNucliaKB()
     rid = await kb.resource.create(
         title="How this chocolatier is navigating an unexpected spike in cocoa prices",
         slug="chocolatier",
+        ndb=ndb
     )
-    await kb.upload.file(rid=rid, path=f"{ASSETS_FILE_PATH}/chocolatier.html", field="file")
+    await kb.upload.file(rid=rid, path=f"{ASSETS_FILE_PATH}/chocolatier.html", field="file", ndb=ndb)
 
     # Wait for resource to be processed
     def resource_is_processed(rid):
         @wraps(resource_is_processed)
         async def condition() -> tuple[bool, Any]:
-            resource = await kb.resource.get(rid=rid)
+            resource = await kb.resource.get(rid=rid, ndb=ndb)
             return (
                 resource.metadata.status == ResourceProcessingStatus.PROCESSED,
                 None,
@@ -89,25 +112,25 @@ async def run_test_upload_and_process(regional_api_config):
         return condition
 
     success, _ = (
-        await wait_for(resource_is_processed(rid)),
+        await wait_for(resource_is_processed(rid), logger=logger),
         "File was not processed in time",
     )
     assert success
 
 
-async def run_test_import_kb(regional_api_config):
+async def run_test_import_kb(regional_api_config, ndb, logger):
     """
     Imports a kb with three resources and some labelsets already created
     """
     kb = AsyncNucliaKB()
-    await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export")
+    await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export", ndb=ndb)
 
     def resources_are_imported(resources):
         @wraps(resources_are_imported)
         async def condition() -> tuple[bool, Any]:
             for slug in resources:
                 try:
-                    await kb.resource.get(slug=slug)
+                    await kb.resource.get(slug=slug, ndb=ndb)
                 except NotFoundError:
                     return (False, None)
             return (True, None)
@@ -115,13 +138,13 @@ async def run_test_import_kb(regional_api_config):
         return condition
 
     success, _ = (
-        await wait_for(resources_are_imported(["disney", "hp", "vaccines"]), max_wait=120),
+        await wait_for(resources_are_imported(["disney", "hp", "vaccines"]), max_wait=120, logger=logger),
         "Expected imported resources not found",
     )
     assert success
 
 
-async def run_test_create_da_labeller(regional_api_config):
+async def run_test_create_da_labeller(regional_api_config, ndb, logger):
     """
     Creates a config to run on all current resources and on all future ones
     """
@@ -129,6 +152,7 @@ async def run_test_create_da_labeller(regional_api_config):
     await asyncio.to_thread(
         partial(
             kb.task.start,
+            ndb=ndb,
             task_name=TaskName.LABELER,
             apply=ApplyOptions.ALL,
             parameters=DataAugmentation(
@@ -167,7 +191,7 @@ async def run_test_create_da_labeller(regional_api_config):
     )
 
 
-async def run_test_check_da_labeller_output(regional_api_config):
+async def run_test_check_da_labeller_output(regional_api_config, ndb, logger):
     kb = NucliaKB()
 
     expected_resource_labels = [
@@ -183,7 +207,7 @@ async def run_test_check_da_labeller_output(regional_api_config):
             result = False
             for resource_slug, (labelset, label) in expected:
                 try:
-                    res = kb.resource.get(slug=resource_slug, show=["extracted"])
+                    res = await asyncio.to_thread(partial(kb.resource.get, slug=resource_slug, show=["extracted"], ndb=ndb))
                 except NotFoundError:
                     # some resource may still be missing from nucliadb, let's wait more
                     continue
@@ -216,16 +240,17 @@ async def run_test_check_da_labeller_output(regional_api_config):
         return condition
 
     success, _ = (
-        await wait_for(resources_are_labelled(expected_resource_labels)),
+        await wait_for(resources_are_labelled(expected_resource_labels), logger=logger),
         "Expected computed labels not found in resources",
     )
     assert success
 
 
-async def run_test_find(regional_api_config):
+async def run_test_find(regional_api_config, ndb, logger):
     kb = AsyncNucliaKB()
 
     result = await kb.search.find(
+        ndb=ndb,
         autofilter=True,
         rephrase=True,
         reranker="predict",
@@ -237,43 +262,35 @@ async def run_test_find(regional_api_config):
     assert first_resource.slug == "chocolatier"
 
 
-@backoff.on_exception(backoff.constant, AssertionError, max_tries=15, interval=0)
-async def run_test_ask(regional_api_config):
+@backoff.on_exception(backoff.constant, AssertionError, max_tries=15, interval=1)
+async def run_test_ask(regional_api_config, ndb, logger):
+
     kb = AsyncNucliaKB()
 
     ask_result = await kb.search.ask(
+        ndb=ndb,
         autofilter=True,
         rephrase=True,
         reranker="predict",
         features=["keyword", "semantic", "relations"],
         query="why cocoa prices high?",
         model="chatgpt4o",
-        prompt="""
-Answer the following question based **only** on the provided context. Do **not** use any outside knowledge. If the context does not provide enough information to fully answer the question, reply with: “Not enough data to answer this.”
-Don’t be too picky. please try to answer if possible, even if it requires to make a bit of a deduction.
-[START OF CONTEXT]
-{context}
-[END OF CONTEXT]
-Question: {question}
-# Notes
-- **Do not** mention the source of the context in any case""",
+        prompt=dedent(
+            """
+            Answer the following question based **only** on the provided context. Do **not** use any outside knowledge. If the context does not provide enough information to fully answer the question, reply with: “Not enough data to answer this.”
+            Don’t be too picky. please try to answer if possible, even if it requires to make a bit of a deduction.
+            [START OF CONTEXT]
+            {context}
+            [END OF CONTEXT]
+            Question: {question}
+            # Notes
+            - **Do not** mention the source of the context in any case
+            """),
     )
-
     assert "climate change" in ask_result.answer.decode().lower()
-    parameters = dict(
-        autofilter=True,
-        rephrase=True,
-        reranker="predict",
-        features=["keyword", "semantic", "relations"],
-        context=[
-            {"author": "USER", "text": "why cocoa prices high?"},
-            {"author": "NUCLIA", "text": ask_result.answer.decode()},
-        ],
-        query="when?",
-        model="chatgpt4o",
-    )
 
     ask_more_result = await kb.search.ask(
+        ndb=ndb,
         autofilter=True,
         rephrase=True,
         reranker="predict",
@@ -288,7 +305,7 @@ Question: {question}
     assert "earlier" in ask_more_result.answer.decode().lower()
 
 
-async def run_test_activity_log(regional_api_config):
+async def run_test_activity_log(regional_api_config, ndb, logger):
     kb = NucliaKB()
     now = datetime.now(tz=timezone.utc)
 
@@ -298,6 +315,7 @@ async def run_test_activity_log(regional_api_config):
             logs = await asyncio.to_thread(
                 partial(
                     kb.logs.query,
+                    ndb=ndb,
                     type=EventType.CHAT,
                     query=ActivityLogsChatQuery(
                         year_month="{dt.year}-{dt.month:02}".format(dt=now), filters={}
@@ -317,13 +335,14 @@ async def run_test_activity_log(regional_api_config):
 
         return condition
 
-    success, logs = await wait_for(activity_log_is_stored(), max_wait=60)
+    success, logs = await wait_for(activity_log_is_stored(), max_wait=90, logger=logger)
     assert success, "Activity logs didn't get stored in time"
 
     # if we have the ask events, we'll must have the find ones, as they have been done earlier.
     logs = await asyncio.to_thread(
         partial(
             kb.logs.query,
+            ndb=ndb,
             type=EventType.SEARCH,
             query=ActivityLogsSearchQuery(year_month="{dt.year}-{dt.month:02}".format(dt=now), filters={}),
         )
@@ -331,7 +350,7 @@ async def run_test_activity_log(regional_api_config):
     assert logs.data[-1].question == "why cocoa prices high?"
 
 
-async def run_test_remi_query(regional_api_config):
+async def run_test_remi_query(regional_api_config, ndb, logger):
     kb = NucliaKB()
     starting_at = datetime.now(tz=timezone.utc) - timedelta(
         seconds=600
@@ -344,6 +363,7 @@ async def run_test_remi_query(regional_api_config):
             scores = await asyncio.to_thread(
                 partial(
                     kb.remi.get_scores,
+                    ndb=ndb,
                     starting_at=starting_at,
                     to=to,
                     aggregation="day",
@@ -358,21 +378,22 @@ async def run_test_remi_query(regional_api_config):
     _, success = await wait_for(
         remi_data_is_computed(),
         max_wait=120,
+        logger=logger
     )
     assert success, "Remi scores didn't get computed in time"
 
 
-async def run_test_kb_deletion(regional_api_config):
+async def run_test_kb_deletion(regional_api_config, kbid, logger):
     kbs = NucliaKBS()
-    print("deleting " + regional_api_config["test_kb_slug"])
-    await asyncio.to_thread(partial(kbs.delete, slug=regional_api_config["test_kb_slug"]))
+    logger("deleting " + kbid)
+    await asyncio.to_thread(partial(kbs.delete, zone=regional_api_config["zone_slug"], id=kbid))
 
-    kbid = await get_kbid_from_slug(regional_api_config["test_kb_slug"])
+    kbid = await get_kbid_from_slug(regional_api_config["zone_slug"],       regional_api_config["test_kb_slug"])
     assert kbid is None
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb(regional_api_config, clean_kb_test):
+async def test_kb(request, regional_api_config, clean_kb_test):
     """
     Test a chain of operations that simulates a normal use of a knowledgebox, just concentrated
     in time.
@@ -385,35 +406,54 @@ async def test_kb(regional_api_config, clean_kb_test):
     A part of this tests is sequential, as it is important to guarantee the state before moving on
     while other parts can be run concurrently, hence the use of `gather` in some points
     """
-    # Create a brand new kb that will be used troughout this test
-    await run_test_kb_creation(regional_api_config)
+
+    def logger(msg):
+        print(f"{request.node.name} ::: {msg}")
+
+    print()
+    logger("starting test")
+
+    zone = regional_api_config["zone_slug"]
+    account = regional_api_config["permanent_account_id"]
+    auth = get_auth()
+
+    # Creates a brand new kb that will be used troughout this test
+    kbid = await run_test_kb_creation(regional_api_config, logger)
+
+    # Configures a nucliadb client defaulting to a specific kb, to be used
+    # to override all the sdk endpoints that automagically creates the client
+    # as this is incompatible with the cooperative tests
+    async_ndb = get_kb_ndb_client(zone, account, kbid, auth._config.token)
+    sync_ndb = get_kb_ndb_client(zone, account, kbid, auth._config.token, sync=True)
 
     # Import a preexisting export containing several resources (coming from the financial-news kb)
     # and wait for the resources to be completely imported
-    await run_test_import_kb(regional_api_config)
+    await run_test_import_kb(regional_api_config, async_ndb, logger)
 
     # Create a labeller configuration, with the goal of testing two tings:
     # - labelling of existing resources (the ones imported)
     # - labelling of new resources(will be created later)
-    await run_test_create_da_labeller(regional_api_config)
+    await run_test_create_da_labeller(regional_api_config, sync_ndb, logger)
 
     # Upload a new resource and validate that is correctly processed and stored in nuclia
-    (await run_test_upload_and_process(regional_api_config),)
+    await run_test_upload_and_process(regional_api_config, async_ndb, logger)
 
-    # Wait for both labeller task results to be consolidated in nucliadb while we also run  semantic search
-    # and a generative question. This /find and /ask requests are crafted so they trigger all the existing calls
-    # to predict features
+    # Wait for both labeller task results to be consolidated in nucliadb while we also run semantic search
+    # This /find and /ask requests are crafted so they trigger all the existing calls to predict features
+    # We wait until find succeeds to run the ask tests to maximize the changes that all indexes will be available
+    # and so minimize the llm costs retrying
     await asyncio.gather(
-        run_test_check_da_labeller_output(regional_api_config),
-        run_test_find(regional_api_config),
-        run_test_ask(regional_api_config),
+        run_test_check_da_labeller_output(regional_api_config, sync_ndb, logger),
+        run_test_find(regional_api_config, async_ndb, logger),
+
     )
+    await run_test_ask(regional_api_config, async_ndb, logger)
 
     # Validate that all the data about the usage we generated is correctly stored on the activity log
     # and can be queried, and that the remi quality metrics. Even if the remi metrics won't be computed until
     # the activity log is stored, the test_activity_log tests several things aside the ask events (the ones
     # affecting the remi queries) and so we can benefit of running them in parallel.
-    await asyncio.gather(run_test_activity_log(regional_api_config), run_test_remi_query(regional_api_config))
+    await asyncio.gather(run_test_activity_log(regional_api_config, sync_ndb, logger), run_test_remi_query(regional_api_config, sync_ndb, logger))
 
     # Delete the kb as a final step
-    await run_test_kb_deletion(regional_api_config)
+    await run_test_kb_deletion(regional_api_config, kbid, logger)

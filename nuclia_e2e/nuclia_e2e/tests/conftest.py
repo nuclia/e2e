@@ -7,7 +7,8 @@ from nuclia.config import set_config_file
 from nuclia.data import get_auth
 from nuclia.data import get_config
 from nuclia.sdk.kbs import NucliaKBS
-
+from nuclia.sdk.auth import NucliaAuth
+from nuclia.config import Config
 import aiohttp
 import asyncio
 import email
@@ -19,6 +20,7 @@ import random
 import re
 import string
 import tempfile
+from nuclia.lib.nua import AsyncNuaClient, NuaClient
 
 TEST_ENV = os.environ.get("TEST_ENV")
 
@@ -41,12 +43,14 @@ CLUSTERS_CONFIG = {
                 "zone_slug": "europe-1",
                 "base_url": "https://europe-1.nuclia.cloud",
                 "test_kb_slug": "nuclia-e2e-live",
+                "permanent_nua_key": os.environ.get("TEST_EUROPE1_NUCLIA_NUA"),
             },
             {
                 "name": "aws-us-east-2-1",
                 "zone_slug": "aws-us-east-2-1",
                 "base_url": "https://aws-us-east-2-1.nuclia.cloud",
                 "test_kb_slug": "nuclia-e2e-live",
+                "permanent_nua_key": os.environ.get("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
             },
         ],
     },
@@ -64,6 +68,7 @@ CLUSTERS_CONFIG = {
                 "zone_slug": "europe-1",
                 "base_url": "https://europe-1.stashify.cloud",
                 "test_kb_slug": "nuclia-e2e-live",
+                "permanent_nua_key": os.environ.get("TEST_EUROPE1_STASHIFY_NUA"),
             },
             # uncomment to test two zone parallel testing on stage
             # {
@@ -186,14 +191,75 @@ def global_api_config():
 )
 def regional_api_config(request, global_api_config):
     zone_config = deepcopy(request.param)
-    nuclia.REGIONAL = zone_config["base_url"]
     auth = get_auth()
     config = get_config()
     auth.set_user_token(global_api_config["permanent_account_owner_pat_token"])
     config.set_default_account(global_api_config["permanent_account_slug"])
     config.set_default_zone(zone_config["zone_slug"])
     zone_config["test_kb_slug"] = "{test_kb_slug}-{name}".format(**zone_config)
+    zone_config["permanent_account_slug"] = global_api_config["permanent_account_slug"]
+    zone_config["permanent_account_id"] = {a.slug: a.id for a in config.accounts}[global_api_config["permanent_account_slug"]]
     yield zone_config
+
+
+# class SDKMethodProxy:
+#     def __init__(self, instance, **kwargs):
+#         self._instance = instance
+#         self._kwargs = kwargs
+
+#     def __getattr__(self, name):
+#         # Retrieve the attribute (method) from the wrapped instance
+#         attr = getattr(self._instance, name)
+#         if callable(attr):
+#             # If the attribute is a method, wrap it
+#             def wrapper(*args, **kwargs):
+#                 print(attr, self._instance, kwargs)
+#                 kwargs.update(self._kwargs)
+#                 return attr(*args, **kwargs)
+#             return wrapper
+#         return attr  # Return the attribute as is if it's not callable
+
+
+# class RegionalSDK:
+
+#     class NucliaKBS(NucliaKBSOriginal):
+
+#         @property
+#         def _auth(self):
+#             return getattr(self, "_test_auth", None)
+
+#         @_auth.setter
+#         def _auth(self, auth):
+#             self._test_auth = auth
+
+#     def __init__(self, account: str, zone: str, auth: NucliaAuth):
+#         self.zone = zone
+
+#         kbs = self.NucliaKBS()
+#         kbs._auth = auth
+#         self.kbs = SDKMethodProxy(kbs, zone=zone, account=account)
+
+
+# @pytest.fixture(scope="function")
+# async def regional_sdk(regional_api_config, global_api_config):
+#     pat_auth = NucliaAuth()
+#     pat_auth._inner_config = Config()
+#     pat_auth.set_user_token(global_api_config["permanent_account_owner_pat_token"])
+
+#     wrapped = RegionalSDK(
+#         zone=regional_api_config["zone_slug"],
+#         account=global_api_config["permanent_account_slug"],
+#         auth=pat_auth
+#     )
+#     print(wrapped, regional_api_config["zone_slug"])
+#     yield wrapped
+
+# @pytest.fixture(scope=function)
+# def permament_nua_auth():
+#     nuclia_auth = NucliaAuth()
+#     client_id = nuclia_auth.nua(token.nua_key)
+#     assert client_id
+#     nuclia_auth._config.set_default_nua(client_id)
 
 
 class EmailUtil:
@@ -291,10 +357,24 @@ async def cleanup_test_account(global_api: GlobalAPI):
 @pytest.fixture(scope="function")
 async def clean_kb_test(request, regional_api_config):
     kbs = NucliaKBS()
+    kb_slug = regional_api_config["test_kb_slug"]
+    all_kbs = await asyncio.to_thread(partial(kbs.list, zone=regional_api_config["zone_slug"]))
+    kb_ids_by_slug = {kb.slug: kb.id for kb in all_kbs}
+    kb_id = kb_ids_by_slug.get(kb_slug)
     try:
-        await asyncio.to_thread(partial(kbs.delete, slug=regional_api_config["test_kb_slug"]))
+        await asyncio.to_thread(partial(kbs.delete, zone=regional_api_config["zone_slug"], id=kb_id))
     except ValueError:
         # Raised by sdk when kb not found
         pass
 
     yield
+
+
+@pytest.fixture(scope="function")
+async def nua_client(regional_api_config):
+    nc = AsyncNuaClient(
+        region=regional_api_config["zone"],
+        account=regional_api_config["permanent_account_id"],
+        token=regional_api_config["permanent_nua_key"]
+    )
+    yield nc

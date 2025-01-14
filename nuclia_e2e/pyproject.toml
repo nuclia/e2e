@@ -1,3 +1,14 @@
+[project]
+name = "nuclia_e2e"  # Your package name
+version = "0.1.0"    # Version
+description = "Your project description"
+readme = "README.md"  # Relative to nuclia_e2e
+requires-python = ">=3.7"
+dependencies = [
+    # Your dependencies here
+]
+
+
 [tool.ruff]
 # Support Python 3.9+.
 target-version = "py39"
@@ -191,7 +202,7 @@ lint.ignore = [
     "F601", # Dictionary key literal `"resources_processed"` repeated
 ]
 
-exclude = [ 
+exclude = [
     ".git",
 ]
 
