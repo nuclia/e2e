@@ -1,3 +1,4 @@
+from collections.abc import Coroutine
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -23,8 +24,8 @@ from nucliadb_sdk.v2.exceptions import NotFoundError
 from pathlib import Path
 from time import monotonic
 from typing import Any
-from typing import Coroutine
 from nuclia import REGIONAL
+
 import asyncio
 import backoff
 import pytest
@@ -60,10 +61,7 @@ def get_kb_ndb_client(zone, account, kbid, user_token, sync=False):
     base_url = REGIONAL.format(region=zone)
     kb_base_url = f"{base_url}{kb_path}"
 
-    if sync:
-        NDBClientClass = NucliaDBClient
-    else:
-        NDBClientClass = AsyncNucliaDBClient
+    NDBClientClass = NucliaDBClient if sync else AsyncNucliaDBClient
 
     ndb = NDBClientClass(
         environment=Environment.CLOUD,
@@ -213,7 +211,8 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb, logger):
                     continue
                 for fc in res.computedmetadata.field_classifications:
                     if fc.field.field_type.name == "GENERIC":
-                        # in case only generic fields are found, result won't be ever trur and condition will fail.
+                        # in case only generic fields are found,
+                        # result won't be ever true and condition will fail.
                         continue
 
                     # heuristic, but si@pytest.mark.asynciomple enough for now,
