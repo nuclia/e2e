@@ -1,7 +1,8 @@
-import pytest
-from nuclia.sdk.predict import AsyncNucliaPredict
 from nuclia.lib.nua import AsyncNuaClient
+from nuclia.sdk.predict import AsyncNucliaPredict
 from regional.models import ALL_LLMS
+
+import pytest
 
 
 @pytest.mark.asyncio_cooperative

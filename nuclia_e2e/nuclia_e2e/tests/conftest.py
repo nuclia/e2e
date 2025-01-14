@@ -1,4 +1,3 @@
-from .data import TEST_ACCOUNT_SLUG
 from copy import deepcopy
 from email.header import decode_header
 from functools import partial
@@ -6,10 +5,9 @@ from nuclia.config import reset_config_file
 from nuclia.config import set_config_file
 from nuclia.data import get_auth
 from nuclia.data import get_config
-from nuclia.lib.kb import AsyncNucliaDBClient
-from nuclia.lib.kb import Environment
+from nuclia.lib.nua import AsyncNuaClient
 from nuclia.sdk.kbs import NucliaKBS
-from tests.data import TEST_ACCOUNT_SLUG
+from nuclia_e2e.data import TEST_ACCOUNT_SLUG
 
 import aiohttp
 import asyncio
@@ -22,7 +20,6 @@ import random
 import re
 import string
 import tempfile
-from nuclia.lib.nua import AsyncNuaClient, NuaClient
 
 TEST_ENV = os.environ.get("TEST_ENV")
 
@@ -170,6 +167,7 @@ def global_api(aiohttp_session):
         aiohttp_session,
     )
 
+
 @pytest.fixture
 def global_api_config():
     global_config = CLUSTERS_CONFIG[TEST_ENV]["global"]
@@ -196,7 +194,9 @@ def regional_api_config(request, global_api_config):
     config.set_default_zone(zone_config["zone_slug"])
     zone_config["test_kb_slug"] = "{test_kb_slug}-{name}".format(**zone_config)
     zone_config["permanent_account_slug"] = global_api_config["permanent_account_slug"]
-    zone_config["permanent_account_id"] = {a.slug: a.id for a in config.accounts}[global_api_config["permanent_account_slug"]]
+    zone_config["permanent_account_id"] = {a.slug: a.id for a in config.accounts}[
+        global_api_config["permanent_account_slug"]
+    ]
     return zone_config
 
 
@@ -370,6 +370,6 @@ async def nua_client(regional_api_config):
     nc = AsyncNuaClient(
         region=regional_api_config["zone"],
         account=regional_api_config["permanent_account_id"],
-        token=regional_api_config["permanent_nua_key"]
+        token=regional_api_config["permanent_nua_key"],
     )
     return nc
