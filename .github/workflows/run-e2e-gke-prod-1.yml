@@ -1,16 +1,9 @@
 name: run-e2e-gke-prod-1
 run-name: GKE-PROD-1 - Migration validation - Cypress e2e tests on 
 on:
-  push:
-    branches:
-      - e2e-on-prod
   workflow_dispatch:
-    branches:
-      - e2e-on-prod
-  repository_dispatch:
-    types: [trigger_e2e]
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-platform-test
   cancel-in-progress: true
 jobs:
   cypress-run:
