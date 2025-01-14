@@ -69,6 +69,7 @@ lint.ignore = [
     "FBT003", # sometimes 3rd parties introduce boolean traps and we need to adjust
     "TRY301", # more trouble then value.
     "SIM105", # to allow try except pass isntead of using contextlib.suppress
+    "N806"
 
     # When using Ruff as a formatter, it is recommended to avoid the following lint rules:
     "W191", # tab-indentation
