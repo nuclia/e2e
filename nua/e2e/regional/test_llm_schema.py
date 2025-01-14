@@ -1,16 +1,20 @@
-from nuclia.sdk.predict import NucliaPredict
+from nuclia.sdk.predict import AsyncNucliaPredict
+import pytest
+from nuclia.lib.nua import AsyncNuaClient
 
 
-def test_llm_schema_nua(nua_config):
-    np = NucliaPredict()
-    config = np.schema()
+@pytest.mark.asyncio_cooperative
+async def test_llm_schema_nua(nua_config: AsyncNuaClient):
+    np = AsyncNucliaPredict()
+    config = await np.schema(nc=nua_config)
 
     assert len(config.ner_model.options) == 1
     assert len(config.generative_model.options) >= 5
 
 
-def test_llm_schema_kbid(nua_config):
-    np = NucliaPredict()
-    config = np.schema("fake_kbid")
+@pytest.mark.asyncio_cooperative
+async def test_llm_schema_kbid(nua_config: AsyncNuaClient):
+    np = AsyncNucliaPredict()
+    config = await np.schema("fake_kbid", nc=nua_config)
     assert len(config.ner_model.options) == 1
     assert len(config.generative_model.options) >= 5

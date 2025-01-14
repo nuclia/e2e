@@ -1,15 +1,17 @@
 from nuclia.lib.nua_responses import ChatModel, UserPrompt
-from nuclia.sdk.predict import NucliaPredict
-
+from nuclia.sdk.predict import AsyncNucliaPredict
+from nuclia.lib.nua import AsyncNuaClient
 from regional.models import ALL_LLMS
+import pytest
 
 
-def test_llm_chat(nua_config):
+@pytest.mark.asyncio_cooperative
+async def test_llm_chat(nua_config: AsyncNuaClient):
     # Validate that other features such as
     # * citations
     # * custom prompts
     # * reranking (TODO once supported by the SDK)
-    np = NucliaPredict()
+    np = AsyncNucliaPredict()
     chat_model = ChatModel(
         question="Which is the CEO of Nuclia?",
         retrieval=False,
@@ -24,9 +26,10 @@ def test_llm_chat(nua_config):
         },
         citations=True,
     )
-    generated = np.generate(
+    generated = await np.generate(
         text=chat_model,
         model=ALL_LLMS[0],
+        nc=nua_config,
     )
     # Check that system + user prompt worked
     assert generated.answer.startswith("ITALIAN")
