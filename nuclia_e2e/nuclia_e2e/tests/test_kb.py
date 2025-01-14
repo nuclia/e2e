@@ -24,7 +24,6 @@ from nucliadb_sdk.v2.exceptions import NotFoundError
 from pathlib import Path
 from time import monotonic
 from typing import Any
-from nuclia import REGIONAL
 
 import asyncio
 import backoff
@@ -35,6 +34,7 @@ from textwrap import dedent
 
 NUCLIADB_KB_ENDPOINT = "/api/v1/kb/{kb}"
 ASSETS_FILE_PATH = f"{Path(__file__).parent.parent}/assets"
+
 
 
 async def wait_for(condition: Coroutine, max_wait: int = 60, interval: int = 1, logger=None) -> tuple[bool, Any]:
@@ -57,6 +57,7 @@ async def get_kbid_from_slug(zone: str, slug: str) -> str:
     return kbid
 
 def get_kb_ndb_client(zone, account, kbid, user_token, sync=False):
+    from nuclia import REGIONAL
     kb_path = NUCLIADB_KB_ENDPOINT.format(zone=zone, account=account, kb=kbid)
     base_url = REGIONAL.format(region=zone)
     kb_base_url = f"{base_url}{kb_path}"

@@ -33,7 +33,7 @@ TEST_ENV = os.environ.get("TEST_ENV")
 CLUSTERS_CONFIG = {
     "prod": {
         "global": {
-            "base_url": "https://nuclia.cloud",
+            "base_domain": "nuclia.cloud",
             "recaptcha": os.environ.get("PROD_GLOBAL_RECAPTCHA"),
             "root_pat_token": os.environ.get("PROD_ROOT_PAT_TOKEN"),
             "permanent_account_slug": "automated-testing",
@@ -43,14 +43,12 @@ CLUSTERS_CONFIG = {
             {
                 "name": "europe-1",
                 "zone_slug": "europe-1",
-                "base_url": "https://europe-1.nuclia.cloud",
                 "test_kb_slug": "nuclia-e2e-live",
                 "permanent_nua_key": os.environ.get("TEST_EUROPE1_NUCLIA_NUA"),
             },
             {
                 "name": "aws-us-east-2-1",
                 "zone_slug": "aws-us-east-2-1",
-                "base_url": "https://aws-us-east-2-1.nuclia.cloud",
                 "test_kb_slug": "nuclia-e2e-live",
                 "permanent_nua_key": os.environ.get("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
             },
@@ -58,7 +56,7 @@ CLUSTERS_CONFIG = {
     },
     "stage": {
         "global": {
-            "base_url": "https://stashify.cloud",
+            "base_domain": "stashify.cloud",
             "recaptcha": os.environ.get("STAGE_GLOBAL_RECAPTCHA"),
             "root_pat_token": os.environ.get("STAGE_ROOT_PAT_TOKEN"),
             "permanent_account_slug": "automated-testing",
@@ -68,7 +66,6 @@ CLUSTERS_CONFIG = {
             {
                 "name": "europe-1",
                 "zone_slug": "europe-1",
-                "base_url": "https://europe-1.stashify.cloud",
                 "test_kb_slug": "nuclia-e2e-live",
                 "permanent_nua_key": os.environ.get("TEST_EUROPE1_STASHIFY_NUA"),
             },
@@ -76,7 +73,6 @@ CLUSTERS_CONFIG = {
             # {
             #     "name": "europe-2",
             #     "zone_slug": "europe-1",
-            #     "base_url": "https://europe-1.stashify.cloud",
             #     "test_kb_slug": "nuclia-e2e-live"
             # }
         ],
@@ -168,17 +164,17 @@ def global_api(aiohttp_session):
     """
     global_config = CLUSTERS_CONFIG[TEST_ENV]["global"]
     return GlobalAPI(
-        global_config["base_url"],
+        f"https://{global_config['base_url']}",
         global_config["recaptcha"],
         global_config["root_pat_token"],
         aiohttp_session,
     )
 
-
-@pytest.fixture()
+@pytest.fixture
 def global_api_config():
     global_config = CLUSTERS_CONFIG[TEST_ENV]["global"]
-    nuclia.BASE = global_config["base_url"]
+    nuclia.BASE = f"https://{global_config['base_domain']}"
+    nuclia.REGIONAL = f"https://{{region}}.{global_config['base_domain']}"
     os.environ["TESTING"] = "True"
     with tempfile.NamedTemporaryFile() as temp_file:
         temp_file.write(b"{}")
