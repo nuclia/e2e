@@ -1,3 +1,4 @@
+from .data import TEST_ACCOUNT_SLUG
 from copy import deepcopy
 from email.header import decode_header
 from functools import partial
@@ -18,8 +19,6 @@ import random
 import re
 import string
 import tempfile
-
-from .data import TEST_ACCOUNT_SLUG
 
 TEST_ENV = os.environ.get("TEST_ENV")
 

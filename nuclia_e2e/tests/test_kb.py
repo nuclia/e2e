@@ -248,10 +248,19 @@ async def run_test_ask(regional_api_config):
         features=["keyword", "semantic", "relations"],
         query="why cocoa prices high?",
         model="chatgpt4o",
+        prompt="""
+Answer the following question based **only** on the provided context. Do **not** use any outside knowledge. If the context does not provide enough information to fully answer the question, reply with: “Not enough data to answer this.”
+Don’t be too picky. please try to answer if possible, even if it requires to make a bit of a deduction.
+[START OF CONTEXT]
+{context}
+[END OF CONTEXT]
+Question: {question}
+# Notes
+- **Do not** mention the source of the context in any case""",
     )
 
     assert "climate change" in ask_result.answer.decode().lower()
-    ask_more_result = await kb.search.ask(
+    parameters = dict(
         autofilter=True,
         rephrase=True,
         reranker="predict",
@@ -263,7 +272,63 @@ async def run_test_ask(regional_api_config):
         query="when?",
         model="chatgpt4o",
     )
+
+    ask_more_result = await kb.search.ask(
+        autofilter=True,
+        rephrase=True,
+        reranker="predict",
+        features=["keyword", "semantic", "relations"],
+        context=[
+            {"author": "USER", "text": "why cocoa prices high?"},
+            {"author": "NUCLIA", "text": ask_result.answer.decode()},
+        ],
+        query="Since when are high?",
+        model="chatgpt4o",
+    )
     assert "earlier" in ask_more_result.answer.decode().lower()
+
+
+async def run_test_activity_log(regional_api_config):
+    kb = NucliaKB()
+    now = datetime.now(tz=timezone.utc)
+
+    def activity_log_is_stored():
+        @wraps(activity_log_is_stored)
+        async def condition() -> tuple[bool, Any]:
+            logs = await asyncio.to_thread(
+                partial(
+                    kb.logs.query,
+                    type=EventType.CHAT,
+                    query=ActivityLogsChatQuery(
+                        year_month="{dt.year}-{dt.month:02}".format(dt=now), filters={}
+                    ),
+                )
+            )
+            if len(logs.data) >= 2:
+                # as the asks may be retried more than once (because some times rephrase doesn't always work)
+                # we need to check the last logs. The way the tests are setup if we reach here is because we validated
+                # that we got the expected results on ask, so the log should match this reasoning.
+                if (
+                    logs.data[-2].question == "why cocoa prices high?"
+                    and logs.data[-1].question == "Since when are high?"
+                ):
+                    return (True, logs)
+            return (False, None)
+
+        return condition
+
+    success, logs = await wait_for(activity_log_is_stored(), max_wait=60)
+    assert success, "Activity logs didn't get stored in time"
+
+    # if we have the ask events, we'll must have the find ones, as they have been done earlier.
+    logs = await asyncio.to_thread(
+        partial(
+            kb.logs.query,
+            type=EventType.SEARCH,
+            query=ActivityLogsSearchQuery(year_month="{dt.year}-{dt.month:02}".format(dt=now), filters={}),
+        )
+    )
+    assert logs.data[-1].question == "why cocoa prices high?"
 
 
 async def run_test_remi_query(regional_api_config):
@@ -290,51 +355,11 @@ async def run_test_remi_query(regional_api_config):
 
         return condition
 
-    success, _ = (
-        await wait_for(
-            remi_data_is_computed(),
-            max_wait=2400,
-        ),
+    _, success = await wait_for(
+        remi_data_is_computed(),
+        max_wait=120,
     )
     assert success, "Remi scores didn't get computed in time"
-
-
-async def run_test_activity_log(regional_api_config):
-    kb = NucliaKB()
-    now = datetime.now(tz=timezone.utc)
-
-    def activity_log_is_stored():
-        @wraps(activity_log_is_stored)
-        async def condition() -> tuple[bool, Any]:
-            logs = await asyncio.to_thread(
-                partial(
-                    kb.logs.query,
-                    type=EventType.CHAT,
-                    query=ActivityLogsChatQuery(year_month="{dt.year}-{dt.month}".format(dt=now), filters={}),
-                )
-            )
-            if len(logs.data) >= 2:
-                # as the asks may be retried more than once (because some times rephrase doesn't always work)
-                # we need to check the last logs. The way the tests are setup if we reach here is because we validated
-                # that we got the expected results on ask, so the log should match this reasoning.
-                if logs.data[-2].question == "why cocoa prices high?" and logs.data[-1].question == "when?":
-                    return (True, logs)
-            return (False, None)
-
-        return condition
-
-    success, logs = await wait_for(activity_log_is_stored(), max_wait=120)
-    assert success, "Activity logs didn't get stored in time"
-
-    # if we have the ask events, we'll must have the find ones, as they have been done earlier.
-    logs = await asyncio.to_thread(
-        partial(
-            kb.logs.query,
-            type=EventType.SEARCH,
-            query=ActivityLogsSearchQuery(year_month="{dt.year}-{dt.month}".format(dt=now), filters={}),
-        )
-    )
-    assert logs.data[-1].question == "why cocoa prices high?"
 
 
 async def run_test_kb_deletion(regional_api_config):
@@ -388,11 +413,7 @@ async def test_kb(regional_api_config, clean_kb_test):
     # and can be queried, and that the remi quality metrics. Even if the remi metrics won't be computed until
     # the activity log is stored, the test_activity_log tests several things aside the ask events (the ones
     # affecting the remi queries) and so we can benefit of running them in parallel.
-    await asyncio.gather(
-        run_test_activity_log(regional_api_config),
-        # DISABLED until we integrate remiv2
-        # run_test_remi_query(regional_api_config)
-    )
+    await asyncio.gather(run_test_activity_log(regional_api_config), run_test_remi_query(regional_api_config))
 
     # Delete the kb as a final step
     await run_test_kb_deletion(regional_api_config)

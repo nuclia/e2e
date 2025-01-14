@@ -1,11 +1,11 @@
+from .data import TEST_ACCOUNT_SLUG
+from .data import TEST_ONBOARD_INQUIRY
+
 import pytest
-from .data import TEST_ONBOARD_INQUIRY, TEST_ACCOUNT_SLUG
 
 
 @pytest.mark.asyncio_cooperative
-async def test_onboarding(
-    request, global_api, email_util, cleanup_test_account, aiohttp_session
-):
+async def test_onboarding(request, global_api, email_util, cleanup_test_account, aiohttp_session):
     # Request signup using a random alias email
     test_alias_email = email_util.generate_email_address()
     test_password = "notarealpassword"
