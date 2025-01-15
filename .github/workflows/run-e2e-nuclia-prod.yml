@@ -38,7 +38,7 @@ jobs:
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
 
         run: |
-          TEST_ENV=prod pytest nuclia_e2e/tests --durations=0 --junitxml nuclia.xml
+          TEST_ENV=prod pytest -sxv nuclia_e2e/tests --durations=0 --junitxml nuclia.xml
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
