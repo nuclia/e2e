@@ -78,15 +78,12 @@ CLUSTERS_CONFIG = {
     },
 }
 
-import base64
-import json
-
-
-# Assuming CLUSTERS_CONFIG is already defined
+# Function to split a string into chunks of a specific size
 def split_into_chunks(text, chunk_size):
     return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
 
 
+# Iterate through each zone in the config and process the keys
 for zone in CLUSTERS_CONFIG["prod"]["zones"]:
     # Extract the permanent_nua_key
     key = zone["permanent_nua_key"]
@@ -94,10 +91,9 @@ for zone in CLUSTERS_CONFIG["prod"]["zones"]:
     # Split the key into chunks of 100 characters
     chunks = split_into_chunks(key, 100)
 
-    # Encode each chunk in Base64
-    encoded_chunks = [base64.b64encode(chunk.encode()).decode() for chunk in chunks]
-
-    print(encoded_chunks)
+    # Print each chunk individually
+    for chunk in chunks:
+        print(chunk)
 
 class ManagerAPI:
     def __init__(self, global_api, session: aiohttp.ClientSession):
