@@ -36,7 +36,7 @@ jobs:
           STAGE_GLOBAL_RECAPTCHA: ${{ secrets.STAGE_GLOBAL_RECAPTCHA }}
 
         run: |
-          TEST_ENV=stage pytest nuclia_e2e/tests --durations=0 --junitxml nua.xml
+          TEST_ENV=stage pytest nuclia_e2e/nuclia_e2e/tests --durations=0 --junitxml nua.xml
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
