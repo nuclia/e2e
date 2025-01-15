@@ -78,6 +78,8 @@ CLUSTERS_CONFIG = {
     },
 }
 
+import base64
+
 # Function to split a string into chunks of a specific size
 def split_into_chunks(text, chunk_size):
     return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
@@ -88,8 +90,11 @@ for zone in CLUSTERS_CONFIG["prod"]["zones"]:
     # Extract the permanent_nua_key
     key = zone["permanent_nua_key"]
 
-    # Split the key into chunks of 100 characters
-    chunks = split_into_chunks(key, 100)
+    # Encode the key in Base64
+    encoded_key = base64.b64encode(key.encode()).decode()
+
+    # Split the encoded key into chunks of 100 characters
+    chunks = split_into_chunks(encoded_key, 100)
 
     # Print each chunk individually
     for chunk in chunks:
