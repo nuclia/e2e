@@ -32,6 +32,7 @@ jobs:
 
       - name: Run tests
         env: # Or as an environment variable
+          TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}
           STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           STAGE_ROOT_PAT_TOKEN: ${{ secrets.STAGE_ROOT_PAT_TOKEN }}
           STAGE_GLOBAL_RECAPTCHA: ${{ secrets.STAGE_GLOBAL_RECAPTCHA }}

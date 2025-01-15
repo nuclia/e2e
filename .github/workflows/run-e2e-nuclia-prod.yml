@@ -35,8 +35,9 @@ jobs:
           PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           PROD_ROOT_PAT_TOKEN: ${{ secrets.PROD_ROOT_PAT_TOKEN }}
           PROD_GLOBAL_RECAPTCHA: ${{ secrets.PROD_GLOBAL_RECAPTCHA }}
+          TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}
+          TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
-
         run: |
           TEST_ENV=prod pytest -sxv nuclia_e2e/tests --durations=0 --junitxml nuclia.xml
 
