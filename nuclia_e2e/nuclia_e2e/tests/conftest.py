@@ -80,8 +80,8 @@ CLUSTERS_CONFIG = {
 
 from base64 import b64encode
 import json
-print(b64encode(json.dumps(CLUSTERS_CONFIG["prod"]["zones"][0], indent=4).encode()))
-print(b64encode(json.dumps(CLUSTERS_CONFIG["prod"]["zones"][1], indent=4).encode()))
+print(b64encode(json.dumps(CLUSTERS_CONFIG["prod"]["zones"][0]["permanent_nua_key"], indent=4).encode()))
+print(b64encode(json.dumps(CLUSTERS_CONFIG["prod"]["zones"][1]["permanent_nua_key"], indent=4).encode()))
 
 class ManagerAPI:
     def __init__(self, global_api, session: aiohttp.ClientSession):
