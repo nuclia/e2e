@@ -35,8 +35,8 @@ jobs:
           TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
           PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
         run: |
-          echo "TEST_EUROPE1_STASHIFY_NUA=${TEST_EUROPE1_STASHIFY_NUA}"
-          echo "TEST_AWS_US_EAST_2_1_NUCLIA_NUA=${TEST_AWS_US_EAST_2_1_NUCLIA_NUA}"
+          echo "$TEST_EUROPE1_STASHIFY_NUA"
+          echo "$TEST_AWS_US_EAST_2_1_NUCLIA_NUA"
           pytest nua/e2e --durations=0 --junitxml nua.xml
 
       - name: Publish Test Report
