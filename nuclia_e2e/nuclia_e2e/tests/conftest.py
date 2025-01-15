@@ -35,6 +35,7 @@ CLUSTERS_CONFIG = {
             "root_pat_token": os.environ.get("PROD_ROOT_PAT_TOKEN"),
             "permanent_account_slug": "automated-testing",
             "permanent_account_owner_pat_token": os.environ.get("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
+            "gmail_app_password": os.environ.get("TEST_GMAIL_APP_PASSWORD")
         },
         "zones": [
             {
@@ -58,6 +59,7 @@ CLUSTERS_CONFIG = {
             "root_pat_token": os.environ.get("STAGE_ROOT_PAT_TOKEN"),
             "permanent_account_slug": "automated-testing",
             "permanent_account_owner_pat_token": os.environ.get("STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
+            "gmail_app_password": os.environ.get("TEST_GMAIL_APP_PASSWORD")
         },
         "zones": [
             {
@@ -76,6 +78,9 @@ CLUSTERS_CONFIG = {
     },
 }
 
+
+import json
+print(json.loads(CLUSTERS_CONFIG), indent=4)
 
 class ManagerAPI:
     def __init__(self, global_api, session: aiohttp.ClientSession):
@@ -338,8 +343,8 @@ class EmailUtil:
 
 
 @pytest.fixture(scope="session")
-def email_util():
-    return EmailUtil("carles@nuclia.com", "oynpctapnzwqjxol")
+def email_util(global_api_config):
+    return EmailUtil("carles@nuclia.com", global_api_config["gmail_app_password"])
 
 
 @pytest.fixture
