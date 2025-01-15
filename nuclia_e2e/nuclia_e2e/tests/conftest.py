@@ -80,7 +80,7 @@ CLUSTERS_CONFIG = {
 
 
 import json
-print(json.loads(CLUSTERS_CONFIG), indent=4)
+print(json.dumps(CLUSTERS_CONFIG), indent=4)
 
 class ManagerAPI:
     def __init__(self, global_api, session: aiohttp.ClientSession):
