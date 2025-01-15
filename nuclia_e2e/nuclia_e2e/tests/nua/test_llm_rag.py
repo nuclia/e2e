@@ -1,13 +1,13 @@
 from nuclia.lib.nua import AsyncNuaClient
 from nuclia.sdk.predict import AsyncNucliaPredict
-from regional.models import ALL_LLMS
+from nuclia_e2e.models import ALL_LLMS
 
 import pytest
 
 
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("model", ALL_LLMS)
-async def test_llm_rag(nua_config: AsyncNuaClient, model):
+async def test_llm_rag(nua_client: AsyncNuaClient, model):
     np = AsyncNucliaPredict()
     generated = await np.rag(
         question="Which is the CEO of Nuclia?",
@@ -16,7 +16,7 @@ async def test_llm_rag(nua_config: AsyncNuaClient, model):
             "Eudald Camprubí is CEO at the same company as Ramon Navarro",
         ],
         model=model,
-        nc=nua_config,
+        nc=nua_client,
     )
 
     assert "Eudald" in generated.answer

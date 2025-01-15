@@ -368,7 +368,7 @@ async def clean_kb_test(request, regional_api_config):
 @pytest.fixture
 async def nua_client(regional_api_config):
     nc = AsyncNuaClient(
-        region=regional_api_config["zone"],
+        region=regional_api_config["zone_slug"],
         account=regional_api_config["permanent_account_id"],
         token=regional_api_config["permanent_nua_key"],
     )
