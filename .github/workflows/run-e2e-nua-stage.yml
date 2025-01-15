@@ -35,6 +35,7 @@ jobs:
           TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}
           STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
         run: |
+          echo "TEST_EUROPE1_STASHIFY_NUA=${TEST_EUROPE1_STASHIFY_NUA}"
           TEST_ENV=stage pytest nua/e2e --durations=0 --junitxml nua.xml
 
       - name: Publish Test Report
