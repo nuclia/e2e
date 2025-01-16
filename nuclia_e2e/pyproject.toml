@@ -3,7 +3,7 @@ name = "nuclia_e2e"  # Your package name
 version = "0.1.0"    # Version
 description = "Your project description"
 readme = "README.md"  # Relative to nuclia_e2e
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 dependencies = [
     # Your dependencies here
 ]
@@ -11,7 +11,7 @@ dependencies = [
 
 [tool.ruff]
 # Support Python 3.9+.
-target-version = "py39"
+target-version = "py310"
 line-length = 110
 lint.select = [
     "E",   # pycodestyle errors
@@ -71,6 +71,8 @@ lint.ignore = [
     "SIM105", # to allow try except pass isntead of using contextlib.suppress
     "N806",
     "SLF001",
+    "TRY003",
+    "EM102",
 
     # When using Ruff as a formatter, it is recommended to avoid the following lint rules:
     "W191", # tab-indentation

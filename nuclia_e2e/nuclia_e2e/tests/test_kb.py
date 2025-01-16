@@ -142,6 +142,7 @@ async def run_test_import_kb(regional_api_config, ndb, logger):
     Imports a kb with three resources and some labelsets already created
     """
     kb = AsyncNucliaKB()
+
     await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export", ndb=ndb)
 
     def resources_are_imported(resources):
@@ -412,7 +413,7 @@ async def run_test_kb_deletion(regional_api_config, kbid, logger):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb(request, regional_api_config, clean_kb_test):
+async def test_kb(upload_lock, request, regional_api_config, clean_kb_test):
     """
     Test a chain of operations that simulates a normal use of a knowledgebox, just concentrated
     in time.
@@ -429,9 +430,6 @@ async def test_kb(request, regional_api_config, clean_kb_test):
     def logger(msg):
         print(f"{request.node.name} ::: {msg}")
 
-    print()
-    logger("starting test")
-
     zone = regional_api_config["zone_slug"]
     account = regional_api_config["permanent_account_id"]
     auth = get_auth()
@@ -443,7 +441,7 @@ async def test_kb(request, regional_api_config, clean_kb_test):
     # to override all the sdk endpoints that automagically creates the client
     # as this is incompatible with the cooperative tests
     async_ndb = get_async_kb_ndb_client(zone, account, kbid, auth._config.token)
-    sync_ndb = get_sync_kb_ndb_client(zone, account, kbid, auth._config.token, sync=True)
+    sync_ndb = get_sync_kb_ndb_client(zone, account, kbid, auth._config.token)
 
     # Import a preexisting export containing several resources (coming from the financial-news kb)
     # and wait for the resources to be completely imported

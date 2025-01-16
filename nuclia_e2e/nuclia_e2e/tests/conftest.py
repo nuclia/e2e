@@ -35,7 +35,7 @@ CLUSTERS_CONFIG = {
             "root_pat_token": os.environ.get("PROD_ROOT_PAT_TOKEN"),
             "permanent_account_slug": "automated-testing",
             "permanent_account_owner_pat_token": os.environ.get("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
-            "gmail_app_password": os.environ.get("TEST_GMAIL_APP_PASSWORD")
+            "gmail_app_password": os.environ.get("TEST_GMAIL_APP_PASSWORD"),
         },
         "zones": [
             {
@@ -59,7 +59,7 @@ CLUSTERS_CONFIG = {
             "root_pat_token": os.environ.get("STAGE_ROOT_PAT_TOKEN"),
             "permanent_account_slug": "automated-testing",
             "permanent_account_owner_pat_token": os.environ.get("STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
-            "gmail_app_password": os.environ.get("TEST_GMAIL_APP_PASSWORD")
+            "gmail_app_password": os.environ.get("TEST_GMAIL_APP_PASSWORD"),
         },
         "zones": [
             {
@@ -77,6 +77,7 @@ CLUSTERS_CONFIG = {
         ],
     },
 }
+
 
 class ManagerAPI:
     def __init__(self, global_api, session: aiohttp.ClientSession):
@@ -146,7 +147,7 @@ class GlobalAPI:
             return (await response.json())["id"]
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def aiohttp_session():
     """
     Create a shared aiohttp session for the entire test session.
@@ -155,14 +156,14 @@ async def aiohttp_session():
         yield session
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def global_api(aiohttp_session):
     """
     Provide a configured GlobalAPI instance for tests.
     """
     global_config = CLUSTERS_CONFIG[TEST_ENV]["global"]
     return GlobalAPI(
-        f"https://{global_config['base_url']}",
+        f"https://{global_config['base_domain']}",
         global_config["recaptcha"],
         global_config["root_pat_token"],
         aiohttp_session,
@@ -338,7 +339,7 @@ class EmailUtil:
         return signup_url
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def email_util(global_api_config):
     return EmailUtil("carles@nuclia.com", global_api_config["gmail_app_password"])
 
@@ -369,7 +370,7 @@ async def clean_kb_test(request, regional_api_config):
 @pytest.fixture
 async def nua_client(regional_api_config):
     nc = AsyncNuaClient(
-        region=regional_api_config["zone_slug"],
+        region=nuclia.REGIONAL.format(region=regional_api_config["zone_slug"]),
         account=regional_api_config["permanent_account_id"],
         token=regional_api_config["permanent_nua_key"],
     )
