@@ -413,7 +413,7 @@ async def run_test_kb_deletion(regional_api_config, kbid, logger):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb(upload_lock, request, regional_api_config, clean_kb_test):
+async def test_kb(request, regional_api_config, clean_kb_test):
     """
     Test a chain of operations that simulates a normal use of a knowledgebox, just concentrated
     in time.
