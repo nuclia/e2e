@@ -25,6 +25,7 @@ import aiohttp
 import asyncio
 import base64
 import pytest
+from time import time
 
 
 @dataclass
@@ -467,14 +468,18 @@ async def tmp_nua_key(
     pat_client_generator = aiohttp_client(
         base_url=nua_client.url,
         pat_key=global_api_config["permanent_account_owner_pat_token"],
-        timeout=30,
+        timeout=300,
     )
     pat_client = await anext(pat_client_generator)
+    t0 = time()
+    print("nua creation start")
     nua_client_id, nua_key = await create_nua_key(
         client=pat_client,
         account_id=account_id,
         title=f"E2E DA AGENTS - {nua_client.region}",
     )
+    t1 = time()
+    print(f"nua creation elapsed: {t1-t0}")
     try:
         yield nua_key
     finally:
