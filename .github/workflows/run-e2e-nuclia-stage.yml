@@ -36,6 +36,7 @@ jobs:
           STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           STAGE_ROOT_PAT_TOKEN: ${{ secrets.STAGE_ROOT_PAT_TOKEN }}
           STAGE_GLOBAL_RECAPTCHA: ${{ secrets.STAGE_GLOBAL_RECAPTCHA }}
+          TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
 
         run: |
           TEST_ENV=stage pytest -sxv nuclia_e2e/nuclia_e2e/tests --durations=0 --junitxml nua.xml
