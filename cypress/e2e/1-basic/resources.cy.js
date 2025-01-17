@@ -80,7 +80,7 @@ describe('Resources', () => {
         it('should allow to preview', () => {
           cy.contains('Lamarr Lesson plan.pdf').click();
           cy.get('.edit-resource > header').should('contain', 'Lamarr Lesson plan.pdf');
-          cy.get('.edit-resource .main-container .paragraph-container').should('contain', 'Lamarr Lesson plan.pdf');
+          cy.get('.edit-resource .main-container .resource-container').should('contain', 'Lamarr Lesson plan.pdf');
           cy.get('.edit-resource nav li:not(.active):first').click();
           cy.get('.edit-resource .main-container').should('contain', 'Hedy Lamarr, An Inventive Mind');
         });
