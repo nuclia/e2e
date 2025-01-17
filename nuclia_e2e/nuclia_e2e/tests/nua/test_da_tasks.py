@@ -19,13 +19,13 @@ from nuclia_models.worker.tasks import PARAMETERS_TYPING
 from nuclia_models.worker.tasks import TaskName
 from nuclia_models.worker.tasks import TaskStart
 from nucliadb_protos.writer_pb2 import BrokerMessage
+from time import time
 
 import aiofiles
 import aiohttp
 import asyncio
 import base64
 import pytest
-from time import time
 
 
 @dataclass

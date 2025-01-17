@@ -54,7 +54,7 @@ async def wait_for(
 
 async def get_kbid_from_slug(zone: str, slug: str) -> str:
     kbs = NucliaKBS()
-    all_kbs = await asyncio.to_thread(partial(kbs.list, zone=zone))
+    all_kbs = await asyncio.to_thread(kbs.list)
     kbids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kbid = kbids_by_slug.get(slug)
     return kbid

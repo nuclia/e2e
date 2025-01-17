@@ -78,6 +78,7 @@ CLUSTERS_CONFIG = {
     },
 }
 
+
 class ManagerAPI:
     def __init__(self, global_api, session: aiohttp.ClientSession):
         self.global_api = global_api
@@ -356,7 +357,7 @@ async def cleanup_test_account(global_api: GlobalAPI):
 async def clean_kb_test(request, regional_api_config):
     kbs = NucliaKBS()
     kb_slug = regional_api_config["test_kb_slug"]
-    all_kbs = await asyncio.to_thread(partial(kbs.list, zone=regional_api_config["zone_slug"]))
+    all_kbs = await asyncio.to_thread(kbs.list)
     kb_ids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kb_id = kb_ids_by_slug.get(kb_slug)
     try:
