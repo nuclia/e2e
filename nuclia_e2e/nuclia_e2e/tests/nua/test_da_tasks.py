@@ -2,6 +2,7 @@ from collections.abc import AsyncGenerator
 from collections.abc import Callable
 from dataclasses import dataclass
 from nuclia.lib.nua import AsyncNuaClient
+from nuclia_e2e.tests.conftest import TEST_ENV
 from nuclia_e2e.utils import get_asset_file_path
 from nuclia_models.worker.proto import ApplyTo
 from nuclia_models.worker.proto import AskOperation
@@ -26,6 +27,9 @@ import aiohttp
 import asyncio
 import base64
 import pytest
+
+LLAMA_GUARD_ENABLED = TEST_ENV == "prod"
+PROMPT_GUARD_ENABLED = TEST_ENV == "prod"
 
 
 @dataclass
@@ -156,18 +160,31 @@ async def wait_for_task_completion(
 
 async def validate_task_output(client: aiohttp.ClientSession, validation: Callable[[BrokerMessage], None]):
     max_retries = 5
+    last_retry_exc = None
     for _ in range(max_retries):
-        resp = await client.get("/api/v1/processing/pull", params={"from_cursor": 0, "limit": 1})
-        assert resp.status == 200, await resp.text()
-        pull_response = await resp.json()
-        if pull_response["payloads"]:
-            assert len(pull_response["payloads"]) == 1
+        try:
+            resp = await client.get("/api/v1/processing/pull", params={"from_cursor": 0, "limit": 1})
+            assert resp.status == 200, await resp.text()
+            pull_response = await resp.json()
+            payloads = pull_response.get("payloads", [])
+            assert len(payloads) > 0, "No payload received"
+            assert len(payloads) == 1, f"Only one payload expected, got {len(payloads)}"
+
             message = BrokerMessage()
-            message.ParseFromString(base64.b64decode(pull_response["payloads"][0]))
+            message.ParseFromString(base64.b64decode(payloads[0]))
             validation(message)
+
+        except AssertionError as exc:
+            last_retry_exc = exc
+            await asyncio.sleep(5)
+            continue
+        else:
+            # No exception on the last retry, we're good!
             return
-        await asyncio.sleep(5)
-    raise ValueError(f"Failed to retrieve a task output after {max_retries} attempts")
+
+    # if we exceeded retries and we're here, last one failed
+    if last_retry_exc is not None:
+        pytest.fail(f"Failed to validate task output ater {max_retries}. Last error was: {last_retry_exc!r}")
 
 
 LABEL_OPERATION_IDENT = "label-operation-ident-1"
@@ -337,29 +354,39 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
         validate_output=validate_llm_graph_output,
     ),
-    TestInput(
-        filename="jailbreak-kb.arrow",
-        task_name=TaskName.PROMPT_GUARD,
-        parameters=DataAugmentation(
-            name="e2e-test-prompt-guard",
-            on=ApplyTo.FIELD,
-            filter=Filter(),
-            operations=[Operation(prompt_guard=GuardOperation(enable=True))],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+    pytest.param(
+        TestInput(
+            filename="jailbreak-kb.arrow",
+            task_name=TaskName.PROMPT_GUARD,
+            parameters=DataAugmentation(
+                name="e2e-test-prompt-guard",
+                on=ApplyTo.FIELD,
+                filter=Filter(),
+                operations=[Operation(prompt_guard=GuardOperation(enable=True))],
+                llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            ),
+            validate_output=validate_prompt_guard_output,
         ),
-        validate_output=validate_prompt_guard_output,
+        marks=pytest.mark.skipif(
+            PROMPT_GUARD_ENABLED, reason="Feature flag application_prompt-safety-task is disabled"
+        ),
     ),
-    TestInput(
-        filename="toxic-kb.arrow",
-        task_name=TaskName.LLAMA_GUARD,
-        parameters=DataAugmentation(
-            name="e2e-test-llama-guard",
-            on=ApplyTo.FIELD,
-            filter=Filter(),
-            operations=[Operation(llama_guard=GuardOperation(enable=True))],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+    pytest.param(
+        TestInput(
+            filename="toxic-kb.arrow",
+            task_name=TaskName.LLAMA_GUARD,
+            parameters=DataAugmentation(
+                name="e2e-test-llama-guard",
+                on=ApplyTo.FIELD,
+                filter=Filter(),
+                operations=[Operation(llama_guard=GuardOperation(enable=True))],
+                llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            ),
+            validate_output=validate_llama_guard_output,
         ),
-        validate_output=validate_llama_guard_output,
+        marks=pytest.mark.skipif(
+            LLAMA_GUARD_ENABLED, reason="Feature flag application_content-safety-task is disabled"
+        ),
     ),
     TestInput(
         filename="legal-text-kb.arrow",
@@ -430,29 +457,39 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
         validate_output=validate_labeler_output_text_block,
     ),
-    TestInput(
-        filename="jailbreak-kb.arrow",
-        task_name=TaskName.PROMPT_GUARD,
-        parameters=DataAugmentation(
-            name="e2e-test-prompt-guard-text-block",
-            on=ApplyTo.TEXT_BLOCK,
-            filter=Filter(),
-            operations=[Operation(prompt_guard=GuardOperation(enable=True))],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+    pytest.param(
+        TestInput(
+            filename="jailbreak-kb.arrow",
+            task_name=TaskName.PROMPT_GUARD,
+            parameters=DataAugmentation(
+                name="e2e-test-prompt-guard-text-block",
+                on=ApplyTo.TEXT_BLOCK,
+                filter=Filter(),
+                operations=[Operation(prompt_guard=GuardOperation(enable=True))],
+                llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            ),
+            validate_output=validate_prompt_guard_output_text_block,
         ),
-        validate_output=validate_prompt_guard_output_text_block,
+        marks=pytest.mark.skipif(
+            PROMPT_GUARD_ENABLED, reason="Feature flag application_prompt-safety-task is disabled"
+        ),
     ),
-    TestInput(
-        filename="toxic-kb.arrow",
-        task_name=TaskName.LLAMA_GUARD,
-        parameters=DataAugmentation(
-            name="e2e-test-llama-guard-text-block",
-            on=ApplyTo.TEXT_BLOCK,
-            filter=Filter(),
-            operations=[Operation(llama_guard=GuardOperation(enable=True))],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+    pytest.param(
+        TestInput(
+            filename="toxic-kb.arrow",
+            task_name=TaskName.LLAMA_GUARD,
+            parameters=DataAugmentation(
+                name="e2e-test-llama-guard-text-block",
+                on=ApplyTo.TEXT_BLOCK,
+                filter=Filter(),
+                operations=[Operation(llama_guard=GuardOperation(enable=True))],
+                llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            ),
+            validate_output=validate_llama_guard_output_text_block,
         ),
-        validate_output=validate_llama_guard_output_text_block,
+        marks=pytest.mark.skipif(
+            LLAMA_GUARD_ENABLED, reason="Feature flag application_content-safety-task is disabled"
+        ),
     ),
 ]
 
