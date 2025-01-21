@@ -39,7 +39,7 @@ ASSETS_FILE_PATH = f"{Path(__file__).parent.parent}/assets"
 
 
 async def wait_for(
-    condition: Coroutine, max_wait: int = 60, interval: int = 1, logger=None
+    condition: Coroutine, max_wait: int = 60, interval: int = 5, logger=None
 ) -> tuple[bool, Any]:
     func_name = condition.__name__
     logger(f"start wait_for '{func_name}', max_wait={max_wait}s")
