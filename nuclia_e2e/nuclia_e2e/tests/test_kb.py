@@ -296,7 +296,7 @@ async def run_test_ask(regional_api_config, ndb, logger):
         reranker="predict",
         features=["keyword", "semantic", "relations"],
         query="why cocoa prices high?",
-        model="chatgpt4o",
+        model="chatgpt-azure-4o-mini",
         prompt=dedent(
             """
             Answer the following question based **only** on the provided context. Do **not** use any outside
@@ -326,7 +326,7 @@ async def run_test_ask(regional_api_config, ndb, logger):
             {"author": "NUCLIA", "text": ask_result.answer.decode()},
         ],
         query="Since when are high?",
-        model="chatgpt4o",
+        model="chatgpt-azure-4o-mini",
     )
     assert "earlier" in ask_more_result.answer.decode().lower()
 
