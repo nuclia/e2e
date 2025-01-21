@@ -508,15 +508,11 @@ async def tmp_nua_key(
         timeout=300,
     )
     pat_client = await anext(pat_client_generator)
-    t0 = time()
-    print("nua creation start")
     nua_client_id, nua_key = await create_nua_key(
         client=pat_client,
         account_id=account_id,
         title=f"E2E DA AGENTS - {nua_client.region}",
     )
-    t1 = time()
-    print(f"nua creation elapsed: {t1-t0}")
     try:
         yield nua_key
     finally:
@@ -526,6 +522,7 @@ async def tmp_nua_key(
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("test_input", DA_TEST_INPUTS, ids=lambda test_input: test_input.parameters.name)
 async def test_da_agent_tasks(
+    request,
     nua_client: AsyncNuaClient,
     aiohttp_client: AsyncGenerator[aiohttp.ClientSession, None],
     tmp_nua_key: str,
@@ -547,7 +544,7 @@ async def test_da_agent_tasks(
             task_name=test_input.task_name,
             parameters=test_input.parameters,
         )
-        print(f"{test_input.parameters.name} task_id: {task_id}")
+        print(f"{request.node.name} ::  task_id: {task_id}")
         task_request = await wait_for_task_completion(
             client=nua_client, dataset_id=dataset_id, task_id=task_id
         )
@@ -566,4 +563,4 @@ async def test_da_agent_tasks(
             await delete_dataset(client=nua_client, dataset_id=dataset_id)
         end_time = asyncio.get_event_loop().time()
         elapsed_time = end_time - start_time
-        print(f"Test {test_input.parameters.name} completed in {elapsed_time:.2f} seconds.")
+        print(f"{request.node.name} :: Task completed in {elapsed_time:.2f} seconds.")
