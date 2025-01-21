@@ -269,6 +269,7 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb, logger):
     assert success
 
 
+@backoff.on_exception(backoff.constant, AssertionError, max_tries=5, interval=5)
 async def run_test_find(regional_api_config, ndb, logger):
     kb = AsyncNucliaKB()
 
@@ -285,7 +286,7 @@ async def run_test_find(regional_api_config, ndb, logger):
     assert first_resource.slug == "chocolatier"
 
 
-@backoff.on_exception(backoff.constant, AssertionError, max_tries=15, interval=1)
+@backoff.on_exception(backoff.constant, AssertionError, max_tries=5, interval=5)
 async def run_test_ask(regional_api_config, ndb, logger):
     kb = AsyncNucliaKB()
 
