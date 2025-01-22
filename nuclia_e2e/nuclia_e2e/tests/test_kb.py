@@ -375,7 +375,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
             query=ActivityLogsSearchQuery(year_month=f"{now.year}-{now.month:02}", filters={}),
         )
     )
-    assert logs.data[-1].question == "why cocoa prices high?"
+    assert logs.data[-1].question == TEST_CHOCO_QUESTION
 
 
 async def run_test_remi_query(regional_api_config, ndb, logger):
