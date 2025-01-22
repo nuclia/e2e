@@ -296,7 +296,7 @@ async def run_test_ask(regional_api_config, ndb, logger):
         rephrase=True,
         reranker="predict",
         features=["keyword", "semantic", "relations"],
-        query="why cocoa prices high?",
+        query="why are cocoa prices high?",
         model="chatgpt-azure-4o-mini",
         prompt=dedent(
             """
