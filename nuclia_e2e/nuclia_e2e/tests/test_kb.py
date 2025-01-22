@@ -38,6 +38,9 @@ NUCLIADB_KB_ENDPOINT = "/api/v1/kb/{kb}"
 ASSETS_FILE_PATH = f"{Path(__file__).parent.parent}/assets"
 
 
+TEST_CHOCO_QUESTION = "why are cocoa prices high?"
+TEST_CHOCO_ASK_MORE = "Since when are high?"
+
 async def wait_for(
     condition: Coroutine, max_wait: int = 60, interval: int = 5, logger=None
 ) -> tuple[bool, Any]:
@@ -279,7 +282,7 @@ async def run_test_find(regional_api_config, ndb, logger):
         rephrase=True,
         reranker="predict",
         features=["keyword", "semantic", "relations"],
-        query="why cocoa prices high?",
+        query=TEST_CHOCO_QUESTION
     )
     assert result.resources
     first_resource = next(iter(result.resources.values()))
@@ -296,7 +299,7 @@ async def run_test_ask(regional_api_config, ndb, logger):
         rephrase=True,
         reranker="predict",
         features=["keyword", "semantic", "relations"],
-        query="why are cocoa prices high?",
+        query=TEST_CHOCO_QUESTION,
         model="chatgpt-azure-4o-mini",
         prompt=dedent(
             """
@@ -323,10 +326,10 @@ async def run_test_ask(regional_api_config, ndb, logger):
         reranker="predict",
         features=["keyword", "semantic", "relations"],
         context=[
-            {"author": "USER", "text": "why cocoa prices high?"},
+            {"author": "USER", "text": TEST_CHOCO_QUESTION},
             {"author": "NUCLIA", "text": ask_result.answer.decode()},
         ],
-        query="Since when are high?",
+        query=TEST_CHOCO_ASK_MORE,
         model="chatgpt-azure-4o-mini",
     )
     assert "earlier" in ask_more_result.answer.decode().lower()
@@ -352,8 +355,8 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                 # we need to check the last logs. The way the tests are setup if we reach here is because we
                 # validated that we got the expected results on ask, so the log should match this reasoning.
                 if (
-                    logs.data[-2].question == "why cocoa prices high?"
-                    and logs.data[-1].question == "Since when are high?"
+                    logs.data[-2].question == TEST_CHOCO_QUESTION
+                    and logs.data[-1].question == TEST_CHOCO_ASK_MORE
                 ):
                     return (True, logs)
             return (False, None)
