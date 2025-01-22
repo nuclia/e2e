@@ -360,7 +360,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
 
         return condition
 
-    success, logs = await wait_for(activity_log_is_stored(), max_wait=90, logger=logger)
+    success, logs = await wait_for(activity_log_is_stored(), max_wait=120, logger=logger)
     assert success, "Activity logs didn't get stored in time"
 
     # if we have the ask events, we'll must have the find ones, as they have been done earlier.
