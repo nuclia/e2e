@@ -1,0 +1,61 @@
+name: run-nuclia-e2e-prod
+run-name: Running e2e PROD NUCLIA tests
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+    branches:
+      - main
+  schedule:
+    # run every day at 04:25
+    - cron: '25 3 * * *'
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      # Launch NucliaDB in docker
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r nuclia_e2e/requirements.txt
+          pip install -e nuclia_e2e
+
+      - name: Run tests
+        env: # Or as an environment variable
+          PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
+          PROD_ROOT_PAT_TOKEN: ${{ secrets.PROD_ROOT_PAT_TOKEN }}
+          PROD_GLOBAL_RECAPTCHA: ${{ secrets.PROD_GLOBAL_RECAPTCHA }}
+          TEST_EUROPE1_NUCLIA_NUA: ${{ secrets.TEST_EUROPE1_NUCLIA_NUA }}
+          TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
+          TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
+        run: |
+          TEST_ENV=prod pytest -sxv nuclia_e2e/nuclia_e2e/tests --durations=0 --junitxml nuclia.xml
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: success() || failure() # always run even if the previous step fails
+        with:
+          report_paths: 'nuclia.xml'
+
+      - name: Slack notification
+        id: slack
+        uses: slackapi/slack-github-action@v1.24.0
+        if: ${{ failure() && github.ref_name == 'main' }}
+        with:
+          payload: |
+            {
+              "text": "⚠️ tests failed on PROD\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

@@ -11,6 +11,7 @@ cypress.env.*.json
 /cypress/reports
 /cypress/downloads
 /ui-starter
+nuclia.xml
 
 # dependencies
 node_modules
@@ -43,6 +44,7 @@ yarn-error.log
 testem.log
 /typings
 .python-version
+__pycache__
 
 # System Files
 .DS_Store

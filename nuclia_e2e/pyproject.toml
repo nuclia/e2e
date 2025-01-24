@@ -1,0 +1,126 @@
+[project]
+name = "nuclia_e2e"  # Your package name
+version = "0.1.0"    # Version
+description = "Your project description"
+readme = "README.md"  # Relative to nuclia_e2e
+requires-python = ">=3.10"
+dependencies = [
+    # Your dependencies here
+]
+
+
+[tool.ruff]
+# Support Python 3.9+.
+target-version = "py310"
+line-length = 110
+lint.select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "C90", # mccabe
+    "F",   # pyflakes
+    "I",   # isort
+    # "D", # pydocstyle - skip, doesn't seem important for now
+    "C4",  # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "YTT", # flake8-2020
+    # "ANN", # flake8-annotations - Skip for now since it's difficult to standardize.
+    "S",   # flake8-bandit
+    "BLE", # flake8-blind-except
+    "FBT", # flake8-boolean-trap
+    # "A", # flake8-builtins - skip for now, but interesting to consider in the future.
+    "COM", # flake8-commas
+    # "DTZ", # flake8-datetimez - skip, doesn't seem important for now
+    "T10", # flake8-debugger
+    # "DJ",  # flake8-django - we don't use django
+    "EM",  # flake8-errmsg
+    "EXE", # flake8-executable
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "G",   # flake8-logging-format
+    "INP", # flake8-no-pep420
+    "PIE", # flake8-pie
+    "T20", # flake8-print
+    "PYI", # flake8-pyi
+    "PT",  # flake8-pytest-style
+    "Q",   # flake8-quotes
+    "RSE", # flake8-raise
+    "RET", # flake8-return
+    "SLF", # flake8-self
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "TCH", # flake8-type-checking
+    "INT", # flake8-gettext
+    # "ARG", # flake8-unused-arguments - causes more trouble then value
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    # "PD",  # pandas-vet - pandas not used
+    "PGH", # pygrep-hooks
+    "PL",  # pylint
+    "TRY", # tryceratops
+    # "NPY", # NumPy-specific rules - we don't currently use numpy
+    "RUF", # Ruff-specific rules
+]
+
+lint.ignore = [
+    "B008",   # do not perform function calls in argument defaults
+    "PT007",  # pytest row should also be able to use pytest.param values
+    "FBT003", # sometimes 3rd parties introduce boolean traps and we need to adjust
+    "TRY301", # more trouble then value.
+    "SIM105", # to allow try except pass isntead of using contextlib.suppress
+    "N806",
+    "SLF001",
+    "TRY003",
+    "EM102",
+
+    # When using Ruff as a formatter, it is recommended to avoid the following lint rules:
+    "W191", # tab-indentation
+    "E111", # indentation-with-invalid-multiple
+    "E114", # indentation-with-invalid-multiple-comment ()
+    "E117", # over-indented ()
+    "D206", # indent-with-spaces ()
+    "D300", # triple-single-quotes ()
+    "Q000", # bad-quotes-inline-string ()
+    "Q001", # bad-quotes-multiline-string ()
+    "Q002", # bad-quotes-docstring ()
+    "Q003", # avoidable-escaped-quote ()
+    "COM812", # missing-trailing-comma ()
+    "COM819", #prohibited-trailing-comma ()
+    "ISC001", # single-line-implicit-string-concatenation ()
+    "ISC002", # multi-line-implicit-string-concatenation ()
+    "S",
+
+    # TODO: Remove these rules from ignore list after fixing them
+    "ERA001",
+    "PLR2004",
+    "T201",
+    "BLE001",
+    "RET504",
+    "SIM102",
+    "B007",
+]
+
+exclude = [
+    ".git",
+]
+
+
+[tool.ruff.lint.isort]
+case-sensitive = false
+no-sections = true
+force-single-line = true # Recommended to remove
+order-by-type = false
+force-sort-within-sections = false
+from-first = true
+lines-between-types = 1
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["PLC0414",]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.pyupgrade]
+# Preserve types, even if a file imports `from __future__ import annotations`.
+keep-runtime-typing = true
