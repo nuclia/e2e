@@ -14,6 +14,7 @@ from nuclia.sdk.kbs import NucliaKBS
 from nuclia_models.events.activity_logs import ActivityLogsChatQuery
 from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
 from nuclia_models.events.activity_logs import EventType
+from nuclia_models.common.pagination import Pagination
 from nuclia_models.worker.proto import ApplyTo
 from nuclia_models.worker.proto import Filter
 from nuclia_models.worker.proto import Label
@@ -39,7 +40,7 @@ ASSETS_FILE_PATH = f"{Path(__file__).parent.parent}/assets"
 
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
-TEST_CHOCO_ASK_MORE = "Since when are high?"
+TEST_CHOCO_ASK_MORE = "When did they start being high?"
 
 async def wait_for(
     condition: Coroutine, max_wait: int = 60, interval: int = 5, logger=None
@@ -135,8 +136,28 @@ async def run_test_upload_and_process(regional_api_config, ndb, logger):
 
     success, _ = (
         await wait_for(resource_is_processed(rid), logger=logger),
-        "File was not processed in time",
+        "File was not processed in time, PROCESSED status not found in resource",
     )
+
+    # Wait for resource to be indexed by searching for a resource based on a content that just
+    # the paragraph we're looking for contains
+    def resource_is_indexed(rid):
+        @wraps(resource_is_indexed)
+        async def condition() -> tuple[bool, Any]:
+            result = await kb.search.find(
+                ndb=ndb,
+                features=["keyword"],
+                query="Michiko"
+            )
+            return len(result.resources) > 0, None
+
+        return condition
+
+    success, _ = (
+        await wait_for(resource_is_indexed(rid), logger=logger, max_wait=120, interval=1),
+        "File was not indexed in time, not enough paragraphs found on resource",
+    )
+
     assert success
 
 
@@ -300,7 +321,7 @@ async def run_test_ask(regional_api_config, ndb, logger):
         reranker="predict",
         features=["keyword", "semantic", "relations"],
         query=TEST_CHOCO_QUESTION,
-        model="chatgpt-azure-4o-mini",
+        generative_model="chatgpt-azure-4o-mini",
         prompt=dedent(
             """
             Answer the following question based **only** on the provided context. Do **not** use any outside
@@ -330,7 +351,7 @@ async def run_test_ask(regional_api_config, ndb, logger):
             {"author": "NUCLIA", "text": ask_result.answer.decode()},
         ],
         query=TEST_CHOCO_ASK_MORE,
-        model="chatgpt-azure-4o-mini",
+        generative_model="chatgpt-azure-4o-mini",
     )
     assert "earlier" in ask_more_result.answer.decode().lower()
 
@@ -347,7 +368,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                     kb.logs.query,
                     ndb=ndb,
                     type=EventType.CHAT,
-                    query=ActivityLogsChatQuery(year_month=f"{now.year}-{now.month:02}", filters={}),
+                    query=ActivityLogsChatQuery(year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)),
                 )
             )
             if len(logs.data) >= 2:
@@ -372,9 +393,10 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
             kb.logs.query,
             ndb=ndb,
             type=EventType.SEARCH,
-            query=ActivityLogsSearchQuery(year_month=f"{now.year}-{now.month:02}", filters={}),
+            query=ActivityLogsSearchQuery(year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)),
         )
     )
+
     assert logs.data[-1].question == TEST_CHOCO_QUESTION
 
 
@@ -457,6 +479,7 @@ async def test_kb(request, regional_api_config, clean_kb_test):
     await run_test_create_da_labeller(regional_api_config, sync_ndb, logger)
 
     # Upload a new resource and validate that is correctly processed and stored in nuclia
+    # Also check that its index are available, by checking the amount of extracted paragraphs
     await run_test_upload_and_process(regional_api_config, async_ndb, logger)
 
     # Wait for both labeller task results to be consolidated in nucliadb while we also run semantic search

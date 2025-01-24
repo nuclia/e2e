@@ -118,6 +118,7 @@ class GlobalAPI:
         payload = {"name": name, "email": email, "password": password}
         headers = {"X-STF-VALIDATION": self.recaptcha}
         async with self.session.post(url, json=payload, headers=headers) as response:
+            content = await response.text()
             response.raise_for_status()
             return await response.json()
 
@@ -157,15 +158,14 @@ async def aiohttp_session():
 
 
 @pytest.fixture
-def global_api(aiohttp_session):
+def global_api(aiohttp_session, global_api_config):
     """
     Provide a configured GlobalAPI instance for tests.
     """
-    global_config = CLUSTERS_CONFIG[TEST_ENV]["global"]
     return GlobalAPI(
-        f"https://{global_config['base_domain']}",
-        global_config["recaptcha"],
-        global_config["root_pat_token"],
+        f"https://{global_api_config['base_domain']}",
+        global_api_config["recaptcha"],
+        global_api_config["root_pat_token"],
         aiohttp_session,
     )
 
@@ -200,66 +200,6 @@ def regional_api_config(request, global_api_config):
         global_api_config["permanent_account_slug"]
     ]
     return zone_config
-
-
-# class SDKMethodProxy:
-#     def __init__(self, instance, **kwargs):
-#         self._instance = instance
-#         self._kwargs = kwargs
-
-#     def __getattr__(self, name):
-#         # Retrieve the attribute (method) from the wrapped instance
-#         attr = getattr(self._instance, name)
-#         if callable(attr):
-#             # If the attribute is a method, wrap it
-#             def wrapper(*args, **kwargs):
-#                 print(attr, self._instance, kwargs)
-#                 kwargs.update(self._kwargs)
-#                 return attr(*args, **kwargs)
-#             return wrapper
-#         return attr  # Return the attribute as is if it's not callable
-
-
-# class RegionalSDK:
-
-#     class NucliaKBS(NucliaKBSOriginal):
-
-#         @property
-#         def _auth(self):
-#             return getattr(self, "_test_auth", None)
-
-#         @_auth.setter
-#         def _auth(self, auth):
-#             self._test_auth = auth
-
-#     def __init__(self, account: str, zone: str, auth: NucliaAuth):
-#         self.zone = zone
-
-#         kbs = self.NucliaKBS()
-#         kbs._auth = auth
-#         self.kbs = SDKMethodProxy(kbs, zone=zone, account=account)
-
-
-# @pytest.fixture(scope="function")
-# async def regional_sdk(regional_api_config, global_api_config):
-#     pat_auth = NucliaAuth()
-#     pat_auth._inner_config = Config()
-#     pat_auth.set_user_token(global_api_config["permanent_account_owner_pat_token"])
-
-#     wrapped = RegionalSDK(
-#         zone=regional_api_config["zone_slug"],
-#         account=global_api_config["permanent_account_slug"],
-#         auth=pat_auth
-#     )
-#     print(wrapped, regional_api_config["zone_slug"])
-#     yield wrapped
-
-# @pytest.fixture(scope=function)
-# def permament_nua_auth():
-#     nuclia_auth = NucliaAuth()
-#     client_id = nuclia_auth.nua(token.nua_key)
-#     assert client_id
-#     nuclia_auth._config.set_default_nua(client_id)
 
 
 class EmailUtil:
@@ -341,7 +281,7 @@ class EmailUtil:
 
 @pytest.fixture
 def email_util(global_api_config):
-    return EmailUtil("carles@nuclia.com", global_api_config["gmail_app_password"])
+    return EmailUtil("nucliaemailvalidation@gmail.com", global_api_config["gmail_app_password"])
 
 
 @pytest.fixture
