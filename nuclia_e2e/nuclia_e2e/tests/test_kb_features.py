@@ -11,10 +11,10 @@ from nuclia.lib.kb import NucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kb import NucliaKB
 from nuclia.sdk.kbs import NucliaKBS
+from nuclia_models.common.pagination import Pagination
 from nuclia_models.events.activity_logs import ActivityLogsChatQuery
 from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
 from nuclia_models.events.activity_logs import EventType
-from nuclia_models.common.pagination import Pagination
 from nuclia_models.worker.proto import ApplyTo
 from nuclia_models.worker.proto import Filter
 from nuclia_models.worker.proto import Label
@@ -41,6 +41,7 @@ ASSETS_FILE_PATH = f"{Path(__file__).parent.parent}/assets"
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "When did they start being high?"
+
 
 async def wait_for(
     condition: Coroutine, max_wait: int = 60, interval: int = 5, logger=None
@@ -144,11 +145,7 @@ async def run_test_upload_and_process(regional_api_config, ndb, logger):
     def resource_is_indexed(rid):
         @wraps(resource_is_indexed)
         async def condition() -> tuple[bool, Any]:
-            result = await kb.search.find(
-                ndb=ndb,
-                features=["keyword"],
-                query="Michiko"
-            )
+            result = await kb.search.find(ndb=ndb, features=["keyword"], query="Michiko")
             return len(result.resources) > 0, None
 
         return condition
@@ -303,7 +300,7 @@ async def run_test_find(regional_api_config, ndb, logger):
         rephrase=True,
         reranker="predict",
         features=["keyword", "semantic", "relations"],
-        query=TEST_CHOCO_QUESTION
+        query=TEST_CHOCO_QUESTION,
     )
     assert result.resources
     first_resource = next(iter(result.resources.values()))
@@ -368,7 +365,9 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                     kb.logs.query,
                     ndb=ndb,
                     type=EventType.CHAT,
-                    query=ActivityLogsChatQuery(year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)),
+                    query=ActivityLogsChatQuery(
+                        year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)
+                    ),
                 )
             )
             if len(logs.data) >= 2:
@@ -393,7 +392,9 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
             kb.logs.query,
             ndb=ndb,
             type=EventType.SEARCH,
-            query=ActivityLogsSearchQuery(year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)),
+            query=ActivityLogsSearchQuery(
+                year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)
+            ),
         )
     )
 

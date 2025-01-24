@@ -118,7 +118,6 @@ class GlobalAPI:
         payload = {"name": name, "email": email, "password": password}
         headers = {"X-STF-VALIDATION": self.recaptcha}
         async with self.session.post(url, json=payload, headers=headers) as response:
-            content = await response.text()
             response.raise_for_status()
             return await response.json()
 
