@@ -186,7 +186,7 @@ def global_api_config():
 @pytest.fixture(
     params=[pytest.param(zone, id=zone["name"]) for zone in CLUSTERS_CONFIG[TEST_ENV]["zones"]],
 )
-def regional_api_config(request, global_api_config):
+def regional_api_config(request: pytest.FixtureRequest, global_api_config):
     zone_config = deepcopy(request.param)
     auth = get_auth()
     config = get_config()
@@ -293,7 +293,7 @@ async def cleanup_test_account(global_api: GlobalAPI):
 
 
 @pytest.fixture
-async def clean_kb_test(request, regional_api_config):
+async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
     kbs = NucliaKBS()
     kb_slug = regional_api_config["test_kb_slug"]
     all_kbs = await asyncio.to_thread(kbs.list)

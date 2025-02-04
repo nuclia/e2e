@@ -1,4 +1,5 @@
-from collections.abc import Coroutine
+from collections.abc import Awaitable
+from collections.abc import Callable
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -35,6 +36,9 @@ import asyncio
 import backoff
 import pytest
 
+Logger = Callable[[str], None]
+
+
 NUCLIADB_KB_ENDPOINT = "/api/v1/kb/{kb}"
 ASSETS_FILE_PATH = f"{Path(__file__).parent.parent}/assets"
 
@@ -44,7 +48,10 @@ TEST_CHOCO_ASK_MORE = "When did they start being high?"
 
 
 async def wait_for(
-    condition: Coroutine, max_wait: int = 60, interval: int = 5, logger=None
+    condition: Callable[[], Awaitable],
+    max_wait: int = 60,
+    interval: int = 5,
+    logger: Logger = print,
 ) -> tuple[bool, Any]:
     func_name = condition.__name__
     logger(f"start wait_for '{func_name}', max_wait={max_wait}s")
@@ -57,7 +64,7 @@ async def wait_for(
     return success, data
 
 
-async def get_kbid_from_slug(zone: str, slug: str) -> str:
+async def get_kbid_from_slug(zone: str, slug: str) -> str | None:
     kbs = NucliaKBS()
     all_kbs = await asyncio.to_thread(kbs.list)
     kbids_by_slug = {kb.slug: kb.id for kb in all_kbs}
@@ -65,7 +72,7 @@ async def get_kbid_from_slug(zone: str, slug: str) -> str:
     return kbid
 
 
-def get_async_kb_ndb_client(zone, account, kbid, user_token):
+def get_async_kb_ndb_client(zone: str, account: str, kbid: str, user_token: str) -> AsyncNucliaDBClient:
     from nuclia import REGIONAL
 
     kb_path = NUCLIADB_KB_ENDPOINT.format(zone=zone, account=account, kb=kbid)
@@ -366,7 +373,9 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                     ndb=ndb,
                     type=EventType.CHAT,
                     query=ActivityLogsChatQuery(
-                        year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)
+                        year_month=f"{now.year}-{now.month:02}",
+                        filters={},
+                        pagination=Pagination(limit=100),
                     ),
                 )
             )
