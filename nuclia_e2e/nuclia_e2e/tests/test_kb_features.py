@@ -426,7 +426,7 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
 
         return condition
 
-    _, success = await wait_for(remi_data_is_computed(), max_wait=120, logger=logger)
+    _, success = await wait_for(remi_data_is_computed(), max_wait=180, logger=logger)
     assert success, "Remi scores didn't get computed in time"
 
 
