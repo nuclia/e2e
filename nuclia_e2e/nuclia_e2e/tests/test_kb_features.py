@@ -72,7 +72,9 @@ async def get_kbid_from_slug(zone: str, slug: str) -> str | None:
     return kbid
 
 
-def get_async_kb_ndb_client(zone: str, account: str, kbid: str, user_token: str) -> AsyncNucliaDBClient:
+def get_async_kb_ndb_client(
+    zone: str, account: str, kbid: str, user_token: str | None
+) -> AsyncNucliaDBClient:
     from nuclia import REGIONAL
 
     kb_path = NUCLIADB_KB_ENDPOINT.format(zone=zone, account=account, kb=kbid)
@@ -88,7 +90,7 @@ def get_async_kb_ndb_client(zone: str, account: str, kbid: str, user_token: str)
     return ndb
 
 
-def get_sync_kb_ndb_client(zone, account, kbid, user_token):
+def get_sync_kb_ndb_client(zone: str, account: str, kbid: str, user_token: str | None) -> NucliaDBClient:
     from nuclia import REGIONAL
 
     kb_path = NUCLIADB_KB_ENDPOINT.format(zone=zone, account=account, kb=kbid)
@@ -104,7 +106,7 @@ def get_sync_kb_ndb_client(zone, account, kbid, user_token):
     return ndb
 
 
-async def run_test_kb_creation(regional_api_config, logger) -> str:
+async def run_test_kb_creation(regional_api_config, logger: Logger) -> str:
     kbs = NucliaKBS()
     new_kb = await asyncio.to_thread(
         partial(
@@ -121,7 +123,7 @@ async def run_test_kb_creation(regional_api_config, logger) -> str:
     return kbid
 
 
-async def run_test_upload_and_process(regional_api_config, ndb, logger):
+async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     kb = AsyncNucliaKB()
     rid = await kb.resource.create(
         title="How this chocolatier is navigating an unexpected spike in cocoa prices",
@@ -165,7 +167,7 @@ async def run_test_upload_and_process(regional_api_config, ndb, logger):
     assert success
 
 
-async def run_test_import_kb(regional_api_config, ndb, logger):
+async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     """
     Imports a kb with three resources and some labelsets already created
     """
@@ -192,7 +194,7 @@ async def run_test_import_kb(regional_api_config, ndb, logger):
     assert success
 
 
-async def run_test_create_da_labeller(regional_api_config, ndb, logger):
+async def run_test_create_da_labeller(regional_api_config, ndb: NucliaDBClient, logger: Logger):
     """
     Creates a config to run on all current resources and on all future ones
     """
@@ -239,7 +241,7 @@ async def run_test_create_da_labeller(regional_api_config, ndb, logger):
     )
 
 
-async def run_test_check_da_labeller_output(regional_api_config, ndb, logger):
+async def run_test_check_da_labeller_output(regional_api_config, ndb: NucliaDBClient, logger: Logger):
     kb = NucliaKB()
 
     expected_resource_labels = [
@@ -298,7 +300,7 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb, logger):
 
 
 @backoff.on_exception(backoff.constant, AssertionError, max_tries=5, interval=5)
-async def run_test_find(regional_api_config, ndb, logger):
+async def run_test_find(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     kb = AsyncNucliaKB()
 
     result = await kb.search.find(
@@ -315,7 +317,7 @@ async def run_test_find(regional_api_config, ndb, logger):
 
 
 @backoff.on_exception(backoff.constant, AssertionError, max_tries=5, interval=5)
-async def run_test_ask(regional_api_config, ndb, logger):
+async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     kb = AsyncNucliaKB()
 
     ask_result = await kb.search.ask(
@@ -449,7 +451,7 @@ async def run_test_kb_deletion(regional_api_config, kbid, logger):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb(request, regional_api_config, clean_kb_test):
+async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_test):
     """
     Test a chain of operations that simulates a normal use of a knowledgebox, just concentrated
     in time.
