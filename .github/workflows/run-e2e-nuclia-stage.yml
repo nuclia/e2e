@@ -9,7 +9,7 @@ on:
       - main
   schedule:
     # run every day at 04:25
-    - cron: '25 3 * * *'
+    - cron: '25 4 * * *'
 jobs:
   test:
     runs-on: ubuntu-22.04
