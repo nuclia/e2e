@@ -34,6 +34,11 @@ node_modules
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Python
+__pycache__
+.egg-info
+**/*.egg-info
+
 # misc
 /.sass-cache
 /connect.lock
@@ -44,7 +49,6 @@ yarn-error.log
 testem.log
 /typings
 .python-version
-__pycache__
 
 # System Files
 .DS_Store
