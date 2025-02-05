@@ -27,8 +27,8 @@ import asyncio
 import base64
 import pytest
 
-LLAMA_GUARD_ENABLED = TEST_ENV == "prod"
-PROMPT_GUARD_ENABLED = TEST_ENV == "prod"
+LLAMA_GUARD_DISABLED = TEST_ENV == "prod"
+PROMPT_GUARD_DISABLED = TEST_ENV == "prod"
 
 
 @dataclass
@@ -367,7 +367,7 @@ DA_TEST_INPUTS: list[TestInput] = [
             validate_output=validate_prompt_guard_output,
         ),
         marks=pytest.mark.skipif(
-            PROMPT_GUARD_ENABLED, reason="Feature flag application_prompt-safety-task is disabled"
+            PROMPT_GUARD_DISABLED, reason="Feature flag application_prompt-safety-task is disabled"
         ),
     ),
     pytest.param(
@@ -384,7 +384,7 @@ DA_TEST_INPUTS: list[TestInput] = [
             validate_output=validate_llama_guard_output,
         ),
         marks=pytest.mark.skipif(
-            LLAMA_GUARD_ENABLED, reason="Feature flag application_content-safety-task is disabled"
+            LLAMA_GUARD_DISABLED, reason="Feature flag application_content-safety-task is disabled"
         ),
     ),
     TestInput(
@@ -470,7 +470,7 @@ DA_TEST_INPUTS: list[TestInput] = [
             validate_output=validate_prompt_guard_output_text_block,
         ),
         marks=pytest.mark.skipif(
-            PROMPT_GUARD_ENABLED, reason="Feature flag application_prompt-safety-task is disabled"
+            PROMPT_GUARD_DISABLED, reason="Feature flag application_prompt-safety-task is disabled"
         ),
     ),
     pytest.param(
@@ -487,7 +487,7 @@ DA_TEST_INPUTS: list[TestInput] = [
             validate_output=validate_llama_guard_output_text_block,
         ),
         marks=pytest.mark.skipif(
-            LLAMA_GUARD_ENABLED, reason="Feature flag application_content-safety-task is disabled"
+            LLAMA_GUARD_DISABLED, reason="Feature flag application_content-safety-task is disabled"
         ),
     ),
 ]
