@@ -498,7 +498,9 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     # Add a new embedding model to the KB and start a task to compute all data
     # with the new embedding model. This will test the data flow between
     # nucliadb and learning to stream all KB data to reprocess with the new
-    # embedding model and ingest/index in nucliadb again
+    # embedding model and ingest/index in nucliadb again.
+    # We want to do it before upload to validate, on one side the migration
+    # itself, and on the other ingestion in a KB with multiple vectorsets
     (_, embedding_migration_task_id) = await asyncio.gather(
         run_test_create_da_labeller(regional_api_config, sync_ndb, logger),
         run_test_start_embedding_model_migration_task(sync_ndb, async_ndb),
