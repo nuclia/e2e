@@ -124,11 +124,10 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
 
         return condition
 
-    success, _ = (
-        await wait_for(resources_are_imported(["disney", "hp", "vaccines"]), max_wait=120, logger=logger),
-        "Expected imported resources not found",
+    success, _ = await wait_for(
+        resources_are_imported(["disney", "hp", "vaccines"]), max_wait=120, logger=logger
     )
-    assert success
+    assert success, "Expected imported resources not found"
 
 
 async def run_test_create_da_labeller(regional_api_config, ndb: NucliaDBClient, logger: Logger):
