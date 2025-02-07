@@ -82,10 +82,8 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
 
         return condition
 
-    success, _ = (
-        await wait_for(resource_is_processed(rid), logger=logger),
-        "File was not processed in time, PROCESSED status not found in resource",
-    )
+    success, _ = await wait_for(resource_is_processed(rid), logger=logger)
+    assert success, "File was not processed in time, PROCESSED status not found in resource"
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
     # the paragraph we're looking for contains
@@ -97,12 +95,8 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
 
         return condition
 
-    success, _ = (
-        await wait_for(resource_is_indexed(rid), logger=logger, max_wait=120, interval=1),
-        "File was not indexed in time, not enough paragraphs found on resource",
-    )
-
-    assert success
+    success, _ = await wait_for(resource_is_indexed(rid), logger=logger, max_wait=120, interval=1)
+    assert success, "File was not indexed in time, not enough paragraphs found on resource"
 
 
 async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
@@ -229,11 +223,8 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb: NucliaDBCl
 
         return condition
 
-    success, _ = (
-        await wait_for(resources_are_labelled(expected_resource_labels), logger=logger),
-        "Expected computed labels not found in resources",
-    )
-    assert success
+    success, _ = await wait_for(resources_are_labelled(expected_resource_labels), logger=logger)
+    assert success, "Expected computed labels not found in resources"
 
 
 async def run_test_start_embedding_model_migration_task(
