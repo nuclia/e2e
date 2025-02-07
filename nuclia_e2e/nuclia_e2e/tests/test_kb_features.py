@@ -90,7 +90,7 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
     def resource_is_indexed(rid):
         @wraps(resource_is_indexed)
         async def condition() -> tuple[bool, Any]:
-            result = await kb.search.find(ndb=ndb, features=["keyword"], query="Michiko")
+            result = await kb.search.find(ndb=ndb, features=["keyword"], reranker="noop", query="Michiko")
             return len(result.resources) > 0, None
 
         return condition
