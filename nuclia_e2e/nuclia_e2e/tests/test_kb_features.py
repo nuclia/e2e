@@ -296,7 +296,9 @@ async def run_test_check_embedding_model_migration(
 
         return condition
 
-    success, search_returned_results = await wait_for(new_embedding_model_available(), logger=logger)
+    success, search_returned_results = await wait_for(
+        new_embedding_model_available(), max_wait=120, logger=logger
+    )
     assert success is True, "embedding migration task did not finish on time"
     assert (
         search_returned_results is True
