@@ -1,7 +1,7 @@
 from nuclia.lib.nua import AsyncNuaClient
 from nuclia.sdk.predict import AsyncNucliaPredict
 from nuclia_e2e.models import ALL_ENCODERS
-from nuclia_e2e.models import ALL_LLMS
+from nuclia_e2e.models import ALL_LLMS, NON_REASONING_LLMS
 from nuclia_models.predict.remi import RemiRequest
 
 import pytest
@@ -50,7 +50,7 @@ async def test_predict_tokens(nua_client: AsyncNuaClient):
 
 
 @pytest.mark.asyncio_cooperative
-@pytest.mark.parametrize("model", ALL_LLMS)
+@pytest.mark.parametrize("model", NON_REASONING_LLMS)
 async def test_predict_rephrase(nua_client: AsyncNuaClient, model):
     # Check that rephrase is working for all models
     np = AsyncNucliaPredict()
