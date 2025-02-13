@@ -5,7 +5,7 @@ from email.header import decode_header
 from functools import partial
 from nuclia.config import reset_config_file
 from nuclia.config import set_config_file
-from nuclia.data import get_auth
+from nuclia.data import get_async_auth
 from nuclia.data import get_config
 from nuclia.lib.nua import AsyncNuaClient
 from nuclia.sdk.kbs import NucliaKBS
@@ -264,11 +264,11 @@ def global_api_config():
 @pytest.fixture(
     params=[pytest.param(zone, id=zone["name"]) for zone in CLUSTERS_CONFIG[TEST_ENV]["zones"]],
 )
-def regional_api_config(request: pytest.FixtureRequest, global_api_config):
+async def regional_api_config(request: pytest.FixtureRequest, global_api_config):
     zone_config = deepcopy(request.param)
-    auth = get_auth()
+    auth = get_async_auth()
     config = get_config()
-    auth.set_user_token(global_api_config["permanent_account_owner_pat_token"])
+    await auth.set_user_token(global_api_config["permanent_account_owner_pat_token"])
     config.set_default_account(global_api_config["permanent_account_slug"])
     config.set_default_zone(zone_config["zone_slug"])
     zone_config["test_kb_slug"] = "{test_kb_slug}-{name}".format(**zone_config)
@@ -278,7 +278,7 @@ def regional_api_config(request: pytest.FixtureRequest, global_api_config):
     ]
     kbs = {
         kb.slug: kb.id
-        for kb in auth.kbs(zone_config["permanent_account_id"])
+        for kb in await auth.kbs(zone_config["permanent_account_id"])
         if kb.region == zone_config["zone_slug"]
     }
     zone_config["permanent_kb_id"] = kbs[zone_config["permanent_kb_slug"]]
