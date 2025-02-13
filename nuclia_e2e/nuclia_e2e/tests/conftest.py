@@ -236,7 +236,7 @@ def global_api(aiohttp_session, global_api_config):
 
 
 @pytest.fixture
-def regional_api(aiohttp_session, global_api_config, regional_api_config):
+async def regional_api(aiohttp_session, global_api_config, regional_api_config):
     """
     Provide a configured GlobalAPI instance for tests.
     """
