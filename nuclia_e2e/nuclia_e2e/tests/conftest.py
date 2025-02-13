@@ -201,15 +201,16 @@ class RegionalAPI:
 
     async def delete_service_account_by_name(
         self, account: str, kbid: str, service_account_name: str
-    ) -> None:
+    ) -> str | None:
         kb_sa = await self.get_kb_sa(account, kbid)
         test_sa = [a for a in kb_sa if a["title"] == service_account_name]
         if len(test_sa) != 1:
-            return
+            return None
         sa_id = test_sa[0]["id"]
         url = f"{self.base_url}/api/v1/account/{account}/kb/{kbid}/service_account/{sa_id}"
         async with self.session.delete(url, headers=self.auth_headers) as response:
             response.raise_for_status()
+        return sa_id
 
 
 @pytest.fixture
@@ -392,11 +393,13 @@ async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
 
 @pytest.fixture
 async def clean_kb_sa(request: pytest.FixtureRequest, regional_api_config, regional_api: RegionalAPI):
-    await regional_api.delete_service_account_by_name(
+    deleted_sa_id = await regional_api.delete_service_account_by_name(
         regional_api_config["permanent_account_id"],
         regional_api_config["permanent_kb_id"],
         "test-e2e-kb-auth",
     )
+    if deleted_sa_id:
+        print(f"clean_kb_sa fixture: Deleted service account with id: {deleted_sa_id}")
 
 
 @pytest.fixture
