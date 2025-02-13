@@ -1,4 +1,6 @@
 from copy import deepcopy
+from datetime import datetime
+from datetime import timedelta
 from email.header import decode_header
 from functools import partial
 from nuclia.config import reset_config_file
@@ -42,12 +44,14 @@ CLUSTERS_CONFIG = {
                 "name": "europe-1",
                 "zone_slug": "europe-1",
                 "test_kb_slug": "nuclia-e2e-live",
+                "permanent_kb_slug": "pre-existing-kb",
                 "permanent_nua_key": os.environ.get("TEST_EUROPE1_NUCLIA_NUA"),
             },
             {
                 "name": "aws-us-east-2-1",
                 "zone_slug": "aws-us-east-2-1",
                 "test_kb_slug": "nuclia-e2e-live",
+                "permanent_kb_slug": "pre-existing-kb",
                 "permanent_nua_key": os.environ.get("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
             },
         ],
@@ -66,6 +70,7 @@ CLUSTERS_CONFIG = {
                 "name": "europe-1",
                 "zone_slug": "europe-1",
                 "test_kb_slug": "nuclia-e2e-live",
+                "permanent_kb_slug": "pre-existing-kb",
                 "permanent_nua_key": os.environ.get("TEST_EUROPE1_STASHIFY_NUA"),
             },
             # uncomment to test two zone parallel testing on stage
@@ -147,6 +152,66 @@ class GlobalAPI:
             return (await response.json())["id"]
 
 
+class RegionalAPI:
+    def __init__(self, base_url, access_token, session: aiohttp.ClientSession):
+        self.base_url = base_url
+        self.access_token = access_token
+        self.session = session
+
+    @property
+    def auth_headers(self):
+        return {
+            "Authorization": f"Bearer {self.access_token}",
+        }
+
+    async def get_kb_sa(self, account: str, kbid: str) -> list[dict[str, str]]:
+        url = f"{self.base_url}/api/v1/account/{account}/kb/{kbid}/service_accounts"
+        async with self.session.get(url, headers=self.auth_headers) as response:
+            data = await response.json()
+            return [{"id": sa["id"], "title": sa["title"]} for sa in data]
+
+    async def create_service_account(
+        self, account: str, kbid: str, service_account_name: str, role: str = "SOWNER"
+    ) -> dict[str, str]:
+        url = f"{self.base_url}/api/v1/account/{account}/kb/{kbid}/service_accounts"
+        async with self.session.post(
+            url, headers=self.auth_headers, json={"title": service_account_name, "role": role}
+        ) as response:
+            data = await response.json()
+            return data
+
+    async def create_service_account_key(self, account: str, kbid: str, sa_id: str, ttl=60 * 60 * 24) -> str:
+        url = f"{self.base_url}/api/v1/account/{account}/kb/{kbid}/service_account/{sa_id}/keys"
+        expires = datetime.now() + timedelta(seconds=ttl)
+        async with self.session.post(
+            url, headers=self.auth_headers, json={"expires": expires.isoformat()}
+        ) as response:
+            data = await response.json()
+            return data["token"]
+
+    async def create_service_account_temp_key(self, sa_token: str, security_groups: list[str] | None) -> str:
+        url = f"{self.base_url}/api/v1/service_account_temporal_key"
+        payload = {} if security_groups is None else {"security_groups": security_groups}
+
+        async with self.session.post(
+            url, headers={"x-nuclia-serviceaccount": f"Bearer {sa_token}"}, json=payload
+        ) as response:
+            data = await response.json()
+            return data["token"]
+
+    async def delete_service_account_by_name(
+        self, account: str, kbid: str, service_account_name: str
+    ) -> None:
+        kb_sa = await self.get_kb_sa(account, kbid)
+        test_sa = [a for a in kb_sa if a["title"] == service_account_name]
+        if len(test_sa) != 1:
+            return
+        sa_id = test_sa[0]["id"]
+        url = f"{self.base_url}/api/v1/account/{account}/kb/{kbid}/service_account/{sa_id}"
+        async with self.session.delete(url, headers=self.auth_headers) as response:
+            response.raise_for_status()
+
+
 @pytest.fixture
 async def aiohttp_session():
     """
@@ -165,6 +230,18 @@ def global_api(aiohttp_session, global_api_config):
         f"https://{global_api_config['base_domain']}",
         global_api_config["recaptcha"],
         global_api_config["root_pat_token"],
+        aiohttp_session,
+    )
+
+
+@pytest.fixture
+def regional_api(aiohttp_session, global_api_config, regional_api_config):
+    """
+    Provide a configured GlobalAPI instance for tests.
+    """
+    return RegionalAPI(
+        nuclia.REGIONAL.format(region=regional_api_config["zone_slug"]),
+        global_api_config["permanent_account_owner_pat_token"],
         aiohttp_session,
     )
 
@@ -198,6 +275,13 @@ def regional_api_config(request: pytest.FixtureRequest, global_api_config):
     zone_config["permanent_account_id"] = {a.slug: a.id for a in config.accounts}[
         global_api_config["permanent_account_slug"]
     ]
+    kbs = {
+        kb.slug: kb.id
+        for kb in auth.kbs(zone_config["permanent_account_id"])
+        if kb.region == zone_config["zone_slug"]
+    }
+    zone_config["permanent_kb_id"] = kbs[zone_config["permanent_kb_slug"]]
+
     return zone_config
 
 
@@ -304,6 +388,15 @@ async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
     except ValueError:
         # Raised by sdk when kb not found
         pass
+
+
+@pytest.fixture
+async def clean_kb_sa(request: pytest.FixtureRequest, regional_api_config, regional_api: RegionalAPI):
+    await regional_api.delete_service_account_by_name(
+        regional_api_config["permanent_account_id"],
+        regional_api_config["permanent_kb_id"],
+        "test-e2e-kb-auth",
+    )
 
 
 @pytest.fixture
