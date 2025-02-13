@@ -1,4 +1,4 @@
-from collections.abc import Coroutine
+from collections.abc import Callable
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -6,11 +6,15 @@ from functools import partial
 from functools import wraps
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
-from nuclia.lib.kb import Environment
 from nuclia.lib.kb import NucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kb import NucliaKB
 from nuclia.sdk.kbs import NucliaKBS
+from nuclia_e2e.utils import ASSETS_FILE_PATH
+from nuclia_e2e.utils import get_async_kb_ndb_client
+from nuclia_e2e.utils import get_kbid_from_slug
+from nuclia_e2e.utils import get_sync_kb_ndb_client
+from nuclia_e2e.utils import wait_for
 from nuclia_models.common.pagination import Pagination
 from nuclia_models.events.activity_logs import ActivityLogsChatQuery
 from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
@@ -26,78 +30,20 @@ from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import TaskName
 from nucliadb_models.metadata import ResourceProcessingStatus
 from nucliadb_sdk.v2.exceptions import NotFoundError
-from pathlib import Path
 from textwrap import dedent
-from time import monotonic
 from typing import Any
 
 import asyncio
 import backoff
 import pytest
 
-NUCLIADB_KB_ENDPOINT = "/api/v1/kb/{kb}"
-ASSETS_FILE_PATH = f"{Path(__file__).parent.parent}/assets"
-
+Logger = Callable[[str], None]
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "When did they start being high?"
 
 
-async def wait_for(
-    condition: Coroutine, max_wait: int = 60, interval: int = 5, logger=None
-) -> tuple[bool, Any]:
-    func_name = condition.__name__
-    logger(f"start wait_for '{func_name}', max_wait={max_wait}s")
-    start = monotonic()
-    success, data = await condition()
-    while not success and monotonic() - start < max_wait:
-        await asyncio.sleep(interval)
-        success, data = await condition()
-    logger(f"wait_for '{func_name}' success={success} in {monotonic()-start} seconds")
-    return success, data
-
-
-async def get_kbid_from_slug(zone: str, slug: str) -> str:
-    kbs = NucliaKBS()
-    all_kbs = await asyncio.to_thread(kbs.list)
-    kbids_by_slug = {kb.slug: kb.id for kb in all_kbs}
-    kbid = kbids_by_slug.get(slug)
-    return kbid
-
-
-def get_async_kb_ndb_client(zone, account, kbid, user_token):
-    from nuclia import REGIONAL
-
-    kb_path = NUCLIADB_KB_ENDPOINT.format(zone=zone, account=account, kb=kbid)
-    base_url = REGIONAL.format(region=zone)
-    kb_base_url = f"{base_url}{kb_path}"
-
-    ndb = AsyncNucliaDBClient(
-        environment=Environment.CLOUD,
-        url=kb_base_url,
-        user_token=user_token,
-        region=zone,
-    )
-    return ndb
-
-
-def get_sync_kb_ndb_client(zone, account, kbid, user_token):
-    from nuclia import REGIONAL
-
-    kb_path = NUCLIADB_KB_ENDPOINT.format(zone=zone, account=account, kb=kbid)
-    base_url = REGIONAL.format(region=zone)
-    kb_base_url = f"{base_url}{kb_path}"
-
-    ndb = NucliaDBClient(
-        environment=Environment.CLOUD,
-        url=kb_base_url,
-        user_token=user_token,
-        region=zone,
-    )
-    return ndb
-
-
-async def run_test_kb_creation(regional_api_config, logger) -> str:
+async def run_test_kb_creation(regional_api_config, logger: Logger) -> str:
     kbs = NucliaKBS()
     new_kb = await asyncio.to_thread(
         partial(
@@ -114,7 +60,7 @@ async def run_test_kb_creation(regional_api_config, logger) -> str:
     return kbid
 
 
-async def run_test_upload_and_process(regional_api_config, ndb, logger):
+async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     kb = AsyncNucliaKB()
     rid = await kb.resource.create(
         title="How this chocolatier is navigating an unexpected spike in cocoa prices",
@@ -158,7 +104,7 @@ async def run_test_upload_and_process(regional_api_config, ndb, logger):
     assert success
 
 
-async def run_test_import_kb(regional_api_config, ndb, logger):
+async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     """
     Imports a kb with three resources and some labelsets already created
     """
@@ -185,7 +131,7 @@ async def run_test_import_kb(regional_api_config, ndb, logger):
     assert success
 
 
-async def run_test_create_da_labeller(regional_api_config, ndb, logger):
+async def run_test_create_da_labeller(regional_api_config, ndb: NucliaDBClient, logger: Logger):
     """
     Creates a config to run on all current resources and on all future ones
     """
@@ -232,7 +178,7 @@ async def run_test_create_da_labeller(regional_api_config, ndb, logger):
     )
 
 
-async def run_test_check_da_labeller_output(regional_api_config, ndb, logger):
+async def run_test_check_da_labeller_output(regional_api_config, ndb: NucliaDBClient, logger: Logger):
     kb = NucliaKB()
 
     expected_resource_labels = [
@@ -291,7 +237,7 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb, logger):
 
 
 @backoff.on_exception(backoff.constant, AssertionError, max_tries=5, interval=5)
-async def run_test_find(regional_api_config, ndb, logger):
+async def run_test_find(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     kb = AsyncNucliaKB()
 
     result = await kb.search.find(
@@ -308,7 +254,7 @@ async def run_test_find(regional_api_config, ndb, logger):
 
 
 @backoff.on_exception(backoff.constant, AssertionError, max_tries=5, interval=5)
-async def run_test_ask(regional_api_config, ndb, logger):
+async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     kb = AsyncNucliaKB()
 
     ask_result = await kb.search.ask(
@@ -366,7 +312,9 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                     ndb=ndb,
                     type=EventType.CHAT,
                     query=ActivityLogsChatQuery(
-                        year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)
+                        year_month=f"{now.year}-{now.month:02}",
+                        filters={},
+                        pagination=Pagination(limit=100),
                     ),
                 )
             )
@@ -440,7 +388,7 @@ async def run_test_kb_deletion(regional_api_config, kbid, logger):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb(request, regional_api_config, clean_kb_test):
+async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_test):
     """
     Test a chain of operations that simulates a normal use of a knowledgebox, just concentrated
     in time.
@@ -467,8 +415,8 @@ async def test_kb(request, regional_api_config, clean_kb_test):
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
     # as this is incompatible with the cooperative tests
-    async_ndb = get_async_kb_ndb_client(zone, account, kbid, auth._config.token)
-    sync_ndb = get_sync_kb_ndb_client(zone, account, kbid, auth._config.token)
+    async_ndb = get_async_kb_ndb_client(zone, account, kbid, user_token=auth._config.token)
+    sync_ndb = get_sync_kb_ndb_client(zone, account, kbid, user_token=auth._config.token)
 
     # Import a preexisting export containing several resources (coming from the financial-news kb)
     # and wait for the resources to be completely imported
