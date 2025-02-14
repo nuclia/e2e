@@ -6,9 +6,9 @@
 # Try to keep the original order to make diffs more useful
 import re
 
-
 ALL_LLMS = [
-    # "generative-multilingual-2023",        EXCLUDED because it's a legacy model, cannot be selected anywhere currently
+    # "generative-multilingual-2023",        EXCLUDED because it's a legacy model, cannot be selected anywhere
+    #                                        currently
     "chatgpt-azure-4-turbo",
     "chatgpt-azure-4o",
     "chatgpt-azure-4o-mini",
@@ -38,7 +38,8 @@ ALL_LLMS = [
     "chatgpt-o1-mini",
     "chatgpt-o1",
     "chatgpt-o3-mini",
-    # "huggingface"                          EXCLUDED because it's not a real model, just a driver, that needs a key to work
+    # "huggingface"                          EXCLUDED because it's not a real model, just a driver, that needs
+    #                                        a key to work
     # "llama-3.2-90b-vision-instruct-maas"   EXCLUDED as it stopped working and was never solved
     # "deepseek-reasoner",                   EXCLUDED as it is too slow and messing all the e2e runs
     "deepseek-chat",
