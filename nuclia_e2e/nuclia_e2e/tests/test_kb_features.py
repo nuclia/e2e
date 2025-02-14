@@ -9,7 +9,7 @@ from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.lib.kb import NucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kb import NucliaKB
-from nuclia.sdk.kbs import NucliaKBS
+from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
@@ -44,14 +44,11 @@ TEST_CHOCO_ASK_MORE = "When did they start being high?"
 
 
 async def run_test_kb_creation(regional_api_config, logger: Logger) -> str:
-    kbs = NucliaKBS()
-    new_kb = await asyncio.to_thread(
-        partial(
-            kbs.add,
-            zone=regional_api_config["zone_slug"],
-            slug=regional_api_config["test_kb_slug"],
-            sentence_embedder="en-2024-04-24",
-        )
+    kbs = AsyncNucliaKBS()
+    new_kb = await kbs.add(
+        zone=regional_api_config["zone_slug"],
+        slug=regional_api_config["test_kb_slug"],
+        sentence_embedder="en-2024-04-24",
     )
 
     kbid = await get_kbid_from_slug(regional_api_config["zone_slug"], regional_api_config["test_kb_slug"])
@@ -131,55 +128,52 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
     assert success
 
 
-async def run_test_create_da_labeller(regional_api_config, ndb: NucliaDBClient, logger: Logger):
+async def run_test_create_da_labeller(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     """
     Creates a config to run on all current resources and on all future ones
     """
-    kb = NucliaKB()
-    await asyncio.to_thread(
-        partial(
-            kb.task.start,
-            ndb=ndb,
-            task_name=TaskName.LABELER,
-            apply=ApplyOptions.ALL,
-            parameters=DataAugmentation(
-                name="test-labels",
-                on=ApplyTo.FIELD,
-                filter=Filter(),
-                operations=[
-                    Operation(
-                        label=LabelOperation(
-                            labels=[
-                                Label(
-                                    label="TECH",
-                                    description="Related to financial news in the TECH/IT industry",
-                                ),
-                                Label(
-                                    label="HEALTH",
-                                    description="Related to financial news in the HEALTHCARE industry",
-                                ),
-                                Label(
-                                    label="FOOD",
-                                    description="Related to financial news in the FOOD industry",
-                                ),
-                                Label(
-                                    label="MEDIA",
-                                    description="Related to financial news in the MEDIA industry",
-                                ),
-                            ],
-                            ident="topic",
-                            description="Topic of the article in the financial context",
-                        )
+    kb = AsyncNucliaKB()
+    await kb.task.start(
+        ndb=ndb,
+        task_name=TaskName.LABELER,
+        apply=ApplyOptions.ALL,
+        parameters=DataAugmentation(
+            name="test-labels",
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[
+                Operation(
+                    label=LabelOperation(
+                        labels=[
+                            Label(
+                                label="TECH",
+                                description="Related to financial news in the TECH/IT industry",
+                            ),
+                            Label(
+                                label="HEALTH",
+                                description="Related to financial news in the HEALTHCARE industry",
+                            ),
+                            Label(
+                                label="FOOD",
+                                description="Related to financial news in the FOOD industry",
+                            ),
+                            Label(
+                                label="MEDIA",
+                                description="Related to financial news in the MEDIA industry",
+                            ),
+                        ],
+                        ident="topic",
+                        description="Topic of the article in the financial context",
                     )
-                ],
-                llm=LLMConfig(model="chatgpt-azure-4o-mini"),
-            ),
-        )
+                )
+            ],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
     )
 
 
 async def run_test_check_da_labeller_output(regional_api_config, ndb: NucliaDBClient, logger: Logger):
-    kb = NucliaKB()
+    kb = AsyncNucliaKB()
 
     expected_resource_labels = [
         ("disney", ("topic", "MEDIA")),
@@ -194,9 +188,7 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb: NucliaDBCl
             result = False
             for resource_slug, (labelset, label) in expected:
                 try:
-                    res = await asyncio.to_thread(
-                        partial(kb.resource.get, slug=resource_slug, show=["extracted"], ndb=ndb)
-                    )
+                    res = await kb.resource.get(slug=resource_slug, show=["extracted"], ndb=ndb)
                 except NotFoundError:
                     # some resource may still be missing from nucliadb, let's wait more
                     continue
@@ -300,23 +292,20 @@ async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Lo
 
 
 async def run_test_activity_log(regional_api_config, ndb, logger):
-    kb = NucliaKB()
+    kb = AsyncNucliaKB()
     now = datetime.now(tz=timezone.utc)
 
     def activity_log_is_stored():
         @wraps(activity_log_is_stored)
         async def condition() -> tuple[bool, Any]:
-            logs = await asyncio.to_thread(
-                partial(
-                    kb.logs.query,
-                    ndb=ndb,
-                    type=EventType.CHAT,
-                    query=ActivityLogsChatQuery(
-                        year_month=f"{now.year}-{now.month:02}",
-                        filters={},
-                        pagination=Pagination(limit=100),
-                    ),
-                )
+            logs = await kb.logs.query(
+                ndb=ndb,
+                type=EventType.CHAT,
+                query=ActivityLogsChatQuery(
+                    year_month=f"{now.year}-{now.month:02}",
+                    filters={},
+                    pagination=Pagination(limit=100),
+                ),
             )
             if len(logs.data) >= 2:
                 # as the asks may be retried more than once (because some times rephrase doesn't always work)
@@ -335,22 +324,19 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
     assert success, "Activity logs didn't get stored in time"
 
     # if we have the ask events, we'll must have the find ones, as they have been done earlier.
-    logs = await asyncio.to_thread(
-        partial(
-            kb.logs.query,
-            ndb=ndb,
-            type=EventType.SEARCH,
-            query=ActivityLogsSearchQuery(
-                year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)
-            ),
-        )
+    logs = await kb.logs.query(
+        ndb=ndb,
+        type=EventType.SEARCH,
+        query=ActivityLogsSearchQuery(
+            year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)
+        ),
     )
 
     assert logs.data[-1].question == TEST_CHOCO_QUESTION
 
 
 async def run_test_remi_query(regional_api_config, ndb, logger):
-    kb = NucliaKB()
+    kb = AsyncNucliaKB()
     starting_at = datetime.now(tz=timezone.utc) - timedelta(
         seconds=600
     )  # 10 minutes is longer than we need, indicating a "safe start" indicator for this test run
@@ -359,14 +345,11 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
     def remi_data_is_computed():
         @wraps(remi_data_is_computed)
         async def condition() -> tuple[bool, Any]:
-            scores = await asyncio.to_thread(
-                partial(
-                    kb.remi.get_scores,
-                    ndb=ndb,
-                    starting_at=starting_at,
-                    to=to,
-                    aggregation="day",
-                )
+            scores = await kb.remi.get_scores(
+                ndb=ndb,
+                starting_at=starting_at,
+                to=to,
+                aggregation="day",
             )
             if len(scores[0].metrics) > 0:
                 return (True, scores)
@@ -379,9 +362,9 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
 
 
 async def run_test_kb_deletion(regional_api_config, kbid, logger):
-    kbs = NucliaKBS()
+    kbs = AsyncNucliaKBS()
     logger("deleting " + kbid)
-    await asyncio.to_thread(partial(kbs.delete, zone=regional_api_config["zone_slug"], id=kbid))
+    await kbs.delete(zone=regional_api_config["zone_slug"], id=kbid)
 
     kbid = await get_kbid_from_slug(regional_api_config["zone_slug"], regional_api_config["test_kb_slug"])
     assert kbid is None
@@ -425,7 +408,7 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     # Create a labeller configuration, with the goal of testing two tings:
     # - labelling of existing resources (the ones imported)
     # - labelling of new resources(will be created later)
-    await run_test_create_da_labeller(regional_api_config, sync_ndb, logger)
+    await run_test_create_da_labeller(regional_api_config, async_ndb, logger)
 
     # Upload a new resource and validate that is correctly processed and stored in nuclia
     # Also check that its index are available, by checking the amount of extracted paragraphs
@@ -436,7 +419,7 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     # We wait until find succeeds to run the ask tests to maximize the changes that all indexes will be
     # available and so minimize the llm costs retrying
     await asyncio.gather(
-        run_test_check_da_labeller_output(regional_api_config, sync_ndb, logger),
+        run_test_check_da_labeller_output(regional_api_config, async_ndb, logger),
         run_test_find(regional_api_config, async_ndb, logger),
     )
     await run_test_ask(regional_api_config, async_ndb, logger)
@@ -446,8 +429,8 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     # the activity log is stored, the test_activity_log tests several things aside the ask events (the ones
     # affecting the remi queries) and so we can benefit of running them in parallel.
     await asyncio.gather(
-        run_test_activity_log(regional_api_config, sync_ndb, logger),
-        run_test_remi_query(regional_api_config, sync_ndb, logger),
+        run_test_activity_log(regional_api_config, async_ndb, logger),
+        run_test_remi_query(regional_api_config, async_ndb, logger),
     )
 
     # Delete the kb as a final step

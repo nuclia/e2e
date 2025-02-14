@@ -8,7 +8,7 @@ from nuclia.config import set_config_file
 from nuclia.data import get_async_auth
 from nuclia.data import get_config
 from nuclia.lib.nua import AsyncNuaClient
-from nuclia.sdk.kbs import NucliaKBS
+from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia_e2e.data import TEST_ACCOUNT_SLUG
 
 import aiohttp
@@ -276,6 +276,7 @@ async def regional_api_config(request: pytest.FixtureRequest, global_api_config)
     zone_config["permanent_account_id"] = {a.slug: a.id for a in config.accounts}[
         global_api_config["permanent_account_slug"]
     ]
+
     kbs = {
         kb.slug: kb.id
         for kb in await auth.kbs(zone_config["permanent_account_id"])
@@ -379,13 +380,13 @@ async def cleanup_test_account(global_api: GlobalAPI):
 
 @pytest.fixture
 async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
-    kbs = NucliaKBS()
+    kbs = AsyncNucliaKBS()
     kb_slug = regional_api_config["test_kb_slug"]
-    all_kbs = await asyncio.to_thread(kbs.list)
+    all_kbs = await kbs.list()
     kb_ids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kb_id = kb_ids_by_slug.get(kb_slug)
     try:
-        await asyncio.to_thread(partial(kbs.delete, zone=regional_api_config["zone_slug"], id=kb_id))
+        await kbs.delete(zone=regional_api_config["zone_slug"], id=kb_id)
     except ValueError:
         # Raised by sdk when kb not found
         pass
