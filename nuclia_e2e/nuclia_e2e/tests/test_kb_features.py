@@ -11,7 +11,6 @@ from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
-from nuclia_e2e.utils import get_sync_kb_ndb_client
 from nuclia_e2e.utils import wait_for
 from nuclia_models.common.pagination import Pagination
 from nuclia_models.events.activity_logs import ActivityLogsChatQuery
@@ -397,7 +396,6 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     # to override all the sdk endpoints that automagically creates the client
     # as this is incompatible with the cooperative tests
     async_ndb = get_async_kb_ndb_client(zone, account, kbid, user_token=auth._config.token)
-    sync_ndb = get_sync_kb_ndb_client(zone, account, kbid, user_token=auth._config.token)
 
     # Import a preexisting export containing several resources (coming from the financial-news kb)
     # and wait for the resources to be completely imported

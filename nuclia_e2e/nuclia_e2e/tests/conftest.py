@@ -1,43 +1,35 @@
+# On the SDK, the httpx client is instantiated in a lot of places, sometimes very deeply nested.
+# With this we can increment the timeout for all requests to minimize noise caused specially by
+# ReadTimeout and ConnectTimeout, related probably to where the tests run on GHA.
+#
+# This patch needs to be executed first
 # fmt: off
-# Save the original __init__ method
-import httpx  # noqa: I001
-_original_init = httpx.AsyncClient.__init__
-
-def custom_init(self, *args, timeout=httpx.Timeout(100), **kwargs):
-    """Override httpx.Client.__init__ to set a custom default timeout."""
-    if "timeout" not in kwargs:  # Only override if timeout is not explicitly set
-        kwargs["timeout"] = timeout
-    _original_init(self, *args, **kwargs)  # Call original init
-
-
-# Apply the patch
-httpx.AsyncClient.__init__ = custom_init
+from _patch_httpx import _patch_httpx; _patch_httpx()  # noqa: I001,E702
 # fmt: on
+from copy import deepcopy  # noqa: E402
+from datetime import datetime  # noqa: E402
+from datetime import timedelta  # noqa: E402
+from email.header import decode_header  # noqa: E402
+from functools import partial  # noqa: E402
+from nuclia.config import reset_config_file  # noqa: E402
+from nuclia.config import set_config_file  # noqa: E402
+from nuclia.data import get_async_auth  # noqa: E402
+from nuclia.data import get_config  # noqa: E402
+from nuclia.lib.nua import AsyncNuaClient  # noqa: E402
+from nuclia.sdk.kbs import NucliaKBS  # noqa: E402
+from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
 
-from copy import deepcopy
-from datetime import datetime
-from datetime import timedelta
-from email.header import decode_header
-from functools import partial
-from nuclia.config import reset_config_file
-from nuclia.config import set_config_file
-from nuclia.data import get_async_auth
-from nuclia.data import get_config
-from nuclia.lib.nua import AsyncNuaClient
-from nuclia.sdk.kbs import NucliaKBS
-from nuclia_e2e.data import TEST_ACCOUNT_SLUG
-
-import aiohttp
-import asyncio
-import email
-import imaplib
-import nuclia
-import os
-import pytest
-import random
-import re
-import string
-import tempfile
+import aiohttp  # noqa: E402
+import asyncio  # noqa: E402
+import email  # noqa: E402
+import imaplib  # noqa: E402
+import nuclia  # noqa: E402
+import os  # noqa: E402
+import pytest  # noqa: E402
+import random  # noqa: E402
+import re  # noqa: E402
+import string  # noqa: E402
+import tempfile  # noqa: E402
 
 TEST_ENV = os.environ.get("TEST_ENV")
 
