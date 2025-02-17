@@ -1,8 +1,9 @@
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.search import AskAnswer
-import pytest
 from nuclia_e2e.utils import get_async_kb_ndb_client
+
+import pytest
 
 
 @pytest.mark.asyncio_cooperative

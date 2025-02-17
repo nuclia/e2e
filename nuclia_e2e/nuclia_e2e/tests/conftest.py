@@ -1,3 +1,19 @@
+# fmt: off
+# Save the original __init__ method
+import httpx  # noqa: I001
+_original_init = httpx.AsyncClient.__init__
+
+def custom_init(self, *args, timeout=httpx.Timeout(100), **kwargs):
+    """Override httpx.Client.__init__ to set a custom default timeout."""
+    if "timeout" not in kwargs:  # Only override if timeout is not explicitly set
+        kwargs["timeout"] = timeout
+    _original_init(self, *args, **kwargs)  # Call original init
+
+
+# Apply the patch
+httpx.AsyncClient.__init__ = custom_init
+# fmt: on
+
 from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
@@ -8,7 +24,7 @@ from nuclia.config import set_config_file
 from nuclia.data import get_async_auth
 from nuclia.data import get_config
 from nuclia.lib.nua import AsyncNuaClient
-from nuclia.sdk.kbs import AsyncNucliaKBS
+from nuclia.sdk.kbs import NucliaKBS
 from nuclia_e2e.data import TEST_ACCOUNT_SLUG
 
 import aiohttp
@@ -380,13 +396,13 @@ async def cleanup_test_account(global_api: GlobalAPI):
 
 @pytest.fixture
 async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
-    kbs = AsyncNucliaKBS()
+    kbs = NucliaKBS()
     kb_slug = regional_api_config["test_kb_slug"]
-    all_kbs = await kbs.list()
+    all_kbs = await asyncio.to_thread(kbs.list)
     kb_ids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kb_id = kb_ids_by_slug.get(kb_slug)
     try:
-        await kbs.delete(zone=regional_api_config["zone_slug"], id=kb_id)
+        await asyncio.to_thread(partial(kbs.delete, zone=regional_api_config["zone_slug"], id=kb_id))
     except ValueError:
         # Raised by sdk when kb not found
         pass

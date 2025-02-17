@@ -1,0 +1,17 @@
+fire
+pydantic>=2.0.0
+pyyaml>=5.4
+requests
+httpx
+httpcore>=1.0.0
+prompt_toolkit
+nucliadb_sdk>=6.2.1.post2864,<7
+nucliadb_models>=6.2.1.post2864,<7
+nucliadb_protos>=6.2.1.post2864,<7
+nuclia-models>=0.25.0
+tqdm
+aiofiles
+backoff
+deprecated
+tabulate
+async_lru

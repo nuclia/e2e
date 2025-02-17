@@ -6,7 +6,6 @@
 # Try to keep the original order to make diffs more useful
 import re
 
-
 ALL_LLMS = [
     # "generative-multilingual-2023",        EXCLUDED because it's a legacy model, cannot be selected anywhere currently
     "chatgpt-azure-4-turbo",

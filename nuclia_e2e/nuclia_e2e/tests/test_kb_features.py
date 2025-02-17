@@ -2,13 +2,11 @@ from collections.abc import Callable
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
-from functools import partial
 from functools import wraps
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.lib.kb import NucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
-from nuclia.sdk.kb import NucliaKB
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import get_async_kb_ndb_client
