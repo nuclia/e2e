@@ -4,7 +4,7 @@
 #
 # This patch needs to be executed first
 # fmt: off
-from _patch_httpx import _patch_httpx; _patch_httpx()  # noqa: I001,E702
+from nuclia_e2e import patch_httpx; patch_httpx()  # noqa: I001,E702
 # fmt: on
 from copy import deepcopy  # noqa: E402
 from datetime import datetime  # noqa: E402
