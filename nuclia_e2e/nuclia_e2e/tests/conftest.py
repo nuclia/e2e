@@ -1,27 +1,35 @@
-from copy import deepcopy
-from datetime import datetime
-from datetime import timedelta
-from email.header import decode_header
-from functools import partial
-from nuclia.config import reset_config_file
-from nuclia.config import set_config_file
-from nuclia.data import get_auth
-from nuclia.data import get_config
-from nuclia.lib.nua import AsyncNuaClient
-from nuclia.sdk.kbs import NucliaKBS
-from nuclia_e2e.data import TEST_ACCOUNT_SLUG
+# On the SDK, the httpx client is instantiated in a lot of places, sometimes very deeply nested.
+# With this we can increment the timeout for all requests to minimize noise caused specially by
+# ReadTimeout and ConnectTimeout, related probably to where the tests run on GHA.
+#
+# This patch needs to be executed first
+# fmt: off
+from nuclia_e2e.tests.patch_httpx import patch_httpx; patch_httpx()  # noqa: I001,E702
+# fmt: on
+from copy import deepcopy  # noqa: E402
+from datetime import datetime  # noqa: E402
+from datetime import timedelta  # noqa: E402
+from email.header import decode_header  # noqa: E402
+from functools import partial  # noqa: E402
+from nuclia.config import reset_config_file  # noqa: E402
+from nuclia.config import set_config_file  # noqa: E402
+from nuclia.data import get_async_auth  # noqa: E402
+from nuclia.data import get_config  # noqa: E402
+from nuclia.lib.nua import AsyncNuaClient  # noqa: E402
+from nuclia.sdk.kbs import NucliaKBS  # noqa: E402
+from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
 
-import aiohttp
-import asyncio
-import email
-import imaplib
-import nuclia
-import os
-import pytest
-import random
-import re
-import string
-import tempfile
+import aiohttp  # noqa: E402
+import asyncio  # noqa: E402
+import email  # noqa: E402
+import imaplib  # noqa: E402
+import nuclia  # noqa: E402
+import os  # noqa: E402
+import pytest  # noqa: E402
+import random  # noqa: E402
+import re  # noqa: E402
+import string  # noqa: E402
+import tempfile  # noqa: E402
 
 TEST_ENV = os.environ.get("TEST_ENV")
 
@@ -201,15 +209,16 @@ class RegionalAPI:
 
     async def delete_service_account_by_name(
         self, account: str, kbid: str, service_account_name: str
-    ) -> None:
+    ) -> str | None:
         kb_sa = await self.get_kb_sa(account, kbid)
         test_sa = [a for a in kb_sa if a["title"] == service_account_name]
         if len(test_sa) != 1:
-            return
+            return None
         sa_id = test_sa[0]["id"]
         url = f"{self.base_url}/api/v1/account/{account}/kb/{kbid}/service_account/{sa_id}"
         async with self.session.delete(url, headers=self.auth_headers) as response:
             response.raise_for_status()
+        return sa_id
 
 
 @pytest.fixture
@@ -235,7 +244,7 @@ def global_api(aiohttp_session, global_api_config):
 
 
 @pytest.fixture
-def regional_api(aiohttp_session, global_api_config, regional_api_config):
+async def regional_api(aiohttp_session, global_api_config, regional_api_config):
     """
     Provide a configured GlobalAPI instance for tests.
     """
@@ -263,11 +272,11 @@ def global_api_config():
 @pytest.fixture(
     params=[pytest.param(zone, id=zone["name"]) for zone in CLUSTERS_CONFIG[TEST_ENV]["zones"]],
 )
-def regional_api_config(request: pytest.FixtureRequest, global_api_config):
+async def regional_api_config(request: pytest.FixtureRequest, global_api_config):
     zone_config = deepcopy(request.param)
-    auth = get_auth()
+    auth = get_async_auth()
     config = get_config()
-    auth.set_user_token(global_api_config["permanent_account_owner_pat_token"])
+    await auth.set_user_token(global_api_config["permanent_account_owner_pat_token"])
     config.set_default_account(global_api_config["permanent_account_slug"])
     config.set_default_zone(zone_config["zone_slug"])
     zone_config["test_kb_slug"] = "{test_kb_slug}-{name}".format(**zone_config)
@@ -275,9 +284,10 @@ def regional_api_config(request: pytest.FixtureRequest, global_api_config):
     zone_config["permanent_account_id"] = {a.slug: a.id for a in config.accounts}[
         global_api_config["permanent_account_slug"]
     ]
+
     kbs = {
         kb.slug: kb.id
-        for kb in auth.kbs(zone_config["permanent_account_id"])
+        for kb in await auth.kbs(zone_config["permanent_account_id"])
         if kb.region == zone_config["zone_slug"]
     }
     zone_config["permanent_kb_id"] = kbs[zone_config["permanent_kb_slug"]]
@@ -392,11 +402,13 @@ async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
 
 @pytest.fixture
 async def clean_kb_sa(request: pytest.FixtureRequest, regional_api_config, regional_api: RegionalAPI):
-    await regional_api.delete_service_account_by_name(
+    deleted_sa_id = await regional_api.delete_service_account_by_name(
         regional_api_config["permanent_account_id"],
         regional_api_config["permanent_kb_id"],
         "test-e2e-kb-auth",
     )
+    if deleted_sa_id:
+        print(f"clean_kb_sa fixture: Deleted service account with id: {deleted_sa_id}")
 
 
 @pytest.fixture

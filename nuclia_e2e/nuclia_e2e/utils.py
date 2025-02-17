@@ -3,7 +3,7 @@ from collections.abc import Callable
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.lib.kb import Environment
 from nuclia.lib.kb import NucliaDBClient
-from nuclia.sdk.kbs import NucliaKBS
+from nuclia.sdk.kbs import AsyncNucliaKBS
 from pathlib import Path
 from time import monotonic
 from typing import Any
@@ -39,8 +39,8 @@ async def wait_for(
 
 
 async def get_kbid_from_slug(zone: str, slug: str) -> str | None:
-    kbs = NucliaKBS()
-    all_kbs = await asyncio.to_thread(kbs.list)
+    kbs = AsyncNucliaKBS()
+    all_kbs = await kbs.list()
     kbids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kbid = kbids_by_slug.get(slug)
     return kbid

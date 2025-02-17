@@ -1,7 +1,7 @@
 from nuclia.lib.nua import AsyncNuaClient
 from nuclia.sdk.predict import AsyncNucliaPredict
 from nuclia_e2e.models import ALL_ENCODERS
-from nuclia_e2e.models import ALL_LLMS, NON_REASONING_LLMS
+from nuclia_e2e.models import NON_REASONING_LLMS
 from nuclia_models.predict.remi import RemiRequest
 
 import pytest
