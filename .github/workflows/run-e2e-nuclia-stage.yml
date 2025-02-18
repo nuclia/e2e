@@ -1,5 +1,6 @@
 name: run-nuclia-e2e-stage
 run-name: Running e2e STAGE NUCLIA tests
+
 on:
   push:
     branches:
@@ -13,10 +14,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        shard_index: [1, 2, 3]  # Running tests in 3 parallel shards
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # Launch NucliaDB in docker
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -30,22 +35,23 @@ jobs:
           pip install -r nuclia_e2e/requirements.txt
           pip install -e nuclia_e2e
 
-      - name: Run tests
-        env: # Or as an environment variable
+      - name: Run tests (Shard ${{ matrix.shard_index }})
+        env:
           TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}
           STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           STAGE_ROOT_PAT_TOKEN: ${{ secrets.STAGE_ROOT_PAT_TOKEN }}
           STAGE_GLOBAL_RECAPTCHA: ${{ secrets.STAGE_GLOBAL_RECAPTCHA }}
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
-
         run: |
-          TEST_ENV=stage pytest -sxv nuclia_e2e/nuclia_e2e/tests --durations=0 --junitxml nua.xml
+          TEST_ENV=stage pytest -sxv nuclia_e2e/nuclia_e2e/tests \
+            --durations=0 --junitxml=nuclia-${{ matrix.shard_index }}.xml \
+            --shard-id=${{ matrix.shard_index }} --num-shards=3
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
         if: success() || failure() # always run even if the previous step fails
         with:
-          report_paths: 'nuclia.xml'
+          report_paths: 'nuclia-*.xml' # Collect all test reports from parallel runs
 
       - name: Slack notification
         id: slack
@@ -54,7 +60,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ tests failed on STAGE\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "⚠️ Tests failed on STAGE\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}

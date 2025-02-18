@@ -4,7 +4,7 @@ import httpx
 def patch_httpx():
     _original_init = httpx.AsyncClient.__init__
 
-    def custom_init(self, *args, timeout=httpx.Timeout(100), **kwargs):
+    def custom_init(self, *args, timeout=httpx.Timeout(120), **kwargs):
         """Override httpx.Client.__init__ to set a custom default timeout."""
         if "timeout" not in kwargs:
             kwargs["timeout"] = timeout
