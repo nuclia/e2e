@@ -32,7 +32,7 @@ PROMPT_GUARD_DISABLED = TEST_ENV == "prod"
 
 
 @dataclass
-class TestInput:
+class TaskTestInput:
     filename: str
     task_name: TaskName
     parameters: PARAMETERS_TYPING
@@ -264,8 +264,8 @@ def validate_labeler_output_text_block(msg: BrokerMessage):
     )
 
 
-DA_TEST_INPUTS: list[TestInput] = [
-    TestInput(
+DA_TEST_INPUTS: list[TaskTestInput] = [
+    TaskTestInput(
         filename="financial-news-kb.arrow",
         task_name=TaskName.LABELER,
         parameters=DataAugmentation(
@@ -302,7 +302,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
         validate_output=validate_labeler_output,
     ),
-    TestInput(
+    TaskTestInput(
         filename="legal-text-kb.arrow",
         task_name=TaskName.LLM_GRAPH,
         parameters=DataAugmentation(
@@ -354,7 +354,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         validate_output=validate_llm_graph_output,
     ),
     pytest.param(
-        TestInput(
+        TaskTestInput(
             filename="jailbreak-kb.arrow",
             task_name=TaskName.PROMPT_GUARD,
             parameters=DataAugmentation(
@@ -371,7 +371,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
     ),
     pytest.param(
-        TestInput(
+        TaskTestInput(
             filename="toxic-kb.arrow",
             task_name=TaskName.LLAMA_GUARD,
             parameters=DataAugmentation(
@@ -387,7 +387,7 @@ DA_TEST_INPUTS: list[TestInput] = [
             LLAMA_GUARD_DISABLED, reason="Feature flag application_content-safety-task is disabled"
         ),
     ),
-    TestInput(
+    TaskTestInput(
         filename="legal-text-kb.arrow",
         task_name=TaskName.ASK,
         parameters=DataAugmentation(
@@ -407,7 +407,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
         validate_output=validate_ask_output,
     ),
-    TestInput(
+    TaskTestInput(
         filename="legal-text-kb.arrow",
         task_name=TaskName.SYNTHETIC_QUESTIONS,
         parameters=DataAugmentation(
@@ -419,7 +419,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
         validate_output=validate_synthetic_questions_output,
     ),
-    TestInput(
+    TaskTestInput(
         filename="financial-news-kb.arrow",
         task_name=TaskName.LABELER,
         parameters=DataAugmentation(
@@ -457,7 +457,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         validate_output=validate_labeler_output_text_block,
     ),
     pytest.param(
-        TestInput(
+        TaskTestInput(
             filename="jailbreak-kb.arrow",
             task_name=TaskName.PROMPT_GUARD,
             parameters=DataAugmentation(
@@ -474,7 +474,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
     ),
     pytest.param(
-        TestInput(
+        TaskTestInput(
             filename="toxic-kb.arrow",
             task_name=TaskName.LLAMA_GUARD,
             parameters=DataAugmentation(
@@ -525,7 +525,7 @@ async def test_da_agent_tasks(
     nua_client: AsyncNuaClient,
     aiohttp_client: AsyncGenerator[aiohttp.ClientSession, None],
     tmp_nua_key: str,
-    test_input: TestInput,
+    test_input: TaskTestInput,
 ):
     dataset_id = None
     task_id = None
