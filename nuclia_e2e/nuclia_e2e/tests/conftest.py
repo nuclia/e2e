@@ -69,7 +69,7 @@ class GlobalConfig:
     permanent_account_owner_pat_token: str
     gmail_app_password: str
     permanent_account_slug: str
-    permanent_account_id: str = ""
+    permanent_account_id: str
 
 
 @dataclasses.dataclass(slots=True)
@@ -103,6 +103,7 @@ CLUSTERS_CONFIG = {
             permanent_account_owner_pat_token=safe_get_prod_env("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
             gmail_app_password=safe_get_prod_env("TEST_GMAIL_APP_PASSWORD"),
             permanent_account_slug="automated-testing",
+            permanent_account_id="8c7db65c-3b7e-4140-8165-d37bb4e6e9b8",
         ),
         zones=[
             ZoneConfig(
@@ -129,6 +130,7 @@ CLUSTERS_CONFIG = {
             permanent_account_owner_pat_token=safe_get_stage_env("STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
             gmail_app_password=safe_get_stage_env("TEST_GMAIL_APP_PASSWORD"),
             permanent_account_slug="automated-testing",
+            permanent_account_id="f2edd58e-431f-4197-be76-6fc611082fe8",
         ),
         zones=[
             ZoneConfig(
@@ -320,21 +322,6 @@ def global_api_config() -> Generator[GlobalConfig, None, None]:
     nuclia.BASE = f"https://{global_config.base_domain}"
     nuclia.REGIONAL = f"https://{{region}}.{global_config.base_domain}"
     os.environ["TESTING"] = "True"
-    config = get_config()
-    if config.accounts is None:
-        msg = "Couldn't find any account, " "check your {TEST_ENV} cluster config"
-        raise RuntimeError(msg)
-
-    accounts_by_slug = {a.slug: a.id for a in config.accounts}
-    permanent_account_id = accounts_by_slug.get(global_config.permanent_account_slug, None)
-    if permanent_account_id is None:
-        msg = (
-            "Couldn't find an account named {global_api_config.permanent_account_slug}, "
-            "check your {TEST_ENV} cluster config"
-        )
-        raise RuntimeError(msg)
-
-    TEST_CLUSTER.global_config.permanent_account_id = permanent_account_id
     with tempfile.NamedTemporaryFile() as temp_file:
         temp_file.write(b"{}")
         temp_file.flush()
@@ -343,9 +330,7 @@ def global_api_config() -> Generator[GlobalConfig, None, None]:
         reset_config_file()
 
 
-@pytest.fixture(
-    params=[pytest.param(zone, id=zone.name) for zone in TEST_CLUSTER.zones],
-)
+@pytest.fixture(params=[pytest.param(zone, id=zone.name) for zone in TEST_CLUSTER.zones])
 async def regional_api_config(request: pytest.FixtureRequest, global_api_config: GlobalConfig) -> ZoneConfig:
     zone_config: ZoneConfig = deepcopy(request.param)
     auth = get_async_auth()

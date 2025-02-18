@@ -506,7 +506,7 @@ async def tmp_nua_key(
     regional_api_config,
     global_api_config,
 ) -> AsyncGenerator[str, None]:
-    account_id = regional_api_config.global_config.permanent_account_id
+    account_id = global_api_config.permanent_account_id
     pat_client_generator = aiohttp_client(
         base_url=nua_client.url,
         pat_key=global_api_config.permanent_account_owner_pat_token,
