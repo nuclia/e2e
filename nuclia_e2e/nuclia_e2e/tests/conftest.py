@@ -194,7 +194,7 @@ class RegionalAPI:
         url = f"{self.base_url}/api/v1/account/{account}/kb/{kbid}/service_account/{sa_id}/keys"
         expires = datetime.now() + timedelta(seconds=ttl)
         async with self.session.post(
-            url, headers=self.auth_headers, json={"expires": expires.isoformat()}
+            url, headers=self.auth_headers, json={"expires": expires.strftime("%Y-%m-%dT%H:%M:%SZ")}
         ) as response:
             data = await response.json()
             return data["token"]
