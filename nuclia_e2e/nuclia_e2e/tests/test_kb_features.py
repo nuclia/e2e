@@ -29,6 +29,7 @@ from nucliadb_models.metadata import ResourceProcessingStatus
 from nucliadb_sdk.v2.exceptions import NotFoundError
 from textwrap import dedent
 from typing import Any
+from nucliadb_sdk.v2.exceptions import ClientError
 
 import asyncio
 import backoff
@@ -225,7 +226,7 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb: NucliaDBCl
     assert success
 
 
-@backoff.on_exception(backoff.constant, AssertionError, max_tries=5, interval=5)
+@backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
 async def run_test_find(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     kb = AsyncNucliaKB()
 
@@ -242,7 +243,7 @@ async def run_test_find(regional_api_config, ndb: AsyncNucliaDBClient, logger: L
     assert first_resource.slug == "chocolatier"
 
 
-@backoff.on_exception(backoff.constant, AssertionError, max_tries=5, interval=5)
+@backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
 async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     kb = AsyncNucliaKB()
 
