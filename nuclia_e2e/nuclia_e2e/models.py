@@ -13,7 +13,7 @@ ALL_LLMS = [
     "chatgpt-azure-4o-mini",
     "chatgpt-azure-o1-preview",
     "chatgpt-azure-o1-mini",
-    "chatgpt-azure-o1",
+    # "chatgpt-azure-o1",                    EXCLUDED because it almost always fails with timeouts
     "chatgpt-azure-o3-mini",
     "claude-3",
     "claude-3-fast",

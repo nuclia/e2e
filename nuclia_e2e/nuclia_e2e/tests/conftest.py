@@ -23,6 +23,7 @@ import aiohttp  # noqa: E402
 import asyncio  # noqa: E402
 import email  # noqa: E402
 import imaplib  # noqa: E402
+import logging  # noqa: E402
 import nuclia  # noqa: E402
 import os  # noqa: E402
 import pytest  # noqa: E402
@@ -30,6 +31,7 @@ import random  # noqa: E402
 import re  # noqa: E402
 import string  # noqa: E402
 import tempfile  # noqa: E402
+
 
 TEST_ENV = os.environ.get("TEST_ENV")
 
@@ -219,6 +221,12 @@ class RegionalAPI:
         async with self.session.delete(url, headers=self.auth_headers) as response:
             response.raise_for_status()
         return sa_id
+
+
+@pytest.fixture(autouse=True)
+def set_logger_level():
+    logger = logging.getLogger("nuclia-sdk")
+    logger.setLevel(logging.CRITICAL)
 
 
 @pytest.fixture
