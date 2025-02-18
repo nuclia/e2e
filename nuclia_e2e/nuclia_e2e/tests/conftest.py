@@ -6,6 +6,7 @@
 # fmt: off
 from nuclia_e2e.tests.patch_httpx import patch_httpx; patch_httpx()  # noqa: I001,E702
 # fmt: on
+from collections.abc import Generator  # noqa: E402
 from copy import deepcopy  # noqa: E402
 from datetime import datetime  # noqa: E402
 from datetime import timedelta  # noqa: E402
@@ -21,6 +22,7 @@ from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
 
 import aiohttp  # noqa: E402
 import asyncio  # noqa: E402
+import dataclasses  # noqa: E402
 import email  # noqa: E402
 import imaplib  # noqa: E402
 import logging  # noqa: E402
@@ -33,65 +35,108 @@ import string  # noqa: E402
 import tempfile  # noqa: E402
 
 
-TEST_ENV = os.environ.get("TEST_ENV")
+def safe_get_env(env_name: str) -> str:
+    value = os.environ.get(env_name, None)
+    if value is None:
+        raise RuntimeError(f"Missing {env_name} check your test config")
+
+    if value.strip() == "":
+        raise RuntimeError(f"Env var {env_name} cannot be empty string")
+    return value
+
+
+TEST_ENV = safe_get_env("TEST_ENV")
+
+
+@dataclasses.dataclass(slots=True)
+class GlobalConfig:
+    base_domain: str
+    recaptcha: str
+    root_pat_token: str
+    permanent_account_owner_pat_token: str
+    gmail_app_password: str
+    permanent_account_slug: str
+    permanent_account_id: str = ""
+
+
+@dataclasses.dataclass(slots=True)
+class ZoneConfig:
+    name: str
+    zone_slug: str
+    test_kb_slug: str
+    permanent_nua_key: str
+    permanent_kb_slug: str
+    permanent_kb_id: str = ""
+    global_config: GlobalConfig | None = None
+
+
+@dataclasses.dataclass(slots=True)
+class ClusterConfig:
+    global_config: GlobalConfig
+    zones: list[ZoneConfig]
+
 
 # All tests that needs some existing account will use the one configured in
 # the global "permanent_account_slug" with some predefined user credentials without expiration:
 # "permanent_account_owner_pat": PAT token for `testing_sdk@nuclia.com` on the suitable account
 
+
 CLUSTERS_CONFIG = {
-    "prod": {
-        "global": {
-            "base_domain": "nuclia.cloud",
-            "recaptcha": os.environ.get("PROD_GLOBAL_RECAPTCHA"),
-            "root_pat_token": os.environ.get("PROD_ROOT_PAT_TOKEN"),
-            "permanent_account_slug": "automated-testing",
-            "permanent_account_owner_pat_token": os.environ.get("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
-            "gmail_app_password": os.environ.get("TEST_GMAIL_APP_PASSWORD"),
-        },
-        "zones": [
-            {
-                "name": "europe-1",
-                "zone_slug": "europe-1",
-                "test_kb_slug": "nuclia-e2e-live",
-                "permanent_kb_slug": "pre-existing-kb",
-                "permanent_nua_key": os.environ.get("TEST_EUROPE1_NUCLIA_NUA"),
-            },
-            {
-                "name": "aws-us-east-2-1",
-                "zone_slug": "aws-us-east-2-1",
-                "test_kb_slug": "nuclia-e2e-live",
-                "permanent_kb_slug": "pre-existing-kb",
-                "permanent_nua_key": os.environ.get("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
-            },
+    "prod": ClusterConfig(
+        global_config=GlobalConfig(
+            base_domain="nuclia.cloud",
+            recaptcha=safe_get_env("PROD_GLOBAL_RECAPTCHA"),
+            root_pat_token=safe_get_env("PROD_ROOT_PAT_TOKEN"),
+            permanent_account_owner_pat_token=safe_get_env("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
+            gmail_app_password=safe_get_env("TEST_GMAIL_APP_PASSWORD"),
+            permanent_account_slug="automated-testing",
+        ),
+        zones=[
+            ZoneConfig(
+                name="europe-1",
+                zone_slug="europe-1",
+                test_kb_slug="nuclia-e2e-live-europe-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=safe_get_env("TEST_EUROPE1_NUCLIA_NUA"),
+            ),
+            ZoneConfig(
+                name="aws-us-east-2-1",
+                zone_slug="aws-us-east-2-1",
+                test_kb_slug="nuclia-e2e-live-aws-us-east-2-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=safe_get_env("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
+            ),
         ],
-    },
-    "stage": {
-        "global": {
-            "base_domain": "stashify.cloud",
-            "recaptcha": os.environ.get("STAGE_GLOBAL_RECAPTCHA"),
-            "root_pat_token": os.environ.get("STAGE_ROOT_PAT_TOKEN"),
-            "permanent_account_slug": "automated-testing",
-            "permanent_account_owner_pat_token": os.environ.get("STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
-            "gmail_app_password": os.environ.get("TEST_GMAIL_APP_PASSWORD"),
-        },
-        "zones": [
-            {
-                "name": "europe-1",
-                "zone_slug": "europe-1",
-                "test_kb_slug": "nuclia-e2e-live",
-                "permanent_kb_slug": "pre-existing-kb",
-                "permanent_nua_key": os.environ.get("TEST_EUROPE1_STASHIFY_NUA"),
-            },
-            # uncomment to test two zone parallel testing on stage
-            # {
-            #     "name": "europe-2",
-            #     "zone_slug": "europe-1",
-            #     "test_kb_slug": "nuclia-e2e-live"
-            # }
+    ),
+    "stage": ClusterConfig(
+        global_config=GlobalConfig(
+            base_domain="stashify.cloud",
+            recaptcha=safe_get_env("STAGE_GLOBAL_RECAPTCHA"),
+            root_pat_token=safe_get_env("STAGE_ROOT_PAT_TOKEN"),
+            permanent_account_owner_pat_token=safe_get_env("STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
+            gmail_app_password=safe_get_env("TEST_GMAIL_APP_PASSWORD"),
+            permanent_account_slug="automated-testing",
+        ),
+        zones=[
+            ZoneConfig(
+                name="europe-1",
+                zone_slug="europe-1",
+                test_kb_slug="nuclia-e2e-live-europe-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=safe_get_env("TEST_EUROPE1_STASHIFY_NUA"),
+            ),
+            # Uncomment to test two-zone parallel testing on stage
+            # ZoneConfig(
+            #     name="europe-2",
+            #     zone_slug="europe-1",
+            #     test_kb_slug="nuclia-e2e-live",
+            #     permanent_kb_slug="pre-existing-kb"
+            # )
         ],
-    },
+    ),
 }
+
+TEST_CLUSTER = CLUSTERS_CONFIG[TEST_ENV.lower()]
 
 
 class ManagerAPI:
@@ -244,9 +289,9 @@ def global_api(aiohttp_session, global_api_config):
     Provide a configured GlobalAPI instance for tests.
     """
     return GlobalAPI(
-        f"https://{global_api_config['base_domain']}",
-        global_api_config["recaptcha"],
-        global_api_config["root_pat_token"],
+        f"https://{global_api_config.base_domain}",
+        global_api_config.recaptcha,
+        global_api_config.root_pat_token,
         aiohttp_session,
     )
 
@@ -257,18 +302,33 @@ async def regional_api(aiohttp_session, global_api_config, regional_api_config):
     Provide a configured GlobalAPI instance for tests.
     """
     return RegionalAPI(
-        nuclia.REGIONAL.format(region=regional_api_config["zone_slug"]),
-        global_api_config["permanent_account_owner_pat_token"],
+        nuclia.REGIONAL.format(region=regional_api_config.zone_slug),
+        global_api_config.permanent_account_owner_pat_token,
         aiohttp_session,
     )
 
 
 @pytest.fixture
-def global_api_config():
-    global_config = CLUSTERS_CONFIG[TEST_ENV]["global"]
-    nuclia.BASE = f"https://{global_config['base_domain']}"
-    nuclia.REGIONAL = f"https://{{region}}.{global_config['base_domain']}"
+def global_api_config() -> Generator[GlobalConfig, None, None]:
+    global_config = TEST_CLUSTER.global_config
+    nuclia.BASE = f"https://{global_config.base_domain}"
+    nuclia.REGIONAL = f"https://{{region}}.{global_config.base_domain}"
     os.environ["TESTING"] = "True"
+    config = get_config()
+    if config.accounts is None:
+        msg = "Couldn't find any account, " "check your {TEST_ENV} cluster config"
+        raise RuntimeError(msg)
+
+    accounts_by_slug = {a.slug: a.id for a in config.accounts}
+    permanent_account_id = accounts_by_slug.get(global_config.permanent_account_slug, None)
+    if permanent_account_id is None:
+        msg = (
+            "Couldn't find an account named {global_api_config.permanent_account_slug}, "
+            "check your {TEST_ENV} cluster config"
+        )
+        raise RuntimeError(msg)
+
+    TEST_CLUSTER.global_config.permanent_account_id = permanent_account_id
     with tempfile.NamedTemporaryFile() as temp_file:
         temp_file.write(b"{}")
         temp_file.flush()
@@ -278,27 +338,24 @@ def global_api_config():
 
 
 @pytest.fixture(
-    params=[pytest.param(zone, id=zone["name"]) for zone in CLUSTERS_CONFIG[TEST_ENV]["zones"]],
+    params=[pytest.param(zone, id=zone.name) for zone in TEST_CLUSTER.zones],
 )
-async def regional_api_config(request: pytest.FixtureRequest, global_api_config):
-    zone_config = deepcopy(request.param)
+async def regional_api_config(request: pytest.FixtureRequest, global_api_config: GlobalConfig) -> ZoneConfig:
+    zone_config: ZoneConfig = deepcopy(request.param)
     auth = get_async_auth()
     config = get_config()
-    await auth.set_user_token(global_api_config["permanent_account_owner_pat_token"])
-    config.set_default_account(global_api_config["permanent_account_slug"])
-    config.set_default_zone(zone_config["zone_slug"])
-    zone_config["test_kb_slug"] = "{test_kb_slug}-{name}".format(**zone_config)
-    zone_config["permanent_account_slug"] = global_api_config["permanent_account_slug"]
-    zone_config["permanent_account_id"] = {a.slug: a.id for a in config.accounts}[
-        global_api_config["permanent_account_slug"]
-    ]
+    await auth.set_user_token(global_api_config.permanent_account_owner_pat_token)
+    config.set_default_account(global_api_config.permanent_account_slug)
+    config.set_default_zone(zone_config.zone_slug)
+    # Store a reference for convenience
+    zone_config.global_config = global_api_config
 
     kbs = {
         kb.slug: kb.id
-        for kb in await auth.kbs(zone_config["permanent_account_id"])
-        if kb.region == zone_config["zone_slug"]
+        for kb in await auth.kbs(zone_config.global_config.permanent_account_id)
+        if kb.region == zone_config.zone_slug
     }
-    zone_config["permanent_kb_id"] = kbs[zone_config["permanent_kb_slug"]]
+    zone_config.permanent_kb_id = kbs[zone_config.permanent_kb_slug]
 
     return zone_config
 
@@ -382,7 +439,7 @@ class EmailUtil:
 
 @pytest.fixture
 def email_util(global_api_config):
-    return EmailUtil("nucliaemailvalidation@gmail.com", global_api_config["gmail_app_password"])
+    return EmailUtil("nucliaemailvalidation@gmail.com", global_api_config.gmail_app_password)
 
 
 @pytest.fixture
@@ -397,12 +454,12 @@ async def cleanup_test_account(global_api: GlobalAPI):
 @pytest.fixture
 async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
     kbs = NucliaKBS()
-    kb_slug = regional_api_config["test_kb_slug"]
+    kb_slug = regional_api_config.test_kb_slug
     all_kbs = await asyncio.to_thread(kbs.list)
     kb_ids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kb_id = kb_ids_by_slug.get(kb_slug)
     try:
-        await asyncio.to_thread(partial(kbs.delete, zone=regional_api_config["zone_slug"], id=kb_id))
+        await asyncio.to_thread(partial(kbs.delete, zone=regional_api_config.zone_slug, id=kb_id))
     except ValueError:
         # Raised by sdk when kb not found
         pass
@@ -411,8 +468,8 @@ async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
 @pytest.fixture
 async def clean_kb_sa(request: pytest.FixtureRequest, regional_api_config, regional_api: RegionalAPI):
     deleted_sa_id = await regional_api.delete_service_account_by_name(
-        regional_api_config["permanent_account_id"],
-        regional_api_config["permanent_kb_id"],
+        regional_api_config.permanent_account_id,
+        regional_api_config.permanent_kb_id,
         "test-e2e-kb-auth",
     )
     if deleted_sa_id:
@@ -420,10 +477,10 @@ async def clean_kb_sa(request: pytest.FixtureRequest, regional_api_config, regio
 
 
 @pytest.fixture
-async def nua_client(regional_api_config):
+async def nua_client(regional_api_config) -> AsyncNuaClient:
     nc = AsyncNuaClient(
-        region=nuclia.REGIONAL.format(region=regional_api_config["zone_slug"]),
-        account=regional_api_config["permanent_account_id"],
-        token=regional_api_config["permanent_nua_key"],
+        region=nuclia.REGIONAL.format(region=regional_api_config.zone_slug),
+        account=regional_api_config.permanent_account_id,
+        token=regional_api_config.permanent_nua_key,
     )
     return nc

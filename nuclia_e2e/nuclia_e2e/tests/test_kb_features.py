@@ -5,7 +5,6 @@ from datetime import timezone
 from functools import wraps
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
-from nuclia.lib.kb import NucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia_e2e.utils import ASSETS_FILE_PATH
@@ -16,6 +15,7 @@ from nuclia_models.common.pagination import Pagination
 from nuclia_models.events.activity_logs import ActivityLogsChatQuery
 from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
 from nuclia_models.events.activity_logs import EventType
+from nuclia_models.events.activity_logs import QueryFiltersChat
 from nuclia_models.worker.proto import ApplyTo
 from nuclia_models.worker.proto import Filter
 from nuclia_models.worker.proto import Label
@@ -26,10 +26,10 @@ from nuclia_models.worker.tasks import ApplyOptions
 from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import TaskName
 from nucliadb_models.metadata import ResourceProcessingStatus
+from nucliadb_sdk.v2.exceptions import ClientError
 from nucliadb_sdk.v2.exceptions import NotFoundError
 from textwrap import dedent
 from typing import Any
-from nucliadb_sdk.v2.exceptions import ClientError
 
 import asyncio
 import backoff
@@ -44,12 +44,12 @@ TEST_CHOCO_ASK_MORE = "When did they start being high?"
 async def run_test_kb_creation(regional_api_config, logger: Logger) -> str:
     kbs = AsyncNucliaKBS()
     new_kb = await kbs.add(
-        zone=regional_api_config["zone_slug"],
-        slug=regional_api_config["test_kb_slug"],
+        zone=regional_api_config.zone_slug,
+        slug=regional_api_config.test_kb_slug,
         sentence_embedder="en-2024-04-24",
     )
 
-    kbid = await get_kbid_from_slug(regional_api_config["zone_slug"], regional_api_config["test_kb_slug"])
+    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, regional_api_config.test_kb_slug)
     assert kbid is not None
     logger(f"Created kb {new_kb['id']}")
     return kbid
@@ -170,7 +170,7 @@ async def run_test_create_da_labeller(regional_api_config, ndb: AsyncNucliaDBCli
     )
 
 
-async def run_test_check_da_labeller_output(regional_api_config, ndb: NucliaDBClient, logger: Logger):
+async def run_test_check_da_labeller_output(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     kb = AsyncNucliaKB()
 
     expected_resource_labels = [
@@ -301,7 +301,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                 type=EventType.CHAT,
                 query=ActivityLogsChatQuery(
                     year_month=f"{now.year}-{now.month:02}",
-                    filters={},
+                    filters=QueryFiltersChat(),
                     pagination=Pagination(limit=100),
                 ),
             )
@@ -362,9 +362,9 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
 async def run_test_kb_deletion(regional_api_config, kbid, logger):
     kbs = AsyncNucliaKBS()
     logger("deleting " + kbid)
-    await kbs.delete(zone=regional_api_config["zone_slug"], id=kbid)
+    await kbs.delete(zone=regional_api_config.zone_slug, id=kbid)
 
-    kbid = await get_kbid_from_slug(regional_api_config["zone_slug"], regional_api_config["test_kb_slug"])
+    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, regional_api_config.test_kb_slug)
     assert kbid is None
 
 
@@ -386,8 +386,8 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     def logger(msg):
         print(f"{request.node.name} ::: {msg}")
 
-    zone = regional_api_config["zone_slug"]
-    account = regional_api_config["permanent_account_id"]
+    zone = regional_api_config.zone_slug
+    account = regional_api_config.permanent_account_id
     auth = get_auth()
 
     # Creates a brand new kb that will be used troughout this test

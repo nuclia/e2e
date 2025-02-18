@@ -1,5 +1,5 @@
 mypy-extensions==1.0.0
-mypy==1.8.0
+mypy==1.15.0
 nuclia>=4.5.2
 pytest-timeout
 pytest==8.3.4
@@ -9,3 +9,4 @@ aiohttp
 pytest-asyncio-cooperative # not compatible with pytest-asyncio
 pytest-shard
 pytest-rerunfailures
+types-aiofiles

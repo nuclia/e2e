@@ -15,10 +15,10 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
     def logger(msg):
         print(f"{request.node.name} ::: {msg}")
 
-    zone = regional_api_config["zone_slug"]
-    account = regional_api_config["permanent_account_id"]
+    zone = regional_api_config.zone_slug
+    account = regional_api_config.permanent_account_id
 
-    kbid = regional_api_config["permanent_kb_id"]
+    kbid = regional_api_config.permanent_kb_id
 
     new_sa = await regional_api.create_service_account(account, kbid, "test-e2e-kb-auth")
     new_sa_key = await regional_api.create_service_account_key(account, kbid, new_sa["id"])
@@ -30,7 +30,7 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
     async_ndb = get_async_kb_ndb_client(zone, account, kbid, service_account_token=new_sa_key)
 
     async def security_groups_test_ask(
-        client: AsyncNucliaDBClient, question: str, security: list[str] | None
+        client: AsyncNucliaDBClient, question: str, security_groups: list[str] | None
     ) -> AskAnswer:
         kb = AsyncNucliaKB()
         return await kb.search.ask(
@@ -40,7 +40,7 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
             features=["semantic"],
             query=question,
             generative_model="chatgpt-azure-4o-mini",
-            security=security,
+            security={"groups": security_groups} if security_groups is not None else None,
         )
 
     # There are two resources describing to recipes
@@ -51,18 +51,18 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
 
     # Regular SA key with no explicit security should answer correctly
     secured_question = "What do you need to make a roasted chicken?"
-    answer = await security_groups_test_ask(async_ndb, secured_question, security=None)
+    answer = await security_groups_test_ask(async_ndb, secured_question, security_groups=None)
     assert answer.status == "success"
 
     # Temporal SA key with no explicit security, should allow the question
     # Recreating the key and client each time, as it has a 10 seconds ttl
     new_sa_temp_key = await regional_api.create_service_account_temp_key(new_sa_key, security_groups=None)
     async_ndb_sa_temp = get_async_kb_ndb_client(zone, account, kbid, service_account_token=new_sa_temp_key)
-    answer = await security_groups_test_ask(async_ndb_sa_temp, secured_question, security=None)
+    answer = await security_groups_test_ask(async_ndb_sa_temp, secured_question, security_groups=None)
     assert answer.status == "success"
 
     # Regular SA key with explicit security on the request should fail this
-    answer = await security_groups_test_ask(async_ndb, secured_question, security={"groups": ["apprentices"]})
+    answer = await security_groups_test_ask(async_ndb, secured_question, security_groups=["apprentices"])
     assert answer.status == "no_context"
 
     # Temporal SA key with key security (injected via authorizer), should allow the question
@@ -71,5 +71,5 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
         new_sa_key, security_groups=["apprentices"]
     )
     async_ndb_sa_temp = get_async_kb_ndb_client(zone, account, kbid, service_account_token=new_sa_temp_key)
-    answer = await security_groups_test_ask(async_ndb_sa_temp, secured_question, security=None)
+    answer = await security_groups_test_ask(async_ndb_sa_temp, secured_question, security_groups=None)
     assert answer.status == "no_context"

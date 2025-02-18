@@ -45,7 +45,8 @@ ALL_LLMS = [
 
 
 def is_reasoning_model(model: str) -> bool:
-    return re.search(r"chatgpt.*?o\d+", model) or re.search(r"reasoner", model)
+    match = re.search(r"chatgpt.*?o\d+", model) or re.search(r"reasoner", model)
+    return match is not None
 
 
 NON_REASONING_LLMS = [model for model in ALL_LLMS if not is_reasoning_model(model)]
