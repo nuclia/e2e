@@ -49,6 +49,18 @@ def safe_get_env(env_var_name: str) -> str:
 TEST_ENV = safe_get_env("TEST_ENV")
 
 
+def safe_get_prod_env(env_var_name: str) -> str:
+    if TEST_ENV != "prod":
+        return ""
+    return safe_get_env(env_var_name)
+
+
+def safe_get_stage_env(env_var_name: str) -> str:
+    if TEST_ENV != "stage":
+        return ""
+    return safe_get_env(env_var_name)
+
+
 @dataclasses.dataclass(slots=True)
 class GlobalConfig:
     base_domain: str
@@ -86,10 +98,10 @@ CLUSTERS_CONFIG = {
     "prod": ClusterConfig(
         global_config=GlobalConfig(
             base_domain="nuclia.cloud",
-            recaptcha=safe_get_env("PROD_GLOBAL_RECAPTCHA"),
-            root_pat_token=safe_get_env("PROD_ROOT_PAT_TOKEN"),
-            permanent_account_owner_pat_token=safe_get_env("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
-            gmail_app_password=safe_get_env("TEST_GMAIL_APP_PASSWORD"),
+            recaptcha=safe_get_prod_env("PROD_GLOBAL_RECAPTCHA"),
+            root_pat_token=safe_get_prod_env("PROD_ROOT_PAT_TOKEN"),
+            permanent_account_owner_pat_token=safe_get_prod_env("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
+            gmail_app_password=safe_get_prod_env("TEST_GMAIL_APP_PASSWORD"),
             permanent_account_slug="automated-testing",
         ),
         zones=[
@@ -98,24 +110,24 @@ CLUSTERS_CONFIG = {
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_env("TEST_EUROPE1_NUCLIA_NUA"),
+                permanent_nua_key=safe_get_prod_env("TEST_EUROPE1_NUCLIA_NUA"),
             ),
             ZoneConfig(
                 name="aws-us-east-2-1",
                 zone_slug="aws-us-east-2-1",
                 test_kb_slug="nuclia-e2e-live-aws-us-east-2-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_env("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
+                permanent_nua_key=safe_get_prod_env("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
             ),
         ],
     ),
     "stage": ClusterConfig(
         global_config=GlobalConfig(
             base_domain="stashify.cloud",
-            recaptcha=safe_get_env("STAGE_GLOBAL_RECAPTCHA"),
-            root_pat_token=safe_get_env("STAGE_ROOT_PAT_TOKEN"),
-            permanent_account_owner_pat_token=safe_get_env("STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
-            gmail_app_password=safe_get_env("TEST_GMAIL_APP_PASSWORD"),
+            recaptcha=safe_get_stage_env("STAGE_GLOBAL_RECAPTCHA"),
+            root_pat_token=safe_get_stage_env("STAGE_ROOT_PAT_TOKEN"),
+            permanent_account_owner_pat_token=safe_get_stage_env("STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
+            gmail_app_password=safe_get_stage_env("TEST_GMAIL_APP_PASSWORD"),
             permanent_account_slug="automated-testing",
         ),
         zones=[
@@ -124,15 +136,8 @@ CLUSTERS_CONFIG = {
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_env("TEST_EUROPE1_STASHIFY_NUA"),
-            ),
-            # Uncomment to test two-zone parallel testing on stage
-            # ZoneConfig(
-            #     name="europe-2",
-            #     zone_slug="europe-1",
-            #     test_kb_slug="nuclia-e2e-live",
-            #     permanent_kb_slug="pre-existing-kb"
-            # )
+                permanent_nua_key=safe_get_stage_env("TEST_EUROPE1_STASHIFY_NUA"),
+            )
         ],
     ),
 }
