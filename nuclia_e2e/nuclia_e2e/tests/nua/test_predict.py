@@ -49,6 +49,12 @@ async def test_predict_tokens(nua_client: AsyncNuaClient):
     assert embed.time > 0
 
 
+# Assumtion is that when they fail is either
+# - server overload (ours or llm provider)
+# - asyncio loop overload
+# - Transient error
+# For any t of hese reasons, make sense not to retry immediately
+@pytest.mark.flaky(reruns=2, reruns_delay=10)
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("model", NON_REASONING_LLMS)
 async def test_predict_rephrase(nua_client: AsyncNuaClient, model):

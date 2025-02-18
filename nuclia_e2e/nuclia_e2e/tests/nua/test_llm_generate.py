@@ -5,6 +5,7 @@ from nuclia_e2e.models import ALL_LLMS
 import pytest
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=30)
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("model", ALL_LLMS)
 async def test_llm_generate(nua_client: AsyncNuaClient, model):

@@ -8,3 +8,4 @@ backoff
 aiohttp
 pytest-asyncio-cooperative # not compatible with pytest-asyncio
 pytest-shard
+pytest-rerunfailures
