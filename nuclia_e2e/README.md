@@ -9,7 +9,7 @@ This document describes the **end-to-end (E2E) test suite** for Nuclia at the AP
 - **Black-box, API-level tests**: We call publicly accessible (or documented) Nuclia endpoints and verify real responses.
 - **No mocking**: Tests run against actual Nuclia services and external dependencies (e.g., Stripe, LLMs).
 - **Not for edge cases**: Edge cases and heavy parametrization belong in CI/unit tests unless an external dependency is involved.
-- **‘Eat Our Own Dog Food’**: Whenever possible, tests use the official Nuclia SDK to ensure we detect issues in our own libraries before our customers do.
+- **‘Eat Our Own Dog Food’**: Whenever possible, tests use the official Nuclia SDK to ensure we detect issues in our own libraries before our customers do. If there's something missing in the SDK, and make sense that is there, please add it.
 
 ---
 
@@ -70,7 +70,9 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
    - **Account nua tokens**: `TEST_{ZONE}_NUCLIA_NUA`
 
 3. **Pre-Existing Knowledge Boxes (KBs)**
-   - `pre-existing-kb`: Used by betterstack external monitors on all regions; **not used** by these tests.
+   - `pre-existing-kb`: Used by betterstack external monitors on all regions; by these tests.
+     - in this kb there are two resources "omelette" and "roasted-chicken" setup to validate security groups.
+     - in this kb you may see a service account named "test-e2e-kb-auth", that is dynamically created by the e2e.
    - `nuclia-e2e-live-{region}`: Dynamically created KBs for tests. They are cleaned up automatically, and the slug is reused.
    - `base-e2e` (stage only): A source of exports for certain tests. **Do not modify or delete** if you don't now what you are doing.
 
@@ -90,6 +92,8 @@ If at some point we hit concurrency issues, we can limit this with `--max-asynci
  - running cpu-bound code on async function
  - long requests without enough yields (e.g upload operations without streaming)
 
+ Aside of this, as we suspect (not 100% sure) that there are asyncio related issues that causes some timeuts (httpx  ReadTimeout and ConnectTimeout mostly), we ended up using `pytest-shard` so all tests are splitted into 3 different pytest instances.
+
 
 ### Configuration
 - All needd config defined in `conftest.py` under `CLUSTERS_CONFIG`, secrets loaded from GHA injected env vars.
@@ -100,8 +104,9 @@ If at some point we hit concurrency issues, we can limit this with `--max-asynci
 
 ### SDK usage in Tests
 
-- The Nuclia SDK is implemented as a singleton in terms of how it handles the configuration, which was causing overwrites when running tests concurrently
-- To work around this, we **inject** a `NucliaDBClient` or `NuaClient` fixture into each test function using the `nc` and `ndb` parameters of sdk methods. These clients are available as fixtures or instantiated directly in the test code if needed.
+The Nuclia SDK is implemented as a singleton in terms of how it handles the configuration, which was causing overwrites when running tests concurrently, to work around some issues caused by that we did several things:
+- We **inject** a `NucliaDBClient` or `NuaClient` fixture into each test function using the `nc` and `ndb` parameters of sdk methods. These clients are available as fixtures or instantiated directly in the test code if needed.
+- On conftest.py, we patch httpx to be able to provide a higher timeout for all clients created within the e2e
 
 --
 
