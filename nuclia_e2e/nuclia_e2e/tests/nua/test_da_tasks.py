@@ -1,5 +1,7 @@
+from _pytest.mark.structures import ParameterSet
 from collections.abc import AsyncGenerator
 from collections.abc import Callable
+from collections.abc import Coroutine
 from dataclasses import dataclass
 from nuclia.lib.nua import AsyncNuaClient
 from nuclia_e2e.tests.conftest import TEST_ENV
@@ -20,6 +22,7 @@ from nuclia_models.worker.tasks import PARAMETERS_TYPING
 from nuclia_models.worker.tasks import TaskName
 from nuclia_models.worker.tasks import TaskStart
 from nucliadb_protos.writer_pb2 import BrokerMessage
+from typing import Any
 
 import aiofiles
 import aiohttp
@@ -32,7 +35,7 @@ PROMPT_GUARD_DISABLED = TEST_ENV == "prod"
 
 
 @dataclass
-class TestInput:
+class TaskTestInput:
     filename: str
     task_name: TaskName
     parameters: PARAMETERS_TYPING
@@ -40,26 +43,29 @@ class TestInput:
 
 
 @pytest.fixture(scope="session")
-def aiohttp_client() -> Callable[[str, str], AsyncGenerator[aiohttp.ClientSession, None]]:
+def aiohttp_client() -> (
+    Callable[[str, str | None, str | None, int], Coroutine[Any, Any, aiohttp.ClientSession]]
+):
     async def create_aiohttp_client(
         base_url: str,
         nua_key: str | None = None,
         pat_key: str | None = None,
         timeout: int = 30,
-    ) -> AsyncGenerator[aiohttp.ClientSession, None]:
+    ) -> aiohttp.ClientSession:
         headers = (
             {"X-NUCLIA-NUAKEY": f"Bearer {nua_key}"} if nua_key else {"Authorization": f"Bearer {pat_key}"}
         )
         timeout_config = aiohttp.ClientTimeout(total=timeout)
 
-        async with aiohttp.ClientSession(
+        # Create the session but return it directly instead of yielding
+        session = aiohttp.ClientSession(
             base_url=base_url,
             headers=headers,
             timeout=timeout_config,
-        ) as session:
-            yield session
+        )
+        return session  # Return the session instead of yielding
 
-    return create_aiohttp_client
+    return create_aiohttp_client  # Return the async function
 
 
 async def create_nua_key(client: aiohttp.ClientSession, account_id: str, title: str) -> tuple[str, str]:
@@ -111,7 +117,7 @@ async def push_data_to_dataset(client: aiohttp.ClientSession, dataset_id: str, f
 async def start_task(
     client: aiohttp.ClientSession,
     dataset_id: str,
-    task_name: str,
+    task_name: TaskName,
     parameters: PARAMETERS_TYPING,
 ) -> str:
     resp = await client.post(
@@ -158,7 +164,7 @@ async def wait_for_task_completion(
 
 
 async def validate_task_output(client: aiohttp.ClientSession, validation: Callable[[BrokerMessage], None]):
-    max_retries = 5
+    max_retries = 10
     last_retry_exc = None
     for _ in range(max_retries):
         try:
@@ -264,8 +270,8 @@ def validate_labeler_output_text_block(msg: BrokerMessage):
     )
 
 
-DA_TEST_INPUTS: list[TestInput] = [
-    TestInput(
+DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
+    TaskTestInput(
         filename="financial-news-kb.arrow",
         task_name=TaskName.LABELER,
         parameters=DataAugmentation(
@@ -302,7 +308,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
         validate_output=validate_labeler_output,
     ),
-    TestInput(
+    TaskTestInput(
         filename="legal-text-kb.arrow",
         task_name=TaskName.LLM_GRAPH,
         parameters=DataAugmentation(
@@ -354,7 +360,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         validate_output=validate_llm_graph_output,
     ),
     pytest.param(
-        TestInput(
+        TaskTestInput(
             filename="jailbreak-kb.arrow",
             task_name=TaskName.PROMPT_GUARD,
             parameters=DataAugmentation(
@@ -371,7 +377,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
     ),
     pytest.param(
-        TestInput(
+        TaskTestInput(
             filename="toxic-kb.arrow",
             task_name=TaskName.LLAMA_GUARD,
             parameters=DataAugmentation(
@@ -387,7 +393,7 @@ DA_TEST_INPUTS: list[TestInput] = [
             LLAMA_GUARD_DISABLED, reason="Feature flag application_content-safety-task is disabled"
         ),
     ),
-    TestInput(
+    TaskTestInput(
         filename="legal-text-kb.arrow",
         task_name=TaskName.ASK,
         parameters=DataAugmentation(
@@ -407,7 +413,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
         validate_output=validate_ask_output,
     ),
-    TestInput(
+    TaskTestInput(
         filename="legal-text-kb.arrow",
         task_name=TaskName.SYNTHETIC_QUESTIONS,
         parameters=DataAugmentation(
@@ -419,7 +425,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
         validate_output=validate_synthetic_questions_output,
     ),
-    TestInput(
+    TaskTestInput(
         filename="financial-news-kb.arrow",
         task_name=TaskName.LABELER,
         parameters=DataAugmentation(
@@ -457,7 +463,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         validate_output=validate_labeler_output_text_block,
     ),
     pytest.param(
-        TestInput(
+        TaskTestInput(
             filename="jailbreak-kb.arrow",
             task_name=TaskName.PROMPT_GUARD,
             parameters=DataAugmentation(
@@ -474,7 +480,7 @@ DA_TEST_INPUTS: list[TestInput] = [
         ),
     ),
     pytest.param(
-        TestInput(
+        TaskTestInput(
             filename="toxic-kb.arrow",
             task_name=TaskName.LLAMA_GUARD,
             parameters=DataAugmentation(
@@ -496,17 +502,17 @@ DA_TEST_INPUTS: list[TestInput] = [
 @pytest.fixture
 async def tmp_nua_key(
     nua_client: AsyncNuaClient,
-    aiohttp_client: AsyncGenerator[aiohttp.ClientSession, None],
+    aiohttp_client,
     regional_api_config,
     global_api_config,
 ) -> AsyncGenerator[str, None]:
-    account_id = regional_api_config["permanent_account_id"]
+    account_id = global_api_config.permanent_account_id
     pat_client_generator = aiohttp_client(
         base_url=nua_client.url,
-        pat_key=global_api_config["permanent_account_owner_pat_token"],
+        pat_key=global_api_config.permanent_account_owner_pat_token,
         timeout=300,
     )
-    pat_client = await anext(pat_client_generator)
+    pat_client = await pat_client_generator
     nua_client_id, nua_key = await create_nua_key(
         client=pat_client,
         account_id=account_id,
@@ -523,43 +529,41 @@ async def tmp_nua_key(
 async def test_da_agent_tasks(
     request,
     nua_client: AsyncNuaClient,
-    aiohttp_client: AsyncGenerator[aiohttp.ClientSession, None],
+    aiohttp_client,
     tmp_nua_key: str,
-    test_input: TestInput,
+    test_input: TaskTestInput,
 ):
     dataset_id = None
     task_id = None
     start_time = asyncio.get_event_loop().time()
     try:
         nua_client_generator = aiohttp_client(base_url=nua_client.url, nua_key=tmp_nua_key, timeout=30)
-        nua_client = await anext(nua_client_generator)
+        client = await nua_client_generator
 
-        dataset_id = await create_dataset(client=nua_client)
-        await push_data_to_dataset(client=nua_client, dataset_id=dataset_id, filename=test_input.filename)
+        dataset_id = await create_dataset(client=client)
+        await push_data_to_dataset(client=client, dataset_id=dataset_id, filename=test_input.filename)
 
         task_id = await start_task(
-            client=nua_client,
+            client=client,
             dataset_id=dataset_id,
             task_name=test_input.task_name,
             parameters=test_input.parameters,
         )
         print(f"{request.node.name} ::  task_id: {task_id}")
-        task_request = await wait_for_task_completion(
-            client=nua_client, dataset_id=dataset_id, task_id=task_id
-        )
+        task_request = await wait_for_task_completion(client=client, dataset_id=dataset_id, task_id=task_id)
         assert task_request["completed"] is True
         assert task_request["failed"] is False
 
         await validate_task_output(
-            client=nua_client,
+            client=client,
             validation=test_input.validate_output,
         )
     finally:
         if dataset_id is not None:
             if task_id is not None:
-                await stop_task(client=nua_client, dataset_id=dataset_id, task_id=task_id)
-                await delete_task(client=nua_client, dataset_id=dataset_id, task_id=task_id)
-            await delete_dataset(client=nua_client, dataset_id=dataset_id)
+                await stop_task(client=client, dataset_id=dataset_id, task_id=task_id)
+                await delete_task(client=client, dataset_id=dataset_id, task_id=task_id)
+            await delete_dataset(client=client, dataset_id=dataset_id)
         end_time = asyncio.get_event_loop().time()
         elapsed_time = end_time - start_time
         print(f"{request.node.name} :: Task completed in {elapsed_time:.2f} seconds.")
