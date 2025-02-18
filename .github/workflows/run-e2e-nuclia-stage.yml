@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard_index: [1, 2, 3]  # Running tests in 3 parallel shards
+        shard_index: [0, 1, 2]  # Running tests in 3 parallel shards
 
     steps:
       - name: Checkout
