@@ -387,7 +387,7 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
         print(f"{request.node.name} ::: {msg}")
 
     zone = regional_api_config.zone_slug
-    account = regional_api_config.permanent_account_id
+    account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
 
     # Creates a brand new kb that will be used troughout this test

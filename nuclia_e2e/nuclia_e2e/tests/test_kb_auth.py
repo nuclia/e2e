@@ -16,7 +16,7 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
         print(f"{request.node.name} ::: {msg}")
 
     zone = regional_api_config.zone_slug
-    account = regional_api_config.permanent_account_id
+    account = regional_api_config.global_config.permanent_account_id
 
     kbid = regional_api_config.permanent_kb_id
 

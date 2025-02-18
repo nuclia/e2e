@@ -35,13 +35,14 @@ import string  # noqa: E402
 import tempfile  # noqa: E402
 
 
-def safe_get_env(env_name: str) -> str:
-    value = os.environ.get(env_name, None)
+def safe_get_env(env_var_name: str) -> str:
+    value = os.environ.get(env_var_name, None)
     if value is None:
-        raise RuntimeError(f"Missing {env_name} check your test config")
+        raise RuntimeError(f"Missing {env_var_name} check your test config")
 
     if value.strip() == "":
-        raise RuntimeError(f"Env var {env_name} cannot be empty string")
+        raise RuntimeError(f"Env var {env_var_name} cannot be empty string")
+
     return value
 
 
@@ -468,7 +469,7 @@ async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
 @pytest.fixture
 async def clean_kb_sa(request: pytest.FixtureRequest, regional_api_config, regional_api: RegionalAPI):
     deleted_sa_id = await regional_api.delete_service_account_by_name(
-        regional_api_config.permanent_account_id,
+        regional_api_config.global_config.permanent_account_id,
         regional_api_config.permanent_kb_id,
         "test-e2e-kb-auth",
     )
@@ -480,7 +481,7 @@ async def clean_kb_sa(request: pytest.FixtureRequest, regional_api_config, regio
 async def nua_client(regional_api_config) -> AsyncNuaClient:
     nc = AsyncNuaClient(
         region=nuclia.REGIONAL.format(region=regional_api_config.zone_slug),
-        account=regional_api_config.permanent_account_id,
+        account=regional_api_config.global_config.permanent_account_id,
         token=regional_api_config.permanent_nua_key,
     )
     return nc

@@ -506,13 +506,13 @@ async def tmp_nua_key(
     regional_api_config,
     global_api_config,
 ) -> AsyncGenerator[str, None]:
-    account_id = regional_api_config.permanent_account_id
+    account_id = regional_api_config.global_config.permanent_account_id
     pat_client_generator = aiohttp_client(
         base_url=nua_client.url,
         pat_key=global_api_config.permanent_account_owner_pat_token,
         timeout=300,
     )
-    pat_client = await anext(pat_client_generator)
+    pat_client = await pat_client_generator
     nua_client_id, nua_key = await create_nua_key(
         client=pat_client,
         account_id=account_id,
@@ -538,7 +538,7 @@ async def test_da_agent_tasks(
     start_time = asyncio.get_event_loop().time()
     try:
         nua_client_generator = aiohttp_client(base_url=nua_client.url, nua_key=tmp_nua_key, timeout=30)
-        client = await anext(nua_client_generator)
+        client = await nua_client_generator
 
         dataset_id = await create_dataset(client=client)
         await push_data_to_dataset(client=client, dataset_id=dataset_id, filename=test_input.filename)
