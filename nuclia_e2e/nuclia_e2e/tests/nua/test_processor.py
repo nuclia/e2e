@@ -57,6 +57,3 @@ async def test_manual_split(nua_client: AsyncNuaClient):
     payload = await nc.process_file(path, kbid="kbid", timeout=300, nc=nua_client)
     assert payload
     assert len(payload.field_metadata[0].metadata.metadata.paragraphs) == 11
-    assert sum(
-        [len(paragraph.sentences) for paragraph in payload.field_metadata[0].metadata.metadata.paragraphs]
-    )

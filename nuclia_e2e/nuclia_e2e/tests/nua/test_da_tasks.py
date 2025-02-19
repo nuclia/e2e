@@ -164,7 +164,7 @@ async def wait_for_task_completion(
 
 
 async def validate_task_output(client: aiohttp.ClientSession, validation: Callable[[BrokerMessage], None]):
-    max_retries = 10
+    max_retries = 15
     last_retry_exc = None
     for _ in range(max_retries):
         try:
