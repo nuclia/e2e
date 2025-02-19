@@ -39,3 +39,24 @@ async def test_vude_1(nua_client: AsyncNuaClient):
 async def test_activity(nua_client: AsyncNuaClient):
     nc = AsyncNucliaProcessing()
     await nc.status(nc=nua_client)
+
+
+@pytest.mark.asyncio_cooperative
+async def test_pptx(nua_client: AsyncNuaClient):
+    path = get_asset_file_path("test_slides.pptx")
+    nc = AsyncNucliaProcessing()
+    payload = await nc.process_file(path, kbid="kbid", timeout=300, nc=nua_client)
+    assert payload
+    assert "This is a test ppt" in payload.extracted_text[0].body.text
+
+
+@pytest.mark.asyncio_cooperative
+async def test_manual_split(nua_client: AsyncNuaClient):
+    nc = AsyncNucliaProcessing()
+    path = get_asset_file_path("plaintext_manual_split.txt")
+    payload = await nc.process_file(path, kbid="kbid", timeout=300, nc=nua_client)
+    assert payload
+    assert len(payload.field_metadata[0].metadata.metadata.paragraphs) == 11
+    assert sum(
+        [len(paragraph.sentences) for paragraph in payload.field_metadata[0].metadata.metadata.paragraphs]
+    )
