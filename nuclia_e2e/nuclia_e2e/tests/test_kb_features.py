@@ -1,3 +1,4 @@
+from collections.abc import Awaitable
 from collections.abc import Callable
 from datetime import datetime
 from datetime import timedelta
@@ -24,6 +25,7 @@ from nuclia_models.worker.proto import LLMConfig
 from nuclia_models.worker.proto import Operation
 from nuclia_models.worker.tasks import ApplyOptions
 from nuclia_models.worker.tasks import DataAugmentation
+from nuclia_models.worker.tasks import SemanticModelMigrationParams
 from nuclia_models.worker.tasks import TaskName
 from nucliadb_models.metadata import ResourceProcessingStatus
 from nucliadb_sdk.v2.exceptions import ClientError
@@ -76,27 +78,21 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
 
         return condition
 
-    success, _ = (
-        await wait_for(resource_is_processed(rid), logger=logger),
-        "File was not processed in time, PROCESSED status not found in resource",
-    )
+    success, _ = await wait_for(resource_is_processed(rid), logger=logger)
+    assert success, "File was not processed in time, PROCESSED status not found in resource"
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
     # the paragraph we're looking for contains
     def resource_is_indexed(rid):
         @wraps(resource_is_indexed)
         async def condition() -> tuple[bool, Any]:
-            result = await kb.search.find(ndb=ndb, features=["keyword"], query="Michiko")
+            result = await kb.search.find(ndb=ndb, features=["keyword"], reranker="noop", query="Michiko")
             return len(result.resources) > 0, None
 
         return condition
 
-    success, _ = (
-        await wait_for(resource_is_indexed(rid), logger=logger, max_wait=120, interval=1),
-        "File was not indexed in time, not enough paragraphs found on resource",
-    )
-
-    assert success
+    success, _ = await wait_for(resource_is_indexed(rid), logger=logger, max_wait=120, interval=1)
+    assert success, "File was not indexed in time, not enough paragraphs found on resource"
 
 
 async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
@@ -119,11 +115,10 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
 
         return condition
 
-    success, _ = (
-        await wait_for(resources_are_imported(["disney", "hp", "vaccines"]), max_wait=120, logger=logger),
-        "Expected imported resources not found",
+    success, _ = await wait_for(
+        resources_are_imported(["disney", "hp", "vaccines"]), max_wait=120, logger=logger
     )
-    assert success
+    assert success, "Expected imported resources not found"
 
 
 async def run_test_create_da_labeller(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
@@ -219,11 +214,79 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb: AsyncNucli
 
         return condition
 
-    success, _ = (
-        await wait_for(resources_are_labelled(expected_resource_labels), logger=logger),
-        "Expected computed labels not found in resources",
+    success, _ = await wait_for(resources_are_labelled(expected_resource_labels), logger=logger)
+    assert success, "Expected computed labels not found in resources"
+
+
+async def run_test_start_embedding_model_migration_task(ndb: AsyncNucliaDBClient) -> str:
+    kbid = ndb.kbid
+
+    # XXX: this is a really naive way to select a self-hosted model for a KB
+    # without listing learning_config. At some point, we should implement
+    # something smarter.
+    #
+    # This model names are coupled with learning_models library and a change
+    # there could break this test
+    vectorsets = await ndb.ndb.list_vector_sets(kbid=kbid)
+    assert len(vectorsets.vectorsets) == 1
+    current_model = vectorsets.vectorsets[0].id
+    new_model = "multilingual-2024-05-06" if current_model == "en-2024-04-24" else "en-2024-04-24"
+
+    # we first need to add the new embedding model in the KB
+    created = await ndb.ndb.add_vector_set(kbid=kbid, vectorset_id=new_model)
+    vectorset_id = created.id
+
+    # now we can add a migration task that will reprocess all KB data with the
+    # new model and store it in nucliadb
+    kb = AsyncNucliaKB()
+    task = await kb.task.start(
+        ndb=ndb,
+        task_name=TaskName.SEMANTIC_MODEL_MIGRATOR,
+        apply=ApplyOptions.ALL,
+        parameters=SemanticModelMigrationParams(
+            semantic_model_id=vectorset_id,
+        ),
     )
-    assert success
+
+    return task.id
+
+
+async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, task_id: str, logger: Logger):
+    def new_embedding_model_available() -> Callable[[], Awaitable[tuple[bool, bool | None]]]:
+        @wraps(new_embedding_model_available)
+        async def condition() -> tuple[bool, bool | None]:
+            search_returned_results = False
+            kb = AsyncNucliaKB()
+
+            task = await kb.task.get(ndb=ndb, task_id=task_id)
+            if not task.request.completed:
+                # we have to wait until task has finished to try if it worked
+                return (False, search_returned_results)
+
+            new_model = task.request.parameters.semantic_model_id
+
+            # once finished, let's try a fast /find and validate there are
+            # results with the new semantic model
+            result = await kb.search.find(
+                ndb=ndb,
+                rephrase=False,
+                reranker="noop",
+                features=["semantic"],
+                vectorset=new_model,
+                query=TEST_CHOCO_QUESTION,
+            )
+            search_returned_results = bool(result.resources)
+            return (True, search_returned_results)
+
+        return condition
+
+    success, search_returned_results = await wait_for(
+        new_embedding_model_available(), max_wait=120, logger=logger
+    )
+    assert success is True, "embedding migration task did not finish on time"
+    assert (
+        search_returned_results is True
+    ), "expected to be able to search with the new embedding model but nucliadb didn't return resources"
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
@@ -405,7 +468,17 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     # Create a labeller configuration, with the goal of testing two tings:
     # - labelling of existing resources (the ones imported)
     # - labelling of new resources(will be created later)
-    await run_test_create_da_labeller(regional_api_config, async_ndb, logger)
+    #
+    # Add a new embedding model to the KB and start a task to compute all data
+    # with the new embedding model. This will test the data flow between
+    # nucliadb and learning to stream all KB data to reprocess with the new
+    # embedding model and ingest/index in nucliadb again.
+    # We want to do it before upload to validate, on one side the migration
+    # itself, and on the other ingestion in a KB with multiple vectorsets
+    (_, embedding_migration_task_id) = await asyncio.gather(
+        run_test_create_da_labeller(regional_api_config, async_ndb, logger),
+        run_test_start_embedding_model_migration_task(async_ndb),
+    )
 
     # Upload a new resource and validate that is correctly processed and stored in nuclia
     # Also check that its index are available, by checking the amount of extracted paragraphs
@@ -413,10 +486,11 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
 
     # Wait for both labeller task results to be consolidated in nucliadb while we also run semantic search
     # This /find and /ask requests are crafted so they trigger all the existing calls to predict features
-    # We wait until find succeeds to run the ask tests to maximize the changes that all indexes will be
+    # We wait until find succeeds to run the ask tests to maximize the chances that all indexes will be
     # available and so minimize the llm costs retrying
     await asyncio.gather(
         run_test_check_da_labeller_output(regional_api_config, async_ndb, logger),
+        run_test_check_embedding_model_migration(async_ndb, embedding_migration_task_id, logger),
         run_test_find(regional_api_config, async_ndb, logger),
     )
     await run_test_ask(regional_api_config, async_ndb, logger)

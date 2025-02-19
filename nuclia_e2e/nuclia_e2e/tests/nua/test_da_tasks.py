@@ -355,7 +355,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                     )
                 )
             ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            llm=LLMConfig(model="gemini-1-5-flash"),
         ),
         validate_output=validate_llm_graph_output,
     ),
@@ -522,6 +522,8 @@ async def tmp_nua_key(
         yield nua_key
     finally:
         await delete_nua_key(client=pat_client, account_id=account_id, nua_client_id=nua_client_id)
+        await nua_client.stream_client.aclose()
+        await nua_client.client.aclose()
 
 
 @pytest.mark.asyncio_cooperative

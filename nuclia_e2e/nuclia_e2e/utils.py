@@ -22,7 +22,7 @@ def get_asset_file_path(file: str):
 
 
 async def wait_for(
-    condition: Callable[[], Awaitable],
+    condition: Callable[[], Awaitable[tuple[bool, Any]]],
     max_wait: int = 60,
     interval: int = 5,
     logger: Logger = print,
