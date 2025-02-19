@@ -110,6 +110,28 @@ The Nuclia SDK is implemented as a singleton in terms of how it handles the conf
 
 --
 
+## Testing locally
+
+These e2e tests are meant to be run against real environments (stage, prod). To run them locally, you'll need to configure your local machine to point to one of those.
+
+For stage, you'll first need the following env vars:
+``` shell
+export TEST_GMAIL_APP_PASSWORD="..."
+export STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN="..."
+export STAGE_ROOT_PAT_TOKEN="..."
+export STAGE_GLOBAL_RECAPTCHA="..."
+export TEST_EUROPE1_STASHIFY_NUA="..."
+```
+
+And then run tests defining `TEST_ENV=stage`:
+``` shell
+TEST_ENV=stage pytest nuclia_e2e/tests <...>
+```
+
+If you don't have those environment variables, ask for them to the owners of the repo :)
+
+--
+
 ## TODO
 - **Minimum Endpoint Coverage**: Confirm that all documented public endpoints appear in at least one E2E test.
 - **Feature Checklist** : Maintain an up-to-date list of features, noting whether they have E2E coverage and why.
