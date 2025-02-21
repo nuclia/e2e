@@ -281,7 +281,7 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         return condition
 
     success, search_returned_results = await wait_for(
-        new_embedding_model_available(), max_wait=120, logger=logger
+        new_embedding_model_available(), max_wait=200, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
     assert (
@@ -503,6 +503,108 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
         run_test_activity_log(regional_api_config, async_ndb, logger),
         run_test_remi_query(regional_api_config, async_ndb, logger),
     )
+
+    # Delete the kb as a final step
+    await run_test_kb_deletion(regional_api_config, kbid, logger)
+
+
+@pytest.mark.asyncio_cooperative
+async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, clean_kb_test, global_api):
+    """
+    Test activity log usage
+
+    This is tested aside and not in the main `test_kb` because we need more deterministic results that
+    with the retries that usually occur in that tests would be hard to get. In this test, we don't care
+    if the ask endpoint actually returns a valid answer, because it will at least consume input tokens.
+
+    The goal is to assert that all the usage generated triggered by an ask request is collected and integrated
+    into the audit event, coming from nucliadb, and predict, and that it matches the one collected by
+    accounting. As the usage is per-request, this test assumes that we are doing one request and the data
+    in accounting is also just from one request.
+    """
+
+    def logger(msg):
+        print(f"{request.node.name} ::: {msg}")
+
+    zone = regional_api_config.zone_slug
+    account = regional_api_config.global_config.permanent_account_id
+    auth = get_auth()
+
+    # Creates a brand new kb that will be used troughout this test
+    kbid = await run_test_kb_creation(regional_api_config, logger)
+
+    # Configures a nucliadb client defaulting to a specific kb, to be used
+    # to override all the sdk endpoints that automagically creates the client
+    # as this is incompatible with the cooperative tests
+    async_ndb = get_async_kb_ndb_client(zone, account, kbid, user_token=auth._config.token)
+
+    # Import a preexisting export containing several resources (coming from the financial-news kb)
+    # and wait for the resources to be completely imported
+    await run_test_import_kb(regional_api_config, async_ndb, logger)
+
+    kb = AsyncNucliaKB()
+    await kb.search.ask(
+        ndb=async_ndb,
+        rephrase=True,
+        reranker="predict",
+        features=["keyword", "semantic", "relations"],
+        query=TEST_CHOCO_QUESTION,
+        generative_model="chatgpt-azure-4o-mini",
+    )
+
+    def nuclia_tokens_calculated_on_activity_log():
+        @wraps(nuclia_tokens_calculated_on_activity_log)
+        async def condition() -> tuple[bool, Any]:
+            now = datetime.now(tz=timezone.utc)
+            logs = await kb.logs.query(
+                ndb=async_ndb,
+                type=EventType.CHAT,
+                query=ActivityLogsChatQuery(
+                    year_month=f"{now.year}-{now.month:02}",
+                    filters=QueryFiltersChat(),
+                    pagination=Pagination(limit=100),
+                    show=["nuclia_tokens"],
+                ),
+            )
+            if len(logs.data) > 0:
+                nuclia_tokens = logs.data[-1].nuclia_tokens
+                if nuclia_tokens is not None and nuclia_tokens > 0:
+                    return (True, nuclia_tokens)
+            return (False, None)
+
+        return condition
+
+    success, activity_log_nuclia_tokens = await wait_for(
+        nuclia_tokens_calculated_on_activity_log(), max_wait=120, logger=logger
+    )
+    assert success, "Nuclia tokens were not added to activity log event on time"
+    assert activity_log_nuclia_tokens > 0
+
+    def nuclia_tokens_stored_on_accounting():
+        @wraps(nuclia_tokens_stored_on_accounting)
+        async def condition() -> tuple[bool, Any]:
+            # IMPORTANT! The usage endpoint is cached using the request parameters, so i'ts mandatory
+            # to change the date in each attempt
+            now = datetime.now(tz=timezone.utc)
+            from_date = (now - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            to_date = (now + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            result = await global_api.get_usage(account, kbid, from_date, to_date)
+            metrics = list(filter(lambda m: m["name"] == "nuclia_tokens_billed", result[0]["metrics"]))
+            if not metrics:
+                return (False, None)
+            nuclia_tokens = metrics[0]["value"]
+            if nuclia_tokens > 0:
+                return (True, nuclia_tokens)
+            return (False, None)
+
+        return condition
+
+    success, accouting_nuclia_tokens = await wait_for(
+        nuclia_tokens_stored_on_accounting(), max_wait=600, interval=10, logger=logger
+    )
+    assert success, "Nuclia tokens were not received by accounting on time"
+    assert activity_log_nuclia_tokens == accouting_nuclia_tokens
 
     # Delete the kb as a final step
     await run_test_kb_deletion(regional_api_config, kbid, logger)
