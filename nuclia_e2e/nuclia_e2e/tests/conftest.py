@@ -214,11 +214,10 @@ class GlobalAPI:
             response.raise_for_status()
             return (await response.json())["id"]
 
-
     async def get_usage(self, account_id, kb_id, from_date, to_date):
-        url = f"{self.base_url}/api/v1/account/{account_id}/usage"
-        params = {"from": from_date, "to": to_date, "knowledgebox": kb_id}
-        async with self.session.get(url, headers=self.root_auth_headers, params=params) as response:
+        params = f"from={from_date}&to={to_date}&knowledgebox={kb_id}"
+        url = f"{self.base_url}/api/v1/account/{account_id}/usage?{params}"
+        async with self.session.get(url, headers=self.root_auth_headers) as response:
             response.raise_for_status()
             return await response.json()
 
