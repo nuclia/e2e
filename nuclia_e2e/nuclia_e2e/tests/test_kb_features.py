@@ -422,7 +422,9 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
     assert success, "Remi scores didn't get computed in time"
 
 
-async def run_test_tokens_on_activity_log(ndb: AsyncNucliaDBClient, logger) -> float:
+async def run_test_tokens_on_activity_log(
+    ndb: AsyncNucliaDBClient, expected_accounting_tokens: float, logger
+) -> float:
     kb = AsyncNucliaKB()
 
     def nuclia_tokens_calculated_on_activity_log():
@@ -448,14 +450,14 @@ async def run_test_tokens_on_activity_log(ndb: AsyncNucliaDBClient, logger) -> f
         return condition
 
     success, activity_log_nuclia_tokens = await wait_for(
-        nuclia_tokens_calculated_on_activity_log(), max_wait=120, logger=logger
+        nuclia_tokens_calculated_on_activity_log(), max_wait=300, logger=logger
     )
     assert success, "Nuclia tokens were not added to activity log event on time"
     assert activity_log_nuclia_tokens > 0
-    return activity_log_nuclia_tokens
+    assert activity_log_nuclia_tokens == expected_accounting_tokens
 
 
-async def run_test_tokens_on_accounting(global_api, account, kbid, expected_tokens, logger):
+async def run_test_tokens_on_accounting(global_api, account, kbid, logger):
     def nuclia_tokens_stored_on_accounting():
         @wraps(nuclia_tokens_stored_on_accounting)
         async def condition() -> tuple[bool, Any]:
@@ -480,7 +482,7 @@ async def run_test_tokens_on_accounting(global_api, account, kbid, expected_toke
         nuclia_tokens_stored_on_accounting(), max_wait=600, interval=10, logger=logger
     )
     assert success, "Nuclia tokens were not received by accounting on time"
-    assert accouting_nuclia_tokens == expected_tokens
+    return accouting_nuclia_tokens
 
 
 async def run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger):
@@ -625,8 +627,8 @@ async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, glo
         generative_model="chatgpt-azure-4o-mini",
     )
 
-    activity_log_tokens = await run_test_tokens_on_activity_log(async_ndb, logger)
-    await run_test_tokens_on_accounting(global_api, account, kbid, activity_log_tokens, logger)
+    accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)
+    await run_test_tokens_on_activity_log(async_ndb, accounting_tokens, logger)
 
     # Delete the kb as a final step
     await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
