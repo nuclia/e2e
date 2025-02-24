@@ -17,7 +17,6 @@ from nuclia.config import set_config_file  # noqa: E402
 from nuclia.data import get_async_auth  # noqa: E402
 from nuclia.data import get_config  # noqa: E402
 from nuclia.lib.nua import AsyncNuaClient  # noqa: E402
-from nuclia.sdk.kbs import NucliaKBS  # noqa: E402
 from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
 
 import aiohttp  # noqa: E402
@@ -447,20 +446,6 @@ async def cleanup_test_account(global_api: GlobalAPI):
     yield
 
     await global_api.manager.delete_account(TEST_ACCOUNT_SLUG)
-
-
-@pytest.fixture
-async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
-    kbs = NucliaKBS()
-    kb_slug = regional_api_config.test_kb_slug
-    all_kbs = await asyncio.to_thread(kbs.list)
-    kb_ids_by_slug = {kb.slug: kb.id for kb in all_kbs}
-    kb_id = kb_ids_by_slug.get(kb_slug)
-    try:
-        await asyncio.to_thread(partial(kbs.delete, zone=regional_api_config.zone_slug, id=kb_id))
-    except ValueError:
-        # Raised by sdk when kb not found
-        pass
 
 
 @pytest.fixture

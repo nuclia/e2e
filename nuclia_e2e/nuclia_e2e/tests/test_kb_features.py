@@ -43,15 +43,15 @@ TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "When did they start being high?"
 
 
-async def run_test_kb_creation(regional_api_config, logger: Logger) -> str:
+async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
     kbs = AsyncNucliaKBS()
     new_kb = await kbs.add(
         zone=regional_api_config.zone_slug,
-        slug=regional_api_config.test_kb_slug,
+        slug=kb_slug,
         sentence_embedder="en-2024-04-24",
     )
 
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, regional_api_config.test_kb_slug)
+    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
     assert kbid is not None
     logger(f"Created kb {new_kb['id']}")
     return kbid
@@ -422,17 +422,78 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
     assert success, "Remi scores didn't get computed in time"
 
 
-async def run_test_kb_deletion(regional_api_config, kbid, logger):
+async def run_test_tokens_on_activity_log(ndb: AsyncNucliaDBClient, logger) -> float:
+    kb = AsyncNucliaKB()
+
+    def nuclia_tokens_calculated_on_activity_log():
+        @wraps(nuclia_tokens_calculated_on_activity_log)
+        async def condition() -> tuple[bool, Any]:
+            now = datetime.now(tz=timezone.utc)
+            logs = await kb.logs.query(
+                ndb=ndb,
+                type=EventType.CHAT,
+                query=ActivityLogsChatQuery(
+                    year_month=f"{now.year}-{now.month:02}",
+                    filters=QueryFiltersChat(),
+                    pagination=Pagination(limit=100),
+                    show=["nuclia_tokens"],
+                ),
+            )
+            if len(logs.data) > 0:
+                nuclia_tokens = logs.data[-1].nuclia_tokens
+                if nuclia_tokens is not None and nuclia_tokens > 0:
+                    return (True, nuclia_tokens)
+            return (False, None)
+
+        return condition
+
+    success, activity_log_nuclia_tokens = await wait_for(
+        nuclia_tokens_calculated_on_activity_log(), max_wait=120, logger=logger
+    )
+    assert success, "Nuclia tokens were not added to activity log event on time"
+    assert activity_log_nuclia_tokens > 0
+    return activity_log_nuclia_tokens
+
+
+async def run_test_tokens_on_accounting(global_api, account, kbid, expected_tokens, logger):
+    def nuclia_tokens_stored_on_accounting():
+        @wraps(nuclia_tokens_stored_on_accounting)
+        async def condition() -> tuple[bool, Any]:
+            # IMPORTANT! The usage endpoint is cached using the request parameters, so i'ts mandatory
+            # to change the date in each attempt
+            now = datetime.now(tz=timezone.utc)
+            from_date = (now - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            to_date = (now + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            result = await global_api.get_usage(account, kbid, from_date, to_date)
+            metrics = list(filter(lambda m: m["name"] == "nuclia_tokens_billed", result[0]["metrics"]))
+            if not metrics:
+                return (False, None)
+            nuclia_tokens = metrics[0]["value"]
+            if nuclia_tokens > 0:
+                return (True, nuclia_tokens)
+            return (False, None)
+
+        return condition
+
+    success, accouting_nuclia_tokens = await wait_for(
+        nuclia_tokens_stored_on_accounting(), max_wait=600, interval=10, logger=logger
+    )
+    assert success, "Nuclia tokens were not received by accounting on time"
+    assert accouting_nuclia_tokens == expected_tokens
+
+
+async def run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger):
     kbs = AsyncNucliaKBS()
     logger("deleting " + kbid)
     await kbs.delete(zone=regional_api_config.zone_slug, id=kbid)
 
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, regional_api_config.test_kb_slug)
+    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
     assert kbid is None
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_test):
+async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     """
     Test a chain of operations that simulates a normal use of a knowledgebox, just concentrated
     in time.
@@ -452,9 +513,15 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     zone = regional_api_config.zone_slug
     account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
+    kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_features"
+
+    # Make sure the kb used for this test is deleted, as the slug is reused:
+    old_kbid = get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    if old_kbid is not None:
+        AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await run_test_kb_creation(regional_api_config, logger)
+    kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
@@ -505,11 +572,11 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     )
 
     # Delete the kb as a final step
-    await run_test_kb_deletion(regional_api_config, kbid, logger)
+    await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, clean_kb_test, global_api):
+async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, global_api):
     """
     Test activity log usage
 
@@ -529,9 +596,15 @@ async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, cle
     zone = regional_api_config.zone_slug
     account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
+    kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_auth"
+
+    # Make sure the kb used for this test is deleted, as the slug is reused:
+    old_kbid = get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    if old_kbid is not None:
+        AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await run_test_kb_creation(regional_api_config, logger)
+    kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
@@ -552,59 +625,8 @@ async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, cle
         generative_model="chatgpt-azure-4o-mini",
     )
 
-    def nuclia_tokens_calculated_on_activity_log():
-        @wraps(nuclia_tokens_calculated_on_activity_log)
-        async def condition() -> tuple[bool, Any]:
-            now = datetime.now(tz=timezone.utc)
-            logs = await kb.logs.query(
-                ndb=async_ndb,
-                type=EventType.CHAT,
-                query=ActivityLogsChatQuery(
-                    year_month=f"{now.year}-{now.month:02}",
-                    filters=QueryFiltersChat(),
-                    pagination=Pagination(limit=100),
-                    show=["nuclia_tokens"],
-                ),
-            )
-            if len(logs.data) > 0:
-                nuclia_tokens = logs.data[-1].nuclia_tokens
-                if nuclia_tokens is not None and nuclia_tokens > 0:
-                    return (True, nuclia_tokens)
-            return (False, None)
-
-        return condition
-
-    success, activity_log_nuclia_tokens = await wait_for(
-        nuclia_tokens_calculated_on_activity_log(), max_wait=120, logger=logger
-    )
-    assert success, "Nuclia tokens were not added to activity log event on time"
-    assert activity_log_nuclia_tokens > 0
-
-    def nuclia_tokens_stored_on_accounting():
-        @wraps(nuclia_tokens_stored_on_accounting)
-        async def condition() -> tuple[bool, Any]:
-            # IMPORTANT! The usage endpoint is cached using the request parameters, so i'ts mandatory
-            # to change the date in each attempt
-            now = datetime.now(tz=timezone.utc)
-            from_date = (now - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
-            to_date = (now + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-            result = await global_api.get_usage(account, kbid, from_date, to_date)
-            metrics = list(filter(lambda m: m["name"] == "nuclia_tokens_billed", result[0]["metrics"]))
-            if not metrics:
-                return (False, None)
-            nuclia_tokens = metrics[0]["value"]
-            if nuclia_tokens > 0:
-                return (True, nuclia_tokens)
-            return (False, None)
-
-        return condition
-
-    success, accouting_nuclia_tokens = await wait_for(
-        nuclia_tokens_stored_on_accounting(), max_wait=600, interval=10, logger=logger
-    )
-    assert success, "Nuclia tokens were not received by accounting on time"
-    assert activity_log_nuclia_tokens == accouting_nuclia_tokens
+    activity_log_tokens = await run_test_tokens_on_activity_log(async_ndb, logger)
+    await run_test_tokens_on_accounting(global_api, account, kbid, activity_log_tokens, logger)
 
     # Delete the kb as a final step
-    await run_test_kb_deletion(regional_api_config, kbid, logger)
+    await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
