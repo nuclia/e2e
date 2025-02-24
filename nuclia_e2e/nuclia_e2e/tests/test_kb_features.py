@@ -516,8 +516,11 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_features"
 
     # Make sure the kb used for this test is deleted, as the slug is reused:
-    old_kbid = get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    old_kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
     if old_kbid is not None:
+        import ipdb
+
+        ipdb.set_trace()
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
@@ -599,9 +602,9 @@ async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, glo
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_auth"
 
     # Make sure the kb used for this test is deleted, as the slug is reused:
-    old_kbid = get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    old_kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
     if old_kbid is not None:
-        await aAsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
+        await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
     kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
