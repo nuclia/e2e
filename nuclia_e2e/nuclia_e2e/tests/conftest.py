@@ -17,7 +17,6 @@ from nuclia.config import set_config_file  # noqa: E402
 from nuclia.data import get_async_auth  # noqa: E402
 from nuclia.data import get_config  # noqa: E402
 from nuclia.lib.nua import AsyncNuaClient  # noqa: E402
-from nuclia.sdk.kbs import NucliaKBS  # noqa: E402
 from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
 
 import aiohttp  # noqa: E402
@@ -47,6 +46,7 @@ def safe_get_env(env_var_name: str) -> str:
 
 
 TEST_ENV = safe_get_env("TEST_ENV")
+GRAFANA_URL = safe_get_env("GRAFANA_URL")
 
 
 def safe_get_prod_env(env_var_name: str) -> str:
@@ -213,6 +213,13 @@ class GlobalAPI:
         ) as response:
             response.raise_for_status()
             return (await response.json())["id"]
+
+    async def get_usage(self, account_id, kb_id, from_date, to_date):
+        params = f"from={from_date}&to={to_date}&knowledgebox={kb_id}"
+        url = f"{self.base_url}/api/v1/account/{account_id}/usage?{params}"
+        async with self.session.get(url, headers=self.root_auth_headers) as response:
+            response.raise_for_status()
+            return await response.json()
 
 
 class RegionalAPI:
@@ -440,20 +447,6 @@ async def cleanup_test_account(global_api: GlobalAPI):
     yield
 
     await global_api.manager.delete_account(TEST_ACCOUNT_SLUG)
-
-
-@pytest.fixture
-async def clean_kb_test(request: pytest.FixtureRequest, regional_api_config):
-    kbs = NucliaKBS()
-    kb_slug = regional_api_config.test_kb_slug
-    all_kbs = await asyncio.to_thread(kbs.list)
-    kb_ids_by_slug = {kb.slug: kb.id for kb in all_kbs}
-    kb_id = kb_ids_by_slug.get(kb_slug)
-    try:
-        await asyncio.to_thread(partial(kbs.delete, zone=regional_api_config.zone_slug, id=kb_id))
-    except ValueError:
-        # Raised by sdk when kb not found
-        pass
 
 
 @pytest.fixture
