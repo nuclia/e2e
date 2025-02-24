@@ -518,9 +518,6 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     # Make sure the kb used for this test is deleted, as the slug is reused:
     old_kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
     if old_kbid is not None:
-        import ipdb
-
-        ipdb.set_trace()
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
