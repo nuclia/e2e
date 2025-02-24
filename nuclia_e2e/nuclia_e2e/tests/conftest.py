@@ -46,6 +46,7 @@ def safe_get_env(env_var_name: str) -> str:
 
 
 TEST_ENV = safe_get_env("TEST_ENV")
+GRAFANA_URL = safe_get_env("GRAFANA_URL")
 
 
 def safe_get_prod_env(env_var_name: str) -> str:
