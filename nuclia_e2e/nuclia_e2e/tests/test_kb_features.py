@@ -424,7 +424,7 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
 
 async def run_test_tokens_on_activity_log(
     ndb: AsyncNucliaDBClient, expected_accounting_tokens: float, logger
-) -> float:
+):
     kb = AsyncNucliaKB()
 
     def nuclia_tokens_calculated_on_activity_log():

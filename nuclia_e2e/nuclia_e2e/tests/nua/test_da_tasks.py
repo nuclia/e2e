@@ -4,7 +4,8 @@ from collections.abc import Callable
 from collections.abc import Coroutine
 from dataclasses import dataclass
 from nuclia.lib.nua import AsyncNuaClient
-from nuclia_e2e.tests.conftest import TEST_ENV, GRAFANA_URL
+from nuclia_e2e.tests.conftest import GRAFANA_URL
+from nuclia_e2e.tests.conftest import TEST_ENV
 from nuclia_e2e.utils import get_asset_file_path
 from nuclia_models.worker.proto import ApplyTo
 from nuclia_models.worker.proto import AskOperation
@@ -28,8 +29,8 @@ import aiofiles
 import aiohttp
 import asyncio
 import base64
-import pytest
 import json
+import pytest
 
 LLAMA_GUARD_DISABLED = TEST_ENV == "prod"
 PROMPT_GUARD_DISABLED = TEST_ENV == "prod"
