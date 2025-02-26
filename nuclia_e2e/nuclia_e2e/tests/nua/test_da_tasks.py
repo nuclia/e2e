@@ -4,6 +4,7 @@ from collections.abc import Callable
 from collections.abc import Coroutine
 from dataclasses import dataclass
 from nuclia.lib.nua import AsyncNuaClient
+from nuclia_e2e.tests.conftest import GRAFANA_URL
 from nuclia_e2e.tests.conftest import TEST_ENV
 from nuclia_e2e.utils import get_asset_file_path
 from nuclia_models.worker.proto import ApplyTo
@@ -28,10 +29,31 @@ import aiofiles
 import aiohttp
 import asyncio
 import base64
+import json
 import pytest
 
 LLAMA_GUARD_DISABLED = TEST_ENV == "prod"
 PROMPT_GUARD_DISABLED = TEST_ENV == "prod"
+
+
+def get_grafana_task_url(task_id: str) -> str:
+    raw = {
+        "y0r": {
+            "datasource": "P8E80F9AEF21F6940",
+            "queries": [
+                {
+                    "refId": "A",
+                    "expr": f'{{pod=~"{task_id}.*"}} |= ``',
+                    "queryType": "range",
+                    "datasource": {"type": "loki", "uid": "P8E80F9AEF21F6940"},
+                    "editorMode": "builder",
+                }
+            ],
+            "range": {"from": "now-24h", "to": "now"},
+        }
+    }
+    query = json.dumps(raw, indent=None, separators=(",", ":"))
+    return f"{GRAFANA_URL}/explore?schemaVersion=1&panes={query}&orgId=1"
 
 
 @dataclass
@@ -147,9 +169,12 @@ async def wait_for_task_completion(
     start_time = asyncio.get_event_loop().time()
     while True:
         elapsed_time = asyncio.get_event_loop().time() - start_time
+        grafana_task_log__url = get_grafana_task_url(task_id)
         if elapsed_time > max_duration:
             raise TimeoutError(
-                f"Task {task_id} did not complete within the maximum allowed time of {max_duration} seconds."
+                f"Task {task_id} didn't complete within the maximum allowed time of {max_duration} seconds.\n"
+                f"You may find more information on the task log: {grafana_task_log__url}, if you see some"
+                "SIGTERM on it, preemtion ocurred and the task won't be retried."
             )
 
         resp = await client.get(

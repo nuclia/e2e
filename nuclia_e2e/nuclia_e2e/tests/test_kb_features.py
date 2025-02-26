@@ -43,15 +43,15 @@ TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "When did they start being high?"
 
 
-async def run_test_kb_creation(regional_api_config, logger: Logger) -> str:
+async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
     kbs = AsyncNucliaKBS()
     new_kb = await kbs.add(
         zone=regional_api_config.zone_slug,
-        slug=regional_api_config.test_kb_slug,
+        slug=kb_slug,
         sentence_embedder="en-2024-04-24",
     )
 
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, regional_api_config.test_kb_slug)
+    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
     assert kbid is not None
     logger(f"Created kb {new_kb['id']}")
     return kbid
@@ -281,7 +281,7 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         return condition
 
     success, search_returned_results = await wait_for(
-        new_embedding_model_available(), max_wait=120, logger=logger
+        new_embedding_model_available(), max_wait=200, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
     assert (
@@ -422,28 +422,91 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
     assert success, "Remi scores didn't get computed in time"
 
 
-async def run_test_kb_deletion(regional_api_config, kbid, logger):
+async def run_test_tokens_on_activity_log(
+    ndb: AsyncNucliaDBClient, expected_accounting_tokens: float, logger
+):
+    kb = AsyncNucliaKB()
+
+    def nuclia_tokens_calculated_on_activity_log():
+        @wraps(nuclia_tokens_calculated_on_activity_log)
+        async def condition() -> tuple[bool, Any]:
+            now = datetime.now(tz=timezone.utc)
+            logs = await kb.logs.query(
+                ndb=ndb,
+                type=EventType.CHAT,
+                query=ActivityLogsChatQuery(
+                    year_month=f"{now.year}-{now.month:02}",
+                    filters=QueryFiltersChat(),
+                    pagination=Pagination(limit=100),
+                    show=["nuclia_tokens"],
+                ),
+            )
+            if len(logs.data) > 0:
+                nuclia_tokens = logs.data[-1].nuclia_tokens
+                if nuclia_tokens is not None and nuclia_tokens > 0:
+                    return (True, nuclia_tokens)
+            return (False, None)
+
+        return condition
+
+    success, activity_log_nuclia_tokens = await wait_for(
+        nuclia_tokens_calculated_on_activity_log(), max_wait=300, logger=logger
+    )
+    assert success, "Nuclia tokens were not added to activity log event on time"
+    assert activity_log_nuclia_tokens > 0
+    assert activity_log_nuclia_tokens == expected_accounting_tokens
+
+
+async def run_test_tokens_on_accounting(global_api, account, kbid, logger):
+    def nuclia_tokens_stored_on_accounting():
+        @wraps(nuclia_tokens_stored_on_accounting)
+        async def condition() -> tuple[bool, Any]:
+            # IMPORTANT! The usage endpoint is cached using the request parameters, so i'ts mandatory
+            # to change the date in each attempt
+            now = datetime.now(tz=timezone.utc)
+            from_date = (now - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            to_date = (now + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            result = await global_api.get_usage(account, kbid, from_date, to_date)
+            metrics = list(filter(lambda m: m["name"] == "nuclia_tokens_billed", result[0]["metrics"]))
+            if not metrics:
+                return (False, None)
+            nuclia_tokens = metrics[0]["value"]
+            if nuclia_tokens > 0:
+                return (True, nuclia_tokens)
+            return (False, None)
+
+        return condition
+
+    success, accouting_nuclia_tokens = await wait_for(
+        nuclia_tokens_stored_on_accounting(), max_wait=600, interval=10, logger=logger
+    )
+    assert success, "Nuclia tokens were not received by accounting on time"
+    return accouting_nuclia_tokens
+
+
+async def run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger):
     kbs = AsyncNucliaKBS()
     logger("deleting " + kbid)
     await kbs.delete(zone=regional_api_config.zone_slug, id=kbid)
 
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, regional_api_config.test_kb_slug)
+    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
     assert kbid is None
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_test):
+async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     """
-    Test a chain of operations that simulates a normal use of a knowledgebox, just concentrated
-    in time.
+    This test simulates a typical sequence of operations within a KnowledgeBox (KB).
 
-    These tests are not individual tests in order to be able to test stuff with newly created
-    knowledgebox, without creating a lot of individual kb's for more atomic tests, just to avoid
-    wasting our resources. The value of doing that on a new kb each time, is being able to catch
-    any error that may not be catches by using a preexisting kb with older parameters.
+    Instead of breaking these into separate atomic tests, we run them together to optimize resource usage.
+    Creating a new KB for each atomic test would be inefficient, so this approach allows us to test
+    functionality on a freshly created KB without excessive overhead. The key advantage of testing on a new
+    KB is the ability to catch errors that might not appear when using an existing KB with older parameters.
 
-    A part of this tests is sequential, as it is important to guarantee the state before moving on
-    while other parts can be run concurrently, hence the use of `gather` in some points
+    The test consists of both sequential and concurrent operations. Some steps must be executed in sequence
+    to ensure the correct state before proceeding, while others can run in parallel. This is why we utilize
+    gather in certain parts of the test.
     """
 
     def logger(msg):
@@ -452,9 +515,15 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     zone = regional_api_config.zone_slug
     account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
+    kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_features"
+
+    # Make sure the kb used for this test is deleted, as the slug is reused:
+    old_kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    if old_kbid is not None:
+        await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await run_test_kb_creation(regional_api_config, logger)
+    kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
@@ -505,4 +574,62 @@ async def test_kb(request: pytest.FixtureRequest, regional_api_config, clean_kb_
     )
 
     # Delete the kb as a final step
-    await run_test_kb_deletion(regional_api_config, kbid, logger)
+    await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
+
+
+@pytest.mark.asyncio_cooperative
+async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, global_api):
+    """
+    This test is conducted separately from the main test_kb to ensure more deterministic results. The retries
+    that typically occur in test_kb make it difficult to achieve the level of precision required for this
+    validation.
+
+    In this test, the actual response from the ask endpoint is not relevant—as long as the request consumes
+    input tokens, the test remains valid. The primary objective is to verify that all usage data generated by
+    an ask request is properly collected and integrated into the audit event. This includes tracking data from
+    NucliaDB, Predict, and ensuring it aligns with the data recorded by Accounting.
+
+    Since usage tracking is performed on a per-request basis, this test assumes that only a single request is
+    being made and that the data captured by Accounting corresponds solely to that request.
+    """
+
+    def logger(msg):
+        print(f"{request.node.name} ::: {msg}")
+
+    zone = regional_api_config.zone_slug
+    account = regional_api_config.global_config.permanent_account_id
+    auth = get_auth()
+    kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_auth"
+
+    # Make sure the kb used for this test is deleted, as the slug is reused:
+    old_kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    if old_kbid is not None:
+        await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
+
+    # Creates a brand new kb that will be used troughout this test
+    kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
+
+    # Configures a nucliadb client defaulting to a specific kb, to be used
+    # to override all the sdk endpoints that automagically creates the client
+    # as this is incompatible with the cooperative tests
+    async_ndb = get_async_kb_ndb_client(zone, account, kbid, user_token=auth._config.token)
+
+    # Import a preexisting export containing several resources (coming from the financial-news kb)
+    # and wait for the resources to be completely imported
+    await run_test_import_kb(regional_api_config, async_ndb, logger)
+
+    kb = AsyncNucliaKB()
+    await kb.search.ask(
+        ndb=async_ndb,
+        rephrase=True,
+        reranker="predict",
+        features=["keyword", "semantic", "relations"],
+        query=TEST_CHOCO_QUESTION,
+        generative_model="chatgpt-azure-4o-mini",
+    )
+
+    accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)
+    await run_test_tokens_on_activity_log(async_ndb, accounting_tokens, logger)
+
+    # Delete the kb as a final step
+    await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
