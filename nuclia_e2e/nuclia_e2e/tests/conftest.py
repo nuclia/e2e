@@ -45,7 +45,7 @@ def safe_get_env(env_var_name: str) -> str:
     return value
 
 
-TEST_ENV = safe_get_env("TEST_ENV")
+TEST_ENV = safe_get_env("TEST_ENV").lower()
 GRAFANA_URL = safe_get_env("GRAFANA_URL")
 
 
@@ -120,6 +120,13 @@ CLUSTERS_CONFIG = {
                 permanent_kb_slug="pre-existing-kb",
                 permanent_nua_key=safe_get_prod_env("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
             ),
+            # ZoneConfig(
+            #     name="aws-il-central-1-1",
+            #     zone_slug="aws-il-central-1-1",
+            #     test_kb_slug="nuclia-e2e-live-aws-il-central-1-1",
+            #     permanent_kb_slug="pre-existing-kb",
+            #     permanent_nua_key=safe_get_prod_env("TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA"),
+            # ),
         ],
     ),
     "stage": ClusterConfig(
