@@ -33,7 +33,7 @@ import json
 import pytest
 
 LLAMA_GUARD_DISABLED = True
-PROMPT_GUARD_DISABLED = True
+PROMPT_GUARD_DISABLED = TEST_ENV == "prod"
 
 
 def get_grafana_task_url(task_id: str) -> str:
