@@ -38,9 +38,11 @@ ALL_LLMS = [
     "chatgpt-o1",
     "chatgpt-o3-mini",
     # "huggingface"                          EXCLUDED as not a model,just a driver, that needs a key to work
-    # "llama-3.2-90b-vision-instruct-maas"   EXCLUDED as it stopped working and was never solved
+    "llama-3.2-90b-vision-instruct-maas",
     # "deepseek-reasoner",                   EXCLUDED as it is too slow and messing all the e2e runs
     "deepseek-chat",
+    # "azure-deepseek-r1",                   EXCLUDED as it is too slow
+    "azure-mistral-large-2",
 ]
 
 
