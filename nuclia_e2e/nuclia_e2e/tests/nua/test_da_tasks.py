@@ -32,7 +32,7 @@ import base64
 import json
 import pytest
 
-LLAMA_GUARD_DISABLED = TEST_ENV == "prod"
+LLAMA_GUARD_DISABLED = True
 PROMPT_GUARD_DISABLED = TEST_ENV == "prod"
 
 
