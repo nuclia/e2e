@@ -6,7 +6,7 @@ on:
       - '**'
     paths:
       - '.github/workflows/run-e2e-stage.yml'
-      - 'nuclia_e2e/**'      
+      - 'e2e/**'      
   workflow_dispatch:
     branches:
       - main
