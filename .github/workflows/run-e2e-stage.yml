@@ -65,7 +65,7 @@ jobs:
       - name: Capture NucliaDB Logs
         if: always() # Run even if Cypress fails
         run: |
-          docker logs nucliadb-server > nucliadb-server.log
+          docker logs nucliadb-server > nucliadb-server.log 2>&1
           docker logs pg > postgres.log
     
       - name: Upload Docker Logs
