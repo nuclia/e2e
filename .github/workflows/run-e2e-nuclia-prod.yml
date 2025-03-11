@@ -5,7 +5,7 @@ on:
     branches:
       - '**'
     paths:
-      - '.github/workflows/run-nuclia-e2e-prod.yml'  # Runs only if this file is modified
+      - '.github/workflows/run-e2e-nuclia-prod.yml'  # Runs only if this file is modified
   workflow_dispatch:  # Allow manual run from any branch
   schedule:
     # Run every day at 04:25
