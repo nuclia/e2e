@@ -36,9 +36,11 @@ jobs:
           docker build -t nucliadb-server .
           docker run --network nucliadb-network \
               -p 8080:8080 \
+              --name nucliadb-server \
               -v nucliadb-standalone:/data \
               -e NUA_API_KEY=${{ secrets.NUA_KEY_PROD_EUROPE }} \
               -e DRIVER=PG \
+              -e LOG_LEVEL=DEBUG \
               -e DRIVER_PG_URL="postgresql://nucliadb:nucliadb@pg:5432/nucliadb" \
               nucliadb-server &
       # Install npm dependencies, cache them correctly and run all Cypress tests
@@ -68,7 +70,7 @@ jobs:
       - name: Capture NucliaDB Logs
         if: always() # Run even if Cypress fails
         run: |
-          docker logs nucliadb-server > nucliadb-server.log
+          docker logs nucliadb-server > nucliadb-server.log 2>&1
           docker logs pg > postgres.log
     
       - name: Upload Docker Logs
@@ -79,7 +81,7 @@ jobs:
           path: |
             nucliadb-server.log
             postgres.log
-          if-no-files-found: ignore          
+          if-no-files-found: ignore            
       - name: Slack notification
         id: slack
         uses: slackapi/slack-github-action@v1.25.0
