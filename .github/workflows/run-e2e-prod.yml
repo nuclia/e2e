@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - e2e-on-prod
+    paths:
+      - '.github/workflows/run-e2e-prod.yml'
   workflow_dispatch:
     branches:
       - e2e-on-prod
