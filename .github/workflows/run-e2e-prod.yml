@@ -64,6 +64,22 @@ jobs:
           name: cypress-reports
           path: cypress/reports
           if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+      # After Cypress tests, get logs and upload them
+      - name: Capture NucliaDB Logs
+        if: always() # Run even if Cypress fails
+        run: |
+          docker logs nucliadb-server > nucliadb-server.log
+          docker logs pg > postgres.log
+    
+      - name: Upload Docker Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs
+          path: |
+            nucliadb-server.log
+            postgres.log
+          if-no-files-found: ignore          
       - name: Slack notification
         id: slack
         uses: slackapi/slack-github-action@v1.25.0
