@@ -6,7 +6,7 @@ on:
       - '**'
     paths:
       - '.github/workflows/run-e2e-stage.yml'
-      - 'e2e/**'      
+      - 'cypress/**'      
   workflow_dispatch:
     branches:
       - main
