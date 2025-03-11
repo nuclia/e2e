@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - '**'
-  workflow_dispatch:
-    branches:
-      - main
+    paths:
+      - '.github/workflows/run-e2e-nuclia-prod.yml'  # Runs only if this file is modified
+  workflow_dispatch:  # Allow manual run from any branch
   schedule:
-    # run every day at 04:25
+    # Run every day at 04:25
     - cron: '25 4 * * *'
 jobs:
   test:
