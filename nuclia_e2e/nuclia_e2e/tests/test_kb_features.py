@@ -631,7 +631,7 @@ async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, glo
     accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)
     # Disable check nuclia tokens on activity log for now, as under heavy loads it takes several hours
     # to be up to date, and so the logs won't be available on most of the tests runs.
-    await run_test_tokens_on_activity_log(async_ndb, accounting_tokens, logger)
+    #await run_test_tokens_on_activity_log(async_ndb, accounting_tokens, logger)
 
     # Delete the kb as a final step
     await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
