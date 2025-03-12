@@ -9,12 +9,12 @@ describe('NucliaDB admin – Manage content', () => {
       headers: STANDALONE_HEADER
     }).then(response => {
       expect(response.status).to.eq(200);
-      const kbPayload = { 'slug': `${STANDALONE_KB_NAME}`, 'zone': 'local', 'title': `${STANDALONE_KB_NAME}` };
+      const kbPayload = { 'slug': ${STANDALONE_KB_NAME}, 'zone': 'local', 'title': ${STANDALONE_KB_NAME} };
       if (response.body['kbs'].length > 0) {
         response.body['kbs'].forEach(kb => {
           cy.request({
             method: 'DELETE',
-            url: `http://localhost:8080/api/v1/kb/${kb['uuid']}`,
+            url: http://localhost:8080/api/v1/kb/${kb['uuid']},
             headers: STANDALONE_HEADER
           }).then(deleteResponse => {
             expect(deleteResponse.status).to.eq(200);
@@ -50,5 +50,26 @@ describe('NucliaDB admin – Manage content', () => {
     cy.get('app-upload-progress button[aria-label="Close"]').click();
     cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
     cy.location('hash').should('contain', `/resources/pending`);
+  });
+
+  afterEach(() => {
+    // Cleanup: Delete any KB created for the test
+    cy.request({
+      method: 'GET',
+      url: 'http://localhost:8080/api/v1/kbs',
+      headers: STANDALONE_HEADER
+    }).then(response => {
+      if (response.body['kbs'].length > 0) {
+        Cypress._.each(response.body['kbs'], (kb) => {
+          cy.request({
+            method: 'DELETE',
+            url: `http://localhost:8080/api/v1/kb/${kb['uuid']}`,
+            headers: STANDALONE_HEADER
+          }).then(deleteResponse => {
+            expect(deleteResponse.status).to.eq(200);
+          });
+        });
+      }
+    });
   });
 });
