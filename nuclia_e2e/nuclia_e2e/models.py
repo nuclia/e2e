@@ -21,7 +21,6 @@ ALL_LLMS = [
     "claude-3-5-small",
     # "gemini-2.0-flash-thinking-exp-1219",  EXCLUDED because they are not currently available in production
     # "gemini-2.0-flash-exp",                EXCLUDED because they are not currently available in production
-    # "gemini-2.0-flash-exp",                EXCLUDED because they are not currently available in production
     # "gemini-2.0-flash-lite",               EXCLUDED because they are not currently available in production
     "gemini-2.0-flash",
     "gemini-1-5-pro",
