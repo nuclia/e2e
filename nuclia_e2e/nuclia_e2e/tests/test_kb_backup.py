@@ -52,7 +52,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
 
     async def check_restore_completed() -> bool:
         catalog = await search.catalog(ndb=ndb)
-        return catalog.resources > 0, catalog
+        return len(catalog.resources) > 0, catalog
 
     await wait_for(condition=check_restore_completed, max_wait=180, interval=10)
 
