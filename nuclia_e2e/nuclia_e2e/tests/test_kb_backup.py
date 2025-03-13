@@ -1,5 +1,6 @@
 from nuclia import sdk
 from nuclia.sdk.kbs import AsyncNucliaKBS
+from nuclia.sdk.search import AsyncNucliaSearch
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import wait_for
 from nuclia_models.accounts.backups import BackupCreate
@@ -27,7 +28,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
         backup_list = [b for b in backups if b.id == backup_create.id]
         assert len(backup_list) == 1
         backup_object = backup_list[0]
-        return backup_object.finished_at is not None
+        return backup_object.finished_at is not None, backup_object
 
     await wait_for(condition=check_backup_finished, max_wait=180, interval=10)
 
@@ -42,6 +43,9 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     kbs = AsyncNucliaKBS()
     kb_get = await kbs.get(id=new_kb.id)
     assert kb_get is not None
+
+    # search = AsyncNucliaSearch()
+    # await search.catalog()
 
     # Delete the restored KB
     await kbs.delete(id=new_kb.id, zone=zone)
