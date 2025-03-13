@@ -47,7 +47,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
 
     # Wait restore is completed
     auth = get_auth()
-    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=new_kb.id, user_token=auth._config.token)
     search = AsyncNucliaSearch()
 
     async def check_restore_completed() -> bool:

@@ -2,7 +2,8 @@ from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.search import AskAnswer
 from nuclia_e2e.utils import get_async_kb_ndb_client
-from nucliadb_models.search import AskRequest, RequestSecurity
+from nucliadb_models.search import AskRequest
+from nucliadb_models.search import RequestSecurity
 
 import pytest
 
