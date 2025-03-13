@@ -1,7 +1,9 @@
 from nuclia import sdk
+from nuclia.data import get_auth
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia.sdk.search import AsyncNucliaSearch
 from nuclia_e2e.tests.conftest import ZoneConfig
+from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import wait_for
 from nuclia_models.accounts.backups import BackupCreate
 from nuclia_models.accounts.backups import BackupRestore
@@ -22,7 +24,6 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     backup_create = await sdk.AsyncNucliaBackup().create(backup=BackupCreate(kb_id=kb_id), zone=zone)
 
     # Wait till backup is finished
-    # Get Backup
     async def check_backup_finished() -> bool:
         backups = await sdk.AsyncNucliaBackup().list(zone=zone)
         backup_list = [b for b in backups if b.id == backup_create.id]
@@ -39,13 +40,21 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
         backup_id=backup_create.id,
         zone=zone,
     )
-    # TODO: Wait and check backup is restored
+    # Check a new KB is created
     kbs = AsyncNucliaKBS()
     kb_get = await kbs.get(id=new_kb.id)
     assert kb_get is not None
 
-    # search = AsyncNucliaSearch()
-    # await search.catalog()
+    # Wait restore is completed
+    auth = get_auth()
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    search = AsyncNucliaSearch()
+
+    async def check_restore_completed() -> bool:
+        catalog = await search.catalog(ndb=ndb)
+        return catalog.resources > 0, catalog
+
+    await wait_for(condition=check_restore_completed, max_wait=180, interval=10)
 
     # Delete the restored KB
     await kbs.delete(id=new_kb.id, zone=zone)

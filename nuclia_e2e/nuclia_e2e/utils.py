@@ -34,7 +34,7 @@ async def wait_for(
     while not success and monotonic() - start < max_wait:
         await asyncio.sleep(interval)
         success, data = await condition()
-    logger(f"wait_for '{func_name}' success={success} in {monotonic()-start} seconds")
+    logger(f"wait_for '{func_name}' success={success} in {monotonic() - start} seconds")
     return success, data
 
 
@@ -48,7 +48,6 @@ async def get_kbid_from_slug(zone: str, slug: str) -> str | None:
 
 def get_async_kb_ndb_client(
     zone: str,
-    account: str,
     kbid: str,
     user_token: str | None = None,
     service_account_token: str | None = None,
@@ -57,7 +56,7 @@ def get_async_kb_ndb_client(
 
     assert any((user_token, service_account_token)), "One of user_token or service_account_token must be set"
 
-    kb_path = NUCLIADB_KB_ENDPOINT.format(zone=zone, account=account, kb=kbid)
+    kb_path = NUCLIADB_KB_ENDPOINT.format(kb=kbid)
     base_url = REGIONAL.format(region=zone)
     kb_base_url = f"{base_url}{kb_path}"
 
