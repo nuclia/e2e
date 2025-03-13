@@ -96,7 +96,7 @@ If at some point we hit concurrency issues, we can limit this with `--max-asynci
 
 
 ### Configuration
-- All needd config defined in `conftest.py` under `CLUSTERS_CONFIG`, secrets loaded from GHA injected env vars.
+- All needed config is defined in `conftest.py` under `CLUSTERS_CONFIG`, secrets loaded from GHA injected env vars.
 - Each environment (`prod` and `stage` currently) can define several zones, and will be run in a separate action. Anything you need to add, make sure you add it in all environments.
 - Each action will run tests for all the zones defined in that environment.
 - `regional_api_config` fixture provides environment + region details for region-scoped tests and triggers the parametrization so tests with this fixture runs once for each region.
