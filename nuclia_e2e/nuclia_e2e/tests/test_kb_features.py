@@ -284,9 +284,9 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         new_embedding_model_available(), max_wait=200, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
-    assert (
-        search_returned_results is True
-    ), "expected to be able to search with the new embedding model but nucliadb didn't return resources"
+    assert search_returned_results is True, (
+        "expected to be able to search with the new embedding model but nucliadb didn't return resources"
+    )
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
@@ -528,7 +528,7 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
     # as this is incompatible with the cooperative tests
-    async_ndb = get_async_kb_ndb_client(zone, account, kbid, user_token=auth._config.token)
+    async_ndb = get_async_kb_ndb_client(zone, kbid, user_token=auth._config.token)
 
     # Import a preexisting export containing several resources (coming from the financial-news kb)
     # and wait for the resources to be completely imported
@@ -612,7 +612,7 @@ async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, glo
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
     # as this is incompatible with the cooperative tests
-    async_ndb = get_async_kb_ndb_client(zone, account, kbid, user_token=auth._config.token)
+    async_ndb = get_async_kb_ndb_client(zone, kbid, user_token=auth._config.token)
 
     # Import a preexisting export containing several resources (coming from the financial-news kb)
     # and wait for the resources to be completely imported
@@ -631,7 +631,7 @@ async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, glo
     accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)
     # Disable check nuclia tokens on activity log for now, as under heavy loads it takes several hours
     # to be up to date, and so the logs won't be available on most of the tests runs.
-    #await run_test_tokens_on_activity_log(async_ndb, accounting_tokens, logger)
+    # await run_test_tokens_on_activity_log(async_ndb, accounting_tokens, logger)
 
     # Delete the kb as a final step
     await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)

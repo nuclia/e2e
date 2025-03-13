@@ -2,6 +2,8 @@ from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.search import AskAnswer
 from nuclia_e2e.utils import get_async_kb_ndb_client
+from nucliadb_models.search import AskRequest
+from nucliadb_models.search import RequestSecurity
 
 import pytest
 
@@ -27,7 +29,7 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
     # to override all the sdk endpoints that automagically creates the client
     # as this is incompatible with the cooperative tests
 
-    async_ndb = get_async_kb_ndb_client(zone, account, kbid, service_account_token=new_sa_key)
+    async_ndb = get_async_kb_ndb_client(zone, kbid, service_account_token=new_sa_key)
 
     async def security_groups_test_ask(
         client: AsyncNucliaDBClient, question: str, security_groups: list[str] | None
@@ -35,12 +37,14 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
         kb = AsyncNucliaKB()
         return await kb.search.ask(
             ndb=client,
-            rephrase=False,
-            reranker="predict",
-            features=["semantic"],
-            query=question,
-            generative_model="chatgpt-azure-4o-mini",
-            security={"groups": security_groups} if security_groups is not None else None,
+            query=AskRequest(
+                query=question,
+                reranker="predict",
+                rephrase=False,
+                generative_model="chatgpt-azure-4o-mini",
+                features=["semantic"],
+                security=RequestSecurity(groups=security_groups) if security_groups is not None else None,
+            ),
         )
 
     # There are two resources describing to recipes
@@ -57,7 +61,7 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
     # Temporal SA key with no explicit security, should allow the question
     # Recreating the key and client each time, as it has a 10 seconds ttl
     new_sa_temp_key = await regional_api.create_service_account_temp_key(new_sa_key, security_groups=None)
-    async_ndb_sa_temp = get_async_kb_ndb_client(zone, account, kbid, service_account_token=new_sa_temp_key)
+    async_ndb_sa_temp = get_async_kb_ndb_client(zone, kbid, service_account_token=new_sa_temp_key)
     answer = await security_groups_test_ask(async_ndb_sa_temp, secured_question, security_groups=None)
     assert answer.status == "success"
 
@@ -70,6 +74,6 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
     new_sa_temp_key = await regional_api.create_service_account_temp_key(
         new_sa_key, security_groups=["apprentices"]
     )
-    async_ndb_sa_temp = get_async_kb_ndb_client(zone, account, kbid, service_account_token=new_sa_temp_key)
+    async_ndb_sa_temp = get_async_kb_ndb_client(zone, kbid, service_account_token=new_sa_temp_key)
     answer = await security_groups_test_ask(async_ndb_sa_temp, secured_question, security_groups=None)
     assert answer.status == "no_context"
