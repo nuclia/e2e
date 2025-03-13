@@ -2,6 +2,7 @@ from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.search import AskAnswer
 from nuclia_e2e.utils import get_async_kb_ndb_client
+from nucliadb_models.search import AskRequest, RequestSecurity
 
 import pytest
 
@@ -35,12 +36,14 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
         kb = AsyncNucliaKB()
         return await kb.search.ask(
             ndb=client,
-            rephrase=False,
-            reranker="predict",
-            features=["semantic"],
-            query=question,
-            generative_model="chatgpt-azure-4o-mini",
-            security={"groups": security_groups} if security_groups is not None else None,
+            query=AskRequest(
+                query=question,
+                reranker="predict",
+                rephrase=False,
+                generative_model="chatgpt-azure-4o-mini",
+                features=["keyword", "semantic"],
+                security=RequestSecurity(groups=security_groups) if security_groups is not None else None,
+            ),
         )
 
     # There are two resources describing to recipes
