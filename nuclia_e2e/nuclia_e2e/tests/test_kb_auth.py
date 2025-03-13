@@ -41,7 +41,7 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
                 reranker="predict",
                 rephrase=False,
                 generative_model="chatgpt-azure-4o-mini",
-                features=["keyword", "semantic"],
+                features=["semantic"],
                 security=RequestSecurity(groups=security_groups) if security_groups is not None else None,
             ),
         )
