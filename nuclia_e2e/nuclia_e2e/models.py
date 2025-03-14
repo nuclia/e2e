@@ -21,7 +21,6 @@ ALL_LLMS = [
     "claude-3-5-small",
     # "gemini-2.0-flash-thinking-exp-1219",  EXCLUDED because they are not currently available in production
     # "gemini-2.0-flash-exp",                EXCLUDED because they are not currently available in production
-    # "gemini-2.0-flash-exp",                EXCLUDED because they are not currently available in production
     # "gemini-2.0-flash-lite",               EXCLUDED because they are not currently available in production
     "gemini-2.0-flash",
     "gemini-1-5-pro",
@@ -38,9 +37,11 @@ ALL_LLMS = [
     "chatgpt-o1",
     "chatgpt-o3-mini",
     # "huggingface"                          EXCLUDED as not a model,just a driver, that needs a key to work
-    # "llama-3.2-90b-vision-instruct-maas"   EXCLUDED as it stopped working and was never solved
+    "llama-3.2-90b-vision-instruct-maas",
     # "deepseek-reasoner",                   EXCLUDED as it is too slow and messing all the e2e runs
     "deepseek-chat",
+    # "azure-deepseek-r1",                   EXCLUDED as it is too slow
+    "azure-mistral-large-2",
 ]
 
 
