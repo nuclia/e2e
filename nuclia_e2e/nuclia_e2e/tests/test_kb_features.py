@@ -270,12 +270,25 @@ async def run_test_create_da_labeller_with_label_filter(
         ),
     )
 
-    # Create a resource talking about food that contains the label that should trigger the labeller task
+    # Create a resource talking about food that contains the label that should trigger the labeller agent
     await kb.resource.create(
         ndb=ndb,
         title="How this chocolatier is navigating an unexpected spike in cocoa prices",
-        slug="chocolatier-new",
+        slug="chocolatier-with-label",
         usermetadata=UserMetadata(classifications=[UserClassification(labelset="MyLabels", label="LABEL1")]),
+        texts={
+            "article": TextField(
+                body="""The price of cocoa has been increasing for the last few months, and chocolatiers are struggling to keep up.
+            In order to keep their prices competitive, they have had to make some tough decisions, such as reducing the size of their products or increasing prices."""
+            )
+        },
+    )
+
+    # Create a resource talking about food that does not contain the label that should NOT trigger the labeller agent
+    await kb.resource.create(
+        ndb=ndb,
+        title="How this chocolatier is navigating an unexpected spike in cocoa prices",
+        slug="chocolatier-without-label",
         texts={
             "article": TextField(
                 body="""The price of cocoa has been increasing for the last few months, and chocolatiers are struggling to keep up.
@@ -293,17 +306,22 @@ async def run_test_check_da_labeller_with_label_filter_output(
     def filtered_resource_is_labelled():
         @wraps(filtered_resource_is_labelled)
         async def condition() -> bool:
-            try:
-                res = await kb.resource.get(slug="chocolatier-new", show=["extracted"], ndb=ndb)
-            except NotFoundError:
-                # some resource may still be missing from nucliadb, let's wait more
+            async def resource_augmented(slug: str) -> bool:
+                try:
+                    res = await kb.resource.get(slug=slug, show=["extracted"], ndb=ndb)
+                except NotFoundError:
+                    # some resource may still be missing from nucliadb, let's wait more
+                    return False
+                for fc in res.computedmetadata.field_classifications:
+                    if not (fc.field.field_type.name == "TEXT" and fc.field.field == "article"):
+                        continue
+                    computed_labels = [(cl.labelset, cl.label) for cl in fc.classifications]
+                    return ("topic", "FOOD") in computed_labels
                 return False
-            for fc in res.computedmetadata.field_classifications:
-                if not (fc.field.field_type.name == "TEXT" and fc.field.field == "article"):
-                    continue
-                computed_labels = [(cl.labelset, cl.label) for cl in fc.classifications]
-                return ("topic", "FOOD") in computed_labels
-            return False
+
+            labeled_resource_augmented = await resource_augmented("chocolatier-with-label")
+            unlabeled_resource_augmented = await resource_augmented("chocolatier-without-label")
+            return labeled_resource_augmented and not unlabeled_resource_augmented
 
         return condition
 
