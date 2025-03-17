@@ -311,8 +311,8 @@ async def run_test_check_da_labeller_with_label_filter_output(
                     return ("topic-filtered", "CLIMBING") in computed_labels
                 return False
 
-            labeled_resource_augmented = await resource_augmented("marmalade-with-label")
-            unlabeled_resource_augmented = await resource_augmented("marmalade-without-label")
+            labeled_resource_augmented = await resource_augmented("climbing-with-label")
+            unlabeled_resource_augmented = await resource_augmented("climbing-without-label")
             return (labeled_resource_augmented and not unlabeled_resource_augmented, None)
 
         return condition
