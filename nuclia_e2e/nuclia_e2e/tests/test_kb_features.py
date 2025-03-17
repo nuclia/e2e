@@ -305,7 +305,7 @@ async def run_test_check_da_labeller_with_label_filter_output(
 
     def filtered_resource_is_labelled():
         @wraps(filtered_resource_is_labelled)
-        async def condition() -> bool:
+        async def condition() -> tuple[bool, None]:
             async def resource_augmented(slug: str) -> bool:
                 try:
                     res = await kb.resource.get(slug=slug, show=["extracted"], ndb=ndb)
@@ -321,7 +321,7 @@ async def run_test_check_da_labeller_with_label_filter_output(
 
             labeled_resource_augmented = await resource_augmented("chocolatier-with-label")
             unlabeled_resource_augmented = await resource_augmented("chocolatier-without-label")
-            return labeled_resource_augmented and not unlabeled_resource_augmented
+            return (labeled_resource_augmented and not unlabeled_resource_augmented, None)
 
         return condition
 
