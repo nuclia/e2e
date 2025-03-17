@@ -4,10 +4,12 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from functools import wraps
+from attr import field
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kbs import AsyncNucliaKBS
+from nucliadb_models import TextField, UserClassification, UserMetadata
 from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
@@ -218,6 +220,96 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb: AsyncNucli
     assert success, "Expected computed labels not found in resources"
 
 
+async def run_test_create_da_labeller_with_label_filter(
+    regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger
+):
+    """
+    Creates a config to run on all future ones but only on resources matching a specific classification label
+    """
+    kb = AsyncNucliaKB()
+    # Create the task
+    await kb.task.start(
+        ndb=ndb,
+        task_name=TaskName.LABELER,
+        apply=ApplyOptions.NEW,
+        parameters=DataAugmentation(
+            name="test-labels-filter",
+            on=ApplyTo.FIELD,
+            filter=Filter(
+                labels=[
+                    "MyLabels/LABEL1",
+                ]
+            ),
+            operations=[
+                Operation(
+                    label=LabelOperation(
+                        labels=[
+                            Label(
+                                label="TECH",
+                                description="Related to financial news in the TECH/IT industry",
+                            ),
+                            Label(
+                                label="HEALTH",
+                                description="Related to financial news in the HEALTHCARE industry",
+                            ),
+                            Label(
+                                label="FOOD",
+                                description="Related to financial news in the FOOD industry",
+                            ),
+                            Label(
+                                label="MEDIA",
+                                description="Related to financial news in the MEDIA industry",
+                            ),
+                        ],
+                        ident="topic",
+                        description="Topic of the article in the financial context",
+                    )
+                )
+            ],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+    )
+
+    # Create a resource talking about food that contains the label that should trigger the labeller task
+    await kb.resource.create(
+        title="How this chocolatier is navigating an unexpected spike in cocoa prices",
+        slug="chocolatier-new",
+        usermetadata=UserMetadata(classifications=[UserClassification(labelset="MyLabels", label="LABEL1")]),
+        texts={
+            "article": TextField(
+                body="""The price of cocoa has been increasing for the last few months, and chocolatiers are struggling to keep up.
+            In order to keep their prices competitive, they have had to make some tough decisions, such as reducing the size of their products or increasing prices."""
+            )
+        },
+    )
+
+
+async def run_test_check_da_labeller_with_label_filter_output(
+    regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger
+):
+    kb = AsyncNucliaKB()
+
+    def filtered_resource_is_labelled():
+        @wraps(filtered_resource_is_labelled)
+        async def condition() -> bool:
+            try:
+                res = await kb.resource.get(slug="chocolatier-new", show=["extracted"], ndb=ndb)
+            except NotFoundError:
+                # some resource may still be missing from nucliadb, let's wait more
+                return False
+            for fc in res.computedmetadata.field_classifications:
+                if not (fc.field.field_type.name == "TEXT" and fc.field.field == "article"):
+                    continue
+                computed_labels = [(cl.labelset, cl.label) for cl in fc.classifications]
+                return ("topic", "FOOD") in computed_labels
+            return False
+
+        return condition
+
+    success = await wait_for(filtered_resource_is_labelled(), logger=logger)
+    assert success, "Expected computed label not found in filtered resource"
+
+
 async def run_test_start_embedding_model_migration_task(ndb: AsyncNucliaDBClient) -> str:
     kbid = ndb.kbid
 
@@ -284,9 +376,9 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         new_embedding_model_available(), max_wait=200, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
-    assert search_returned_results is True, (
-        "expected to be able to search with the new embedding model but nucliadb didn't return resources"
-    )
+    assert (
+        search_returned_results is True
+    ), "expected to be able to search with the new embedding model but nucliadb didn't return resources"
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
@@ -544,9 +636,14 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     # embedding model and ingest/index in nucliadb again.
     # We want to do it before upload to validate, on one side the migration
     # itself, and on the other ingestion in a KB with multiple vectorsets
+    #
+    # Create a labeller configuration that runs only on new resources that have a specific label
+    # This will test the filtering capabilities of the labeller
+    #
     (_, embedding_migration_task_id) = await asyncio.gather(
         run_test_create_da_labeller(regional_api_config, async_ndb, logger),
         run_test_start_embedding_model_migration_task(async_ndb),
+        run_test_create_da_labeller_with_label_filter(regional_api_config, async_ndb, logger),
     )
 
     # Upload a new resource and validate that is correctly processed and stored in nuclia
@@ -561,6 +658,7 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         run_test_check_da_labeller_output(regional_api_config, async_ndb, logger),
         run_test_check_embedding_model_migration(async_ndb, embedding_migration_task_id, logger),
         run_test_find(regional_api_config, async_ndb, logger),
+        run_test_check_da_labeller_with_label_filter_output(regional_api_config, async_ndb, logger),
     )
     await run_test_ask(regional_api_config, async_ndb, logger)
 
