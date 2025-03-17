@@ -261,7 +261,7 @@ async def run_test_create_da_labeller_with_label_filter(
                                 description="Related to financial news in the MEDIA industry",
                             ),
                         ],
-                        ident="topic",
+                        ident="topic-filtered",
                         description="Topic of the article in the financial context",
                     )
                 )
