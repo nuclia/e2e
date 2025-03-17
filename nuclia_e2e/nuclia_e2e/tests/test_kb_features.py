@@ -308,7 +308,7 @@ async def run_test_check_da_labeller_with_label_filter_output(
                     if not (fc.field.field_type.name == "TEXT" and fc.field.field == "article"):
                         continue
                     computed_labels = [(cl.labelset, cl.label) for cl in fc.classifications]
-                    return ("topic", "CLIMBING") in computed_labels
+                    return ("topic-filtered", "CLIMBING") in computed_labels
                 return False
 
             labeled_resource_augmented = await resource_augmented("marmalade-with-label")
