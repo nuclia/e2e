@@ -270,16 +270,19 @@ async def run_test_create_da_labeller_with_label_filter(
         ),
     )
 
+    title = "How this marmalade maker is navigating an unexpected spike in sugar prices"
+    text = """The pice of sugar has increased for the last few months, and marmalade makers are struggling to keep up.
+    In order to keep their prices competitive, they have had to make some tough decisions, such as reducing the size of their products or increasing prices."""
+
     # Create a resource talking about food that contains the label that should trigger the labeller agent
     await kb.resource.create(
         ndb=ndb,
-        title="How this chocolatier is navigating an unexpected spike in cocoa prices",
-        slug="chocolatier-with-label",
+        title=title,
+        slug="marmalade-with-label",
         usermetadata=UserMetadata(classifications=[UserClassification(labelset="MyLabels", label="LABEL1")]),
         texts={
             "article": TextField(
-                body="""The price of cocoa has been increasing for the last few months, and chocolatiers are struggling to keep up.
-            In order to keep their prices competitive, they have had to make some tough decisions, such as reducing the size of their products or increasing prices."""
+                body=text,
             )
         },
     )
@@ -287,12 +290,11 @@ async def run_test_create_da_labeller_with_label_filter(
     # Create a resource talking about food that does not contain the label that should NOT trigger the labeller agent
     await kb.resource.create(
         ndb=ndb,
-        title="How this chocolatier is navigating an unexpected spike in cocoa prices",
-        slug="chocolatier-without-label",
+        title=title,
+        slug="marmalade-without-label",
         texts={
             "article": TextField(
-                body="""The price of cocoa has been increasing for the last few months, and chocolatiers are struggling to keep up.
-            In order to keep their prices competitive, they have had to make some tough decisions, such as reducing the size of their products or increasing prices."""
+                body=text,
             )
         },
     )
@@ -319,8 +321,8 @@ async def run_test_check_da_labeller_with_label_filter_output(
                     return ("topic", "FOOD") in computed_labels
                 return False
 
-            labeled_resource_augmented = await resource_augmented("chocolatier-with-label")
-            unlabeled_resource_augmented = await resource_augmented("chocolatier-without-label")
+            labeled_resource_augmented = await resource_augmented("marmalade-with-label")
+            unlabeled_resource_augmented = await resource_augmented("marmalade-without-label")
             return (labeled_resource_augmented and not unlabeled_resource_augmented, None)
 
         return condition
@@ -411,6 +413,7 @@ async def run_test_find(regional_api_config, ndb: AsyncNucliaDBClient, logger: L
         reranker="predict",
         features=["keyword", "semantic", "relations"],
         query=TEST_CHOCO_QUESTION,
+        top_k=1,
     )
     assert result.resources
     first_resource = next(iter(result.resources.values()))
