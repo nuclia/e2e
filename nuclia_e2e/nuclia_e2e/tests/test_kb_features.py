@@ -253,12 +253,8 @@ async def run_test_create_da_labeller_with_label_filter(
                                 description="Related to financial news in the HEALTHCARE industry",
                             ),
                             Label(
-                                label="FOOD",
-                                description="Related to financial news in the FOOD industry",
-                            ),
-                            Label(
-                                label="MEDIA",
-                                description="Related to financial news in the MEDIA industry",
+                                label="CLIMBING",
+                                description="Related to financial news in the CLIMBING industry",
                             ),
                         ],
                         ident="topic-filtered",
@@ -270,33 +266,27 @@ async def run_test_create_da_labeller_with_label_filter(
         ),
     )
 
-    title = "How this marmalade maker is navigating an unexpected spike in sugar prices"
-    text = """The pice of sugar has increased for the last few months, and marmalade makers are struggling to keep up.
-    In order to keep their prices competitive, they have had to make some tough decisions, such as reducing the size of their products or increasing prices."""
+    title = "The rise of climbing gyms across the US"
+    text = """The rise of climbing gyms across the US has been a boon for the climbing industry.
+    With the rise of climbing gyms, more people are getting into the sport and the industry is growing.
+    Items like climbing shoes, ropes, and harnesses are flying off the shelves as more people take up the sport."""
+    article = TextField(body=text)
 
-    # Create a resource talking about food that contains the label that should trigger the labeller agent
+    # Create a resource talking about climbing that contains the label that should trigger the labeller agent
     await kb.resource.create(
         ndb=ndb,
         title=title,
-        slug="marmalade-with-label",
+        slug="climbing-with-label",
         usermetadata=UserMetadata(classifications=[UserClassification(labelset="MyLabels", label="LABEL1")]),
-        texts={
-            "article": TextField(
-                body=text,
-            )
-        },
+        texts={"article": article},
     )
 
-    # Create a resource talking about food that does not contain the label that should NOT trigger the labeller agent
+    # Create a resource talking about climbing that does not contain the label that should NOT trigger the labeller agent
     await kb.resource.create(
         ndb=ndb,
         title=title,
-        slug="marmalade-without-label",
-        texts={
-            "article": TextField(
-                body=text,
-            )
-        },
+        slug="climbing-without-label",
+        texts={"article": article},
     )
 
 
@@ -318,7 +308,7 @@ async def run_test_check_da_labeller_with_label_filter_output(
                     if not (fc.field.field_type.name == "TEXT" and fc.field.field == "article"):
                         continue
                     computed_labels = [(cl.labelset, cl.label) for cl in fc.classifications]
-                    return ("topic", "FOOD") in computed_labels
+                    return ("topic", "CLIMBING") in computed_labels
                 return False
 
             labeled_resource_augmented = await resource_augmented("marmalade-with-label")
