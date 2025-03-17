@@ -272,6 +272,7 @@ async def run_test_create_da_labeller_with_label_filter(
 
     # Create a resource talking about food that contains the label that should trigger the labeller task
     await kb.resource.create(
+        ndb=ndb,
         title="How this chocolatier is navigating an unexpected spike in cocoa prices",
         slug="chocolatier-new",
         usermetadata=UserMetadata(classifications=[UserClassification(labelset="MyLabels", label="LABEL1")]),
