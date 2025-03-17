@@ -640,7 +640,7 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     # Create a labeller configuration that runs only on new resources that have a specific label
     # This will test the filtering capabilities of the labeller
     #
-    (_, embedding_migration_task_id) = await asyncio.gather(
+    (_, embedding_migration_task_id, _) = await asyncio.gather(
         run_test_create_da_labeller(regional_api_config, async_ndb, logger),
         run_test_start_embedding_model_migration_task(async_ndb),
         run_test_create_da_labeller_with_label_filter(regional_api_config, async_ndb, logger),
