@@ -1,15 +1,14 @@
+from attr import field
 from collections.abc import Awaitable
 from collections.abc import Callable
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from functools import wraps
-from attr import field
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kbs import AsyncNucliaKBS
-from nucliadb_models import TextField, UserClassification, UserMetadata
 from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
@@ -29,6 +28,9 @@ from nuclia_models.worker.tasks import ApplyOptions
 from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import SemanticModelMigrationParams
 from nuclia_models.worker.tasks import TaskName
+from nucliadb_models import TextField
+from nucliadb_models import UserClassification
+from nucliadb_models import UserMetadata
 from nucliadb_models.metadata import ResourceProcessingStatus
 from nucliadb_sdk.v2.exceptions import ClientError
 from nucliadb_sdk.v2.exceptions import NotFoundError
