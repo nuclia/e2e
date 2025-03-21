@@ -289,6 +289,22 @@ class RegionalAPI:
             response.raise_for_status()
         return sa_id
 
+    async def create_vector_set(self, kb_id: str, model: str):
+        url = f"{self.base_url}/api/v1/kb/{kb_id}/vectorsets/{model}"
+        async with self.session.post(url, headers=self.auth_headers) as response:
+            response.raise_for_status()
+
+    async def delete_vector_set(self, kb_id: str, model: str):
+        url = f"{self.base_url}/api/v1/kb/{kb_id}/vectorsets/{model}"
+        async with self.session.delete(url, headers=self.auth_headers) as response:
+            response.raise_for_status()
+
+    async def get_configuration(self, kb_id: str) -> dict:
+        url = f"{self.base_url}/api/v1/kb/{kb_id}/configuration"
+        async with self.session.get(url, headers=self.auth_headers) as response:
+            response.raise_for_status()
+            return await response.json()
+
 
 @pytest.fixture(autouse=True)
 def set_logger_level():
