@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from nuclia.data import get_auth
 from nuclia.lib.kb import LogType
 from nuclia.sdk.kb import AsyncNucliaKB
@@ -30,9 +31,11 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
     auth = get_auth()
     async_ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
 
+    date = datetime.now() - timedelta(days=31)
+
     test_email = email_util.generate_email_address()
     query = DownloadActivityLogsChatQuery(
-        year_month="2025-03",
+        year_month=f"{date.year}-{str(date.month).zfill(2)}",
         show={"id"},
         filters=QueryFiltersChat(),
         email_address=test_email,
