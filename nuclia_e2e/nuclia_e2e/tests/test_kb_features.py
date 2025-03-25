@@ -1,4 +1,3 @@
-from attr import field
 from collections.abc import Awaitable
 from collections.abc import Callable
 from datetime import datetime
