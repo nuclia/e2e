@@ -92,7 +92,7 @@ async def test_predict_remi(nua_client: AsyncNuaClient):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_ask_with_json_output(nua_client: AsyncNuaClient):
+async def test_query_with_json_output(nua_client: AsyncNuaClient):
     np = AsyncNucliaPredict()
     response = await np.generate(
         nc=nua_client,

@@ -23,7 +23,7 @@ async def fetch_ndjson_async(url: str):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_ask_with_json_output(regional_api_config: ZoneConfig, email_util: EmailUtil):
+async def test_download_activity_log(regional_api_config: ZoneConfig, email_util: EmailUtil):
     kb_id = regional_api_config.permanent_kb_id
     zone = regional_api_config.zone_slug
 
