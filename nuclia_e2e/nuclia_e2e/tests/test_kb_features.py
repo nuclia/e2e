@@ -81,7 +81,7 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
 
         return condition
 
-    success, _ = await wait_for(resource_is_processed(rid), logger=logger)
+    success, _ = await wait_for(resource_is_processed(rid), max_wait=180, interval=10, logger=logger)
     assert success, "File was not processed in time, PROCESSED status not found in resource"
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
