@@ -25,7 +25,7 @@ async def test_predict_sentence(nua_client: AsyncNuaClient, model):
 @pytest.mark.asyncio_cooperative
 async def test_predict_query(nua_client: AsyncNuaClient):
     np = AsyncNucliaPredict()
-    embed = await np.query(text="I love Barcelona", nc=nua_client)
+    embed = await np.query(text="I really like Barcelona", nc=nua_client)
     # Semantic
     assert embed.semantic_threshold > 0
     assert len(embed.sentence.data) > 128

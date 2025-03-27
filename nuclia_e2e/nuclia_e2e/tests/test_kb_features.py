@@ -618,7 +618,6 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         print(f"{request.node.name} ::: {msg}")
 
     zone = regional_api_config.zone_slug
-    account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_features"
 
