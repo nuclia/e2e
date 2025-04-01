@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from nuclia.data import get_auth
 from nuclia.lib.kb import LogType
 from nuclia.sdk.kb import AsyncNucliaKB
@@ -10,6 +11,7 @@ from nuclia_models.events.activity_logs import DownloadFormat
 from nuclia_models.events.activity_logs import QueryFiltersChat
 
 import aiohttp
+import asyncio
 import json
 import pytest
 
@@ -47,5 +49,6 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
     )
     data = await fetch_ndjson_async(request.download_url)
     assert len(data) > 1
+    await asyncio.sleep(5)
     last_email = await email_util.get_last_email_body(test_email)
     assert request.download_url in last_email
