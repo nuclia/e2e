@@ -1,4 +1,5 @@
 from nuclia.lib.nua import AsyncNuaClient
+from nuclia.lib.nua_responses import ChatModel
 from nuclia.sdk.predict import AsyncNucliaPredict
 from nuclia_e2e.models import ALL_ENCODERS
 from nuclia_e2e.models import NON_REASONING_LLMS
@@ -24,7 +25,7 @@ async def test_predict_sentence(nua_client: AsyncNuaClient, model):
 @pytest.mark.asyncio_cooperative
 async def test_predict_query(nua_client: AsyncNuaClient):
     np = AsyncNucliaPredict()
-    embed = await np.query(text="I love Barcelona", nc=nua_client)
+    embed = await np.query(text="I really like Barcelona", nc=nua_client)
     # Semantic
     assert embed.semantic_threshold > 0
     assert len(embed.sentence.data) > 128
@@ -88,3 +89,42 @@ async def test_predict_remi(nua_client: AsyncNuaClient):
 
     assert results.context_relevance[1] < 2
     assert results.groundedness[1] < 2
+
+
+@pytest.mark.asyncio_cooperative
+async def test_query_with_json_output(nua_client: AsyncNuaClient):
+    np = AsyncNucliaPredict()
+    response = await np.generate(
+        nc=nua_client,
+        text=ChatModel(
+            question="how to cook an omelette?",
+            user_id="e2e-test",
+            json_schema={
+                "name": "omelette_recipe",
+                "description": "Structured answer for the instructions on how to make an omeletter",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ingredients": {
+                            "type": "string",
+                            "description": "Comma separated list of ingredients needed",
+                        },
+                        "actions": {
+                            "type": "string",
+                            "description": "Comma separated list of actions to complete the recipe",
+                        },
+                        "time": {
+                            "type": "number",
+                            "description": "The time duration in minutes needed to complete the recipe",
+                        },
+                    },
+                    "required": ["ingredients", "actions", "time"],
+                },
+            },
+        ),
+        model="chatgpt-azure-4o-mini",
+    )
+
+    assert "eggs" in response.object["ingredients"]
+    assert "eggs" in response.object["actions"]
+    assert response.object["time"] > 0

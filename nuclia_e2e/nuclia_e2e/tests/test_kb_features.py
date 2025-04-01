@@ -4,12 +4,10 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from functools import wraps
-from attr import field
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kbs import AsyncNucliaKBS
-from nucliadb_models import TextField, UserClassification, UserMetadata
 from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
@@ -29,6 +27,9 @@ from nuclia_models.worker.tasks import ApplyOptions
 from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import SemanticModelMigrationParams
 from nuclia_models.worker.tasks import TaskName
+from nucliadb_models import TextField
+from nucliadb_models import UserClassification
+from nucliadb_models import UserMetadata
 from nucliadb_models.metadata import ResourceProcessingStatus
 from nucliadb_sdk.v2.exceptions import ClientError
 from nucliadb_sdk.v2.exceptions import NotFoundError
@@ -80,7 +81,7 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
 
         return condition
 
-    success, _ = await wait_for(resource_is_processed(rid), logger=logger)
+    success, _ = await wait_for(resource_is_processed(rid), max_wait=180, interval=10, logger=logger)
     assert success, "File was not processed in time, PROCESSED status not found in resource"
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
@@ -617,7 +618,6 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         print(f"{request.node.name} ::: {msg}")
 
     zone = regional_api_config.zone_slug
-    account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_features"
 
