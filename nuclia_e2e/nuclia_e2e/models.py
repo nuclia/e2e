@@ -28,7 +28,6 @@ ALL_LLMS = [
     "gemini-1-5-flash",
     # "gemini-1-5-flash-vision",             EXCLUDED because it shares same implementation as non-vision
     "mistral",
-    "azure-mistral",
     "chatgpt4",
     "chatgpt4o",
     "chatgpt4o-mini",
@@ -92,7 +91,6 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     "gemini-1-5-flash",
     "gemini-1-5-flash-vision",
     # "mistral",
-    "azure-mistral",
     "chatgpt4",
     "chatgpt4o",
     "chatgpt4o-mini",
