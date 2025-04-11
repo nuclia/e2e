@@ -27,6 +27,9 @@ from nuclia_models.worker.tasks import ApplyOptions
 from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import SemanticModelMigrationParams
 from nuclia_models.worker.tasks import TaskName
+from nucliadb_models import TextField
+from nucliadb_models import UserClassification
+from nucliadb_models import UserMetadata
 from nucliadb_models.metadata import ResourceProcessingStatus
 from nucliadb_sdk.v2.exceptions import ClientError
 from nucliadb_sdk.v2.exceptions import NotFoundError
@@ -78,7 +81,7 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
 
         return condition
 
-    success, _ = await wait_for(resource_is_processed(rid), logger=logger)
+    success, _ = await wait_for(resource_is_processed(rid), max_wait=180, interval=10, logger=logger)
     assert success, "File was not processed in time, PROCESSED status not found in resource"
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
@@ -218,6 +221,107 @@ async def run_test_check_da_labeller_output(regional_api_config, ndb: AsyncNucli
     assert success, "Expected computed labels not found in resources"
 
 
+async def run_test_create_da_labeller_with_label_filter(
+    regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger
+):
+    """
+    Creates a config to run on all future ones but only on resources matching a specific classification label
+    """
+    kb = AsyncNucliaKB()
+    # Create the task
+    await kb.task.start(
+        ndb=ndb,
+        task_name=TaskName.LABELER,
+        apply=ApplyOptions.NEW,
+        parameters=DataAugmentation(
+            name="test-labels-filter",
+            on=ApplyTo.FIELD,
+            filter=Filter(
+                labels=[
+                    "MyLabels/LABEL1",
+                ]
+            ),
+            operations=[
+                Operation(
+                    label=LabelOperation(
+                        labels=[
+                            Label(
+                                label="TECH",
+                                description="Related to financial news in the TECH/IT industry",
+                            ),
+                            Label(
+                                label="HEALTH",
+                                description="Related to financial news in the HEALTHCARE industry",
+                            ),
+                            Label(
+                                label="CLIMBING",
+                                description="Related to financial news in the CLIMBING industry",
+                            ),
+                        ],
+                        ident="topic-filtered",
+                        description="Topic of the article in the financial context",
+                    )
+                )
+            ],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+    )
+
+    title = "The rise of climbing gyms across the US"
+    text = """The rise of climbing gyms across the US has been a boon for the climbing industry.
+    With the rise of climbing gyms, more people are getting into the sport and the industry is growing.
+    Items like climbing shoes, ropes, and harnesses are flying off the shelves as more people take up the sport."""
+    article = TextField(body=text)
+
+    # Create a resource talking about climbing that contains the label that should trigger the labeller agent
+    await kb.resource.create(
+        ndb=ndb,
+        title=title,
+        slug="climbing-with-label",
+        usermetadata=UserMetadata(classifications=[UserClassification(labelset="MyLabels", label="LABEL1")]),
+        texts={"article": article},
+    )
+
+    # Create a resource talking about climbing that does not contain the label that should NOT trigger the labeller agent
+    await kb.resource.create(
+        ndb=ndb,
+        title=title,
+        slug="climbing-without-label",
+        texts={"article": article},
+    )
+
+
+async def run_test_check_da_labeller_with_label_filter_output(
+    regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger
+):
+    kb = AsyncNucliaKB()
+
+    def filtered_resource_is_labelled():
+        @wraps(filtered_resource_is_labelled)
+        async def condition() -> tuple[bool, None]:
+            async def resource_augmented(slug: str) -> bool:
+                try:
+                    res = await kb.resource.get(slug=slug, show=["extracted"], ndb=ndb)
+                except NotFoundError:
+                    # some resource may still be missing from nucliadb, let's wait more
+                    return False
+                for fc in res.computedmetadata.field_classifications:
+                    if not (fc.field.field_type.name == "TEXT" and fc.field.field == "article"):
+                        continue
+                    computed_labels = [(cl.labelset, cl.label) for cl in fc.classifications]
+                    return ("topic-filtered", "CLIMBING") in computed_labels
+                return False
+
+            labeled_resource_augmented = await resource_augmented("climbing-with-label")
+            unlabeled_resource_augmented = await resource_augmented("climbing-without-label")
+            return (labeled_resource_augmented and not unlabeled_resource_augmented, None)
+
+        return condition
+
+    success = await wait_for(filtered_resource_is_labelled(), logger=logger)
+    assert success, "Expected computed label not found in filtered resource"
+
+
 async def run_test_start_embedding_model_migration_task(ndb: AsyncNucliaDBClient) -> str:
     kbid = ndb.kbid
 
@@ -284,9 +388,9 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         new_embedding_model_available(), max_wait=200, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
-    assert search_returned_results is True, (
-        "expected to be able to search with the new embedding model but nucliadb didn't return resources"
-    )
+    assert (
+        search_returned_results is True
+    ), "expected to be able to search with the new embedding model but nucliadb didn't return resources"
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
@@ -300,6 +404,7 @@ async def run_test_find(regional_api_config, ndb: AsyncNucliaDBClient, logger: L
         reranker="predict",
         features=["keyword", "semantic", "relations"],
         query=TEST_CHOCO_QUESTION,
+        top_k=1,
     )
     assert result.resources
     first_resource = next(iter(result.resources.values()))
@@ -513,7 +618,6 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         print(f"{request.node.name} ::: {msg}")
 
     zone = regional_api_config.zone_slug
-    account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_features"
 
@@ -544,9 +648,14 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     # embedding model and ingest/index in nucliadb again.
     # We want to do it before upload to validate, on one side the migration
     # itself, and on the other ingestion in a KB with multiple vectorsets
-    (_, embedding_migration_task_id) = await asyncio.gather(
+    #
+    # Create a labeller configuration that runs only on new resources that have a specific label
+    # This will test the filtering capabilities of the labeller
+    #
+    (_, embedding_migration_task_id, _) = await asyncio.gather(
         run_test_create_da_labeller(regional_api_config, async_ndb, logger),
         run_test_start_embedding_model_migration_task(async_ndb),
+        run_test_create_da_labeller_with_label_filter(regional_api_config, async_ndb, logger),
     )
 
     # Upload a new resource and validate that is correctly processed and stored in nuclia
@@ -561,6 +670,7 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         run_test_check_da_labeller_output(regional_api_config, async_ndb, logger),
         run_test_check_embedding_model_migration(async_ndb, embedding_migration_task_id, logger),
         run_test_find(regional_api_config, async_ndb, logger),
+        run_test_check_da_labeller_with_label_filter_output(regional_api_config, async_ndb, logger),
     )
     await run_test_ask(regional_api_config, async_ndb, logger)
 

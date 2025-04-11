@@ -59,7 +59,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     # Delete the restored KB
     await kbs.delete(id=new_kb.id, zone=zone)
     with pytest.raises(Exception) as exc_info:  # noqa: PT011
-        _ = await kbs.get(id=new_kb.id)
+        _ = await kbs.get(id=new_kb.id, zone=zone)
     assert exc_info.value.args[0]["status"] == 404
 
     # Delete backup
