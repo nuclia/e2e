@@ -28,7 +28,6 @@ ALL_LLMS = [
     "gemini-1-5-flash",
     # "gemini-1-5-flash-vision",             EXCLUDED because it shares same implementation as non-vision
     "mistral",
-    "azure-mistral",
     "chatgpt4",
     "chatgpt4o",
     "chatgpt4o-mini",
@@ -42,6 +41,8 @@ ALL_LLMS = [
     "deepseek-chat",
     # "azure-deepseek-r1",                   EXCLUDED as it is too slow
     "azure-mistral-large-2",
+    "gcp-claude-3-5-sonnet-v2",
+    "gcp-claude-3-7-sonnet",
 ]
 
 
@@ -75,6 +76,10 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     "chatgpt-azure-4-turbo",
     "chatgpt-azure-4o",
     "chatgpt-azure-4o-mini",
+    # "chatgpt-azure-o1-preview",
+    # "chatgpt-azure-o1-mini",
+    # "chatgpt-azure-o1",                    EXCLUDED because it almost always fails with timeouts
+    "chatgpt-azure-o3-mini",
     "claude-3",
     "claude-3-fast",
     "claude-3-5-fast",
@@ -86,12 +91,19 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     "gemini-1-5-flash",
     "gemini-1-5-flash-vision",
     # "mistral",
-    "azure-mistral",
     "chatgpt4",
     "chatgpt4o",
     "chatgpt4o-mini",
     # "chatgpt-o1-preview",                                WHY EXCLUDED ?
     # "chatgpt-o1-mini",                                   WHY EXCLUDED ?
-    # "llama-3.2-90b-vision-instruct-maas"
-    # "huggingface"  # excluded because it need a key
+    # "chatgpt-o1",
+    "chatgpt-o3-mini",
+    # "huggingface"
+    "llama-3.2-90b-vision-instruct-maas",
+    # "deepseek-reasoner",
+    "deepseek-chat",
+    # "azure-deepseek-r1",
+    "azure-mistral-large-2",
+    "gcp-claude-3-5-sonnet-v2",
+    "gcp-claude-3-7-sonnet",
 ]
