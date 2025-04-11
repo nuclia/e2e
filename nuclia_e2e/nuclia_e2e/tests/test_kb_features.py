@@ -378,6 +378,7 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
                 features=["semantic"],
                 vectorset=new_model,
                 query=TEST_CHOCO_QUESTION,
+                min_score=100,
             )
             search_returned_results = bool(result.resources)
             return (True, search_returned_results)
