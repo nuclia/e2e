@@ -41,4 +41,4 @@ jobs:
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
         run: |
-          TEST_ENV=prod TEST_ZONES="europe-1" pytest -sxvr nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
+          TEST_ENV=prod TEST_ZONES="europe-1" pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
