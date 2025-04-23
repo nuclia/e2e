@@ -114,7 +114,7 @@ CLUSTERS_CONFIG = {
         ),
         zones=[
             ZoneConfig(
-                name="europe-1",
+                name="gke-prod-1",
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",
@@ -148,7 +148,7 @@ CLUSTERS_CONFIG = {
         ),
         zones=[
             ZoneConfig(
-                name="europe-1",
+                name="gke-stage-1",
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",

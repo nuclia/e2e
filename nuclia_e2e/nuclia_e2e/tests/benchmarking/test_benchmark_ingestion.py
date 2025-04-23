@@ -20,11 +20,17 @@ import aiohttp
 import asyncio
 import backoff
 import pytest
+import os
+
+from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
+from typing import Dict
 
 Logger = Callable[[str], None]
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "When did they start being high?"
+GH_RUN_ID = os.getenv("RUN_ID", "unknown")
+LOKI_URL = "https://loki.gcp-internal-1.nuclia.cloud"
 
 
 def build_loki_query(cluster: str, namespace: str, app: str, kbid: str, message_pattern: str) -> str:
@@ -180,6 +186,43 @@ class Timer:
         return self.end_time
 
 
+def push_timings_to_prometheus(
+    timings: dict[str, Timer],
+    job_name: str,
+    instance: str,
+    benchmark_type: str,
+    cluster: str,
+    extra_labels: Dict[str, str] = None,
+    gateway_url: str = "http://prometheus-cloud-pushgateway-prometheus-pushgateway:9091",
+):
+    registry = CollectorRegistry()
+
+    base_labels = {
+        "benchmark_type": benchmark_type,
+        "k8s_cluster": cluster,
+        "step": "",  # Placeholder, set dynamically below
+    }
+    if extra_labels:
+        base_labels.update(extra_labels)
+
+    # Create a gauge with dynamic label names
+    label_names = list(base_labels.keys())
+    g = Gauge(
+        name="benchmark_step_duration_seconds",
+        documentation="Elapsed time for each step in benchmark (in seconds)",
+        labelnames=label_names,
+        registry=registry,
+    )
+
+    for step_name, timer in timings.items():
+        labels = base_labels.copy()
+        labels["step"] = step_name
+        g.labels(**labels).set(timer.elapsed)
+
+    # Push to Pushgateway
+    push_to_gateway(gateway_url, job=job_name, grouping_key={"instance": instance}, registry=registry)
+
+
 @pytest.mark.asyncio_cooperative
 async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_api_config):
     """
@@ -247,31 +290,30 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     processing_started = resource.data.files["file"].extracted.metadata.metadata.last_processing_start
     processing_finished = resource.data.files["file"].extracted.metadata.metadata.last_understanding
 
+    timings["process_delay"].stop(processing_started)
     timings["process"].start(processing_started)
     timings["process"].stop(processing_finished)
     timings["index_delay"].start(processing_finished)
 
     # Get timestamps from loki
-    base_url = "https://loki.gcp-internal-1.nuclia.cloud"
-
     query = build_loki_query(
-        cluster="gke-prod-1",
+        cluster=regional_api_config.name,
         namespace="nucliadb",
         app="writer",
         kbid=kbid,
         message_pattern="Pushed message to proxy.*",
     )
-    timestamps = await query_loki(base_url, query, test_start, test_start + timedelta(minutes=10))
+    timestamps = await query_loki(LOKI_URL, query, test_start, test_start + timedelta(minutes=10))
     loki_push_to_proxy = timestamps[1]
 
     query = build_loki_query(
-        cluster="gke-prod-1",
+        cluster=regional_api_config.name,
         namespace="nucliadb",
         app="ingest-processed-consumer",
         kbid=kbid,
         message_pattern="Message processing.*",
     )
-    timestamps = await query_loki(base_url, query, test_start, test_start + timedelta(minutes=10))
+    timestamps = await query_loki(LOKI_URL, query, test_start, test_start + timedelta(minutes=10))
     loki_received_processing_bm = timestamps[1]
 
     timings["process_delay"].start(loki_push_to_proxy)
@@ -296,6 +338,15 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
 
     for timer_name, timer in timings.items():
         print(f"{timer_name} elapsed: {timer.elapsed}")
+
+    push_timings_to_prometheus(
+        timings=timings,
+        job_name="daily_benchmark",
+        instance=f"gh-run-{GH_RUN_ID}",
+        benchmark_type="ingestion",
+        cluster=regional_api_config.name,
+        extra_labels={"processor_version": "2.1.4", "nucliadb_version": "3.3.7"},
+    )
 
     # Delete the kb as a final step
     await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
