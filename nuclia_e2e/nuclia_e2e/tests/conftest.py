@@ -31,8 +31,9 @@ import pytest  # noqa: E402
 import random  # noqa: E402
 import re  # noqa: E402
 import string  # noqa: E402
-import tempfile  # noqa: E402
 import sys  # noqa: E402
+import tempfile  # noqa: E402
+
 
 def safe_get_env(env_var_name: str) -> str:
     value = os.environ.get(env_var_name, None)
@@ -47,6 +48,7 @@ def safe_get_env(env_var_name: str) -> str:
 
 TEST_ENV = safe_get_env("TEST_ENV").lower()
 GRAFANA_URL = safe_get_env("GRAFANA_URL")
+
 
 def safe_get_prod_env(env_var_name: str) -> str:
     if TEST_ENV != "prod":
@@ -64,6 +66,7 @@ def safe_get_progress_env(env_var_name: str) -> str:
     if TEST_ENV != "progress":
         return ""
     return safe_get_env(env_var_name)
+
 
 @dataclasses.dataclass(slots=True)
 class GlobalConfig:
@@ -158,7 +161,9 @@ CLUSTERS_CONFIG = {
             base_domain="syntha.progress.com",
             recaptcha=safe_get_progress_env("PROGRESS_GLOBAL_RECAPTCHA"),
             root_pat_token=safe_get_progress_env("PROGRESS_ROOT_PAT_TOKEN"),
-            permanent_account_owner_pat_token=safe_get_progress_env("PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
+            permanent_account_owner_pat_token=safe_get_progress_env(
+                "PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"
+            ),
             gmail_app_password=safe_get_progress_env("TEST_GMAIL_APP_PASSWORD"),
             permanent_account_slug="automated-testing",
             permanent_account_id="0e515342-3b5c-4778-acf0-0723a71eafa3",
@@ -182,12 +187,13 @@ TEST_ZONES = os.environ.get("TEST_ZONES", None)
 if TEST_ZONES is None:
     ENABLED_ZONES = ALL_TEST_ZONES
 else:
-    ENABLED_ZONES = [zone.strip(" ") for zone in TEST_ZONES.split(',') if zone.strip(" ")]
+    ENABLED_ZONES = [zone.strip(" ") for zone in TEST_ZONES.split(",") if zone.strip(" ")]
 TEST_CLUSTER.zones = [zone for zone in TEST_CLUSTER.zones if zone.name in ENABLED_ZONES]
 
 if not TEST_CLUSTER.zones:
     print("Exiting, no zones defined or all of them filtered")
     sys.exit(1)
+
 
 class ManagerAPI:
     def __init__(self, global_api, session: aiohttp.ClientSession):

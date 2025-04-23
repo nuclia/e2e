@@ -1,4 +1,3 @@
-from collections.abc import Awaitable
 from collections.abc import Callable
 from datetime import datetime
 from datetime import timedelta
@@ -12,38 +11,15 @@ from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
 from nuclia_e2e.utils import wait_for
-from nuclia_models.common.pagination import Pagination
-from nuclia_models.events.activity_logs import ActivityLogsChatQuery
-from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
-from nuclia_models.events.activity_logs import EventType
-from nuclia_models.events.activity_logs import QueryFiltersChat
-from nuclia_models.worker.proto import ApplyTo
-from nuclia_models.worker.proto import Filter
-from nuclia_models.worker.proto import Label
-from nuclia_models.worker.proto import LabelOperation
-from nuclia_models.worker.proto import LLMConfig
-from nuclia_models.worker.proto import Operation
-from nuclia_models.worker.tasks import ApplyOptions
-from nuclia_models.worker.tasks import DataAugmentation
-from nuclia_models.worker.tasks import SemanticModelMigrationParams
-from nuclia_models.worker.tasks import TaskName
-from nucliadb_models import TextField
-from nucliadb_models import UserClassification
-from nucliadb_models import UserMetadata
 from nucliadb_models.metadata import ResourceProcessingStatus
 from nucliadb_sdk.v2.exceptions import ClientError
-from nucliadb_sdk.v2.exceptions import NotFoundError
 from textwrap import dedent
 from typing import Any
-from dataclasses import dataclass
+
+import aiohttp
 import asyncio
 import backoff
 import pytest
-from datetime import datetime
-import aiohttp
-import asyncio
-from datetime import datetime
-
 
 Logger = Callable[[str], None]
 
@@ -54,32 +30,22 @@ TEST_CHOCO_ASK_MORE = "When did they start being high?"
 def build_loki_query(cluster: str, namespace: str, app: str, kbid: str, message_pattern: str) -> str:
     return (
         f'{{cluster="{cluster}", namespace="{namespace}", app="{app}"}} '
-        f'| json '
-        f'| context_kbid = `{kbid}` '
-        f'| message =~ `{message_pattern}`'
+        f"| json "
+        f"| context_kbid = `{kbid}` "
+        f"| message =~ `{message_pattern}`"
     )
 
 
 def datetime_to_ns(dt: datetime) -> int:
     return int(dt.timestamp() * 1e9)
 
-async def query_loki(
-    base_url: str,
-    query: str,
-    start_time: datetime,
-    end_time: datetime
-) -> list[datetime]:
+
+async def query_loki(base_url: str, query: str, start_time: datetime, end_time: datetime) -> list[datetime]:
     start_ns = datetime_to_ns(start_time)
     end_ns = datetime_to_ns(end_time)
 
     url = f"{base_url}/loki/api/v1/query_range"
-    params = {
-        "query": query,
-        "start": start_ns,
-        "end": end_ns,
-        "limit": 1000,
-        "direction": "backward"
-    }
+    params = {"query": query, "start": start_ns, "end": end_ns, "limit": 1000, "direction": "backward"}
 
     async with aiohttp.ClientSession() as session:
         for attempt in range(100):
@@ -104,8 +70,8 @@ async def query_loki(
 
             await asyncio.sleep(1)
             print(attempt)
-
-        raise TimeoutError("Did not receive at least 2 results from Loki after 10 attempts.")
+        err_msg = "Did not receive at least 2 results from Loki after 10 attempts."
+        raise TimeoutError(err_msg)
 
 
 async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
@@ -226,7 +192,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         "process_delay": Timer(),
         "process": Timer(),
         "index_delay": Timer(),
-        "index": Timer()
+        "index": Timer(),
     }
 
     def logger(msg):
@@ -262,23 +228,22 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     def first_resource_is_processed():
         @wraps(first_resource_is_processed)
         async def condition() -> tuple[bool, Any]:
-
             resources = await kb.list(ndb=async_ndb)
             if len(resources.resources) > 0:
                 if resources.resources[0].metadata.status == ResourceProcessingStatus.PROCESSED:
-                    resource = await kb.resource.get(rid=resources.resources[0].id, ndb=async_ndb, show=["basic", "extracted"])
-                    return (
-                        True,
-                        resource
+                    resource = await kb.resource.get(
+                        rid=resources.resources[0].id, ndb=async_ndb, show=["basic", "extracted"]
                     )
+                    return (True, resource)
             return False, None
 
         return condition
+
     success, resource = await wait_for(first_resource_is_processed(), max_wait=180, interval=1, logger=logger)
     assert success, "File was not processed in time, PROCESSED status not found in resource"
 
     # Read timings of processing steps, provided by the processor and stored in extracted metadata
-    # when this was written, last_understanding was the last thing done just before sending the BrokerMessage to NDB
+    # last_understanding is the timestamp of the last thing done just before sending the BrokerMessage to NDB
     processing_started = resource.data.files["file"].extracted.metadata.metadata.last_processing_start
     processing_finished = resource.data.files["file"].extracted.metadata.metadata.last_understanding
 
@@ -294,7 +259,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         namespace="nucliadb",
         app="writer",
         kbid=kbid,
-        message_pattern="Pushed message to proxy.*"
+        message_pattern="Pushed message to proxy.*",
     )
     timestamps = await query_loki(base_url, query, test_start, test_start + timedelta(minutes=10))
     loki_push_to_proxy = timestamps[1]
@@ -304,7 +269,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         namespace="nucliadb",
         app="ingest-processed-consumer",
         kbid=kbid,
-        message_pattern="Message processing.*"
+        message_pattern="Message processing.*",
     )
     timestamps = await query_loki(base_url, query, test_start, test_start + timedelta(minutes=10))
     loki_received_processing_bm = timestamps[1]
@@ -318,7 +283,9 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     def resource_is_indexed(rid):
         @wraps(resource_is_indexed)
         async def condition() -> tuple[bool, Any]:
-            result = await kb.search.find(ndb=async_ndb, features=["keyword"], reranker="noop", query="Michiko")
+            result = await kb.search.find(
+                ndb=async_ndb, features=["keyword"], reranker="noop", query="Michiko"
+            )
             return len(result.resources) > 0, None
 
         return condition
