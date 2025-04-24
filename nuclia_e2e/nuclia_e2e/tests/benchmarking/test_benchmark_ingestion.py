@@ -35,6 +35,7 @@ LOKI_URL = "https://loki.gcp-internal-1.nuclia.cloud"
 PROMETHEUS_PUSHGATEWAY = os.getenv(
     "PROMETHEUS_PUSHGATEWAY", "http://prometheus-cloud-pushgateway-prometheus-pushgateway:9091"
 )
+CORE_APPS_REPO_PATH = os.getenv("CORE_APPS_REPO_PATH", '/tmp/core-apps')
 
 
 def build_loki_query(cluster: str, namespace: str, app: str, kbid: str, message_pattern: str) -> str:
@@ -251,7 +252,7 @@ def get_application_set_version(file_path, cluster):
 def extract_versions(components, cluster):
     versions = {}
     for component_name in components:
-        app_set_file = f"/tmp/core-apps/apps/{component_name}.applicationSet.yaml"
+        app_set_file = f"{CORE_APPS_REPO_PATH}/core-apps/apps/{component_name}.applicationSet.yaml"
         versions[component_name] = get_application_set_version(app_set_file, cluster)
     return versions
 

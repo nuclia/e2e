@@ -44,6 +44,7 @@ jobs:
         with:
           repository: nuclia/core-apps
           token: ${{ steps.app-token.outputs.token }}
+          path: core-apps
 
       - name: Run Benchmark
         env: # Or as an environment variable
