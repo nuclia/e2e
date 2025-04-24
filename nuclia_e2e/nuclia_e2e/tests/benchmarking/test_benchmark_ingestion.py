@@ -30,7 +30,7 @@ Logger = Callable[[str], None]
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "When did they start being high?"
-GH_RUN_ID = os.getenv("RUN_ID", "unknown")
+GHA_RUN_ID = os.getenv("GHA_RUN_ID", "unknown")
 LOKI_URL = "https://loki.gcp-internal-1.nuclia.cloud"
 PROMETHEUS_PUSHGATEWAY = os.getenv(
     "PROMETHEUS_PUSHGATEWAY", "http://prometheus-cloud-pushgateway-prometheus-pushgateway:9091"
@@ -235,7 +235,7 @@ def push_timings_to_prometheus(
 
 def get_application_set_version(file_path, cluster):
     try:
-        with Path.open(file_path) as file:
+        with Path(file_path).open() as file:
             yaml_data = yaml.safe_load(file)
             versions = {
                 item["cluster"]: item["app_chart_version"]
@@ -252,8 +252,9 @@ def get_application_set_version(file_path, cluster):
 def extract_versions(components, cluster):
     versions = {}
     for component_name in components:
-        app_set_file = f"{CORE_APPS_REPO_PATH}/core-apps/apps/{component_name}.applicationSet.yaml"
-        versions[component_name] = get_application_set_version(app_set_file, cluster)
+        app_set_file = f"{CORE_APPS_REPO_PATH}/apps/{component_name}.applicationSet.yaml"
+        label_component_name = component_name.replace('-', '_')
+        versions[f"version_{label_component_name}"] = get_application_set_version(app_set_file, cluster)
     return versions
 
 
@@ -377,7 +378,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     push_timings_to_prometheus(
         timings=timings,
         job_name="daily_benchmark",
-        instance=f"gh-run-{GH_RUN_ID}",
+        instance=f"gha-run-{GHA_RUN_ID}",
         benchmark_type="ingestion",
         cluster=regional_api_config.name,
         extra_labels=extract_versions(
