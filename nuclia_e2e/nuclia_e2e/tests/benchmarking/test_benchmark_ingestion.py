@@ -20,7 +20,7 @@ from prometheus_client import push_to_gateway
 from textwrap import dedent
 from typing import Any
 
-import tabulate
+from tabulate import tabulate
 import aiohttp
 import backoff
 import os
@@ -36,7 +36,7 @@ LOKI_URL = "https://loki.gcp-internal-1.nuclia.cloud"
 PROMETHEUS_PUSHGATEWAY = os.getenv(
     "PROMETHEUS_PUSHGATEWAY", "http://prometheus-cloud-pushgateway-prometheus-pushgateway:9091"
 )
-CORE_APPS_REPO_PATH = os.getenv("CORE_APPS_REPO_PATH", '/tmp/core-apps')
+CORE_APPS_REPO_PATH = os.getenv("CORE_APPS_REPO_PATH", "/tmp/core-apps")
 
 
 def build_loki_query(cluster: str, namespace: str, app: str, kbid: str, message_pattern: str) -> str:
@@ -255,8 +255,8 @@ def extract_versions(components, cluster):
     versions = {}
     for component_name in components:
         app_set_file = f"{CORE_APPS_REPO_PATH}/apps/{component_name}.applicationSet.yaml"
-        label_component_name = component_name.replace('-', '_')
-        versions[f"version_{label_component_name}"] = get_application_set_version(app_set_file, cluster)
+        label_component_name = component_name.replace("-", "_")
+        versions[label_component_name] = get_application_set_version(app_set_file, cluster)
     return versions
 
 
@@ -270,7 +270,9 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     test_start = datetime.now(timezone.utc)
     timings = {
         "upload": Timer("Client perceived upload time"),
-        "process_delay": Timer("Elapsed time from upload to processing-slow start (nats, processor scale-up)"),
+        "process_delay": Timer(
+            "Elapsed time from upload to processing-slow start (nats, processor scale-up)"
+        ),
         "process": Timer("Processing time up to the sending of the BrokerMessage"),
         "index_delay": Timer("Elapsed time since processing finished until BrokerMessage ingestion starts"),
         "index": Timer("Elapsed time since NucliaDB ingestion starts since the first find succeeds"),
@@ -374,16 +376,25 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     timings["index_delay"].stop(loki_received_processing_bm)
     timings["index"].start(loki_received_processing_bm)
 
-    # Generate results for UI as markdown
-    rows = [(timer_id, timer.desc, f"{timer.elapsed:.2f}") for timer_id, timer in timings.items()]
-    headers = ["Step", "Duration (s)", "Description"]
+    running_versions = extract_versions(
+        ["nucliadb_writer", "nucliadb_ingest", "nidx", "processing", "processing-slow"],
+        cluster=regional_api_config.name,
+    )
 
-    table_md = tabulate(rows, headers=headers, tablefmt="github")
+    # Benchmark timings tabke
+    timing_rows = [(timer_name, f"{timer.elapsed:.2f}", timer.desc) for timer_name, timer in timings.items()]
+    timing_table = tabulate(timing_rows, headers=["Step", "Duration (s)", "Description"], tablefmt="github")
 
-    # Write to summary file
-    with Path("benchmark_ingestion_summary.md").open("w") as f:
-        f.write("### 🧪 Ingestion benchmark\n")
-        f.write(table_md + "\n")
+    # Running versions table
+    version_rows = list(running_versions.items())
+    version_table = tabulate(version_rows, headers=["Component", "Version"], tablefmt="github")
+
+    # Final markdown
+    with Path("benchmark_summary.md").open("w") as f:
+        f.write("### 🧪 Benchmark Timings\n")
+        f.write(timing_table + "\n\n")
+        f.write("### 🔢 Running Versions\n")
+        f.write(version_table + "\n")
 
     push_timings_to_prometheus(
         timings=timings,
@@ -391,9 +402,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         instance=f"gha-run-{GHA_RUN_ID}",
         benchmark_type="ingestion",
         cluster=regional_api_config.name,
-        extra_labels=extract_versions(
-            ["nucliadb_writer", "nucliadb_ingest", "nidx", "processing", "processing-slow"], cluster=regional_api_config.name
-        ),
+        extra_labels=[f"version_{version}" for version in running_versions],
     )
 
     # Delete the kb as a final step
