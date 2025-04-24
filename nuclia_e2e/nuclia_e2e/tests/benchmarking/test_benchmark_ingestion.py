@@ -220,7 +220,7 @@ def push_timings_to_prometheus(
     # Create a gauge with dynamic label names
     label_names = list(base_labels.keys())
     g = Gauge(
-        name="benchmark_step_duration_seconds",
+        name="benchmark_step_elapsed_seconds",
         documentation="Elapsed time for each step in benchmark (in seconds)",
         labelnames=label_names,
         registry=registry,
