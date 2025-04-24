@@ -193,7 +193,7 @@ def push_timings_to_prometheus(
     benchmark_type: str,
     cluster: str,
     extra_labels: Dict[str, str] = None,
-    gateway_url: str = "http://prometheus-cloud-pushgateway-prometheus-pushgateway:9091",
+    gateway_url: str = "http://prometheus-cloud-pushgateway-prometheus-pushgateway.svc.cluster.local:9091",
 ):
     registry = CollectorRegistry()
 
