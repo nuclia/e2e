@@ -63,4 +63,4 @@ jobs:
           TEST_ENV=prod TEST_ZONES="gke-prod-1" pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
 
       - name: Include benchmark summary
-        run: cat benchmark_ingestion_summary.md >> $GITHUB_STEP_SUMMARY
+        run: cat benchmark_summary.md >> $GITHUB_STEP_SUMMARY
