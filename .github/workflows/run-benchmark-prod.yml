@@ -42,4 +42,4 @@ jobs:
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
           RUN_ID: ${{ github.run_id }}
         run: |
-          TEST_ENV=prod TEST_ZONES="europe-1" pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
+          TEST_ENV=prod TEST_ZONES="gke-prod-1" pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
