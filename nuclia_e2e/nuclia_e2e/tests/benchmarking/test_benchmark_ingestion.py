@@ -20,6 +20,7 @@ from prometheus_client import push_to_gateway
 from textwrap import dedent
 from typing import Any
 
+import tabulate
 import aiohttp
 import backoff
 import os
@@ -178,7 +179,8 @@ async def run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger):
 
 
 class Timer:
-    def __init__(self):
+    def __init__(self, desc):
+        self.desc: str = desc
         self.start_time: datetime | None = None
         self.end_time: datetime | None = None
 
@@ -267,11 +269,11 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
 
     test_start = datetime.now(timezone.utc)
     timings = {
-        "upload": Timer(),
-        "process_delay": Timer(),
-        "process": Timer(),
-        "index_delay": Timer(),
-        "index": Timer(),
+        "upload": Timer("Client perceived upload time"),
+        "process_delay": Timer("Elapsed time from upload to processing-slow start (nats, processor scale-up)"),
+        "process": Timer("Processing time up to the sending of the BrokerMessage"),
+        "index_delay": Timer("Elapsed time since processing finished until BrokerMessage ingestion starts"),
+        "index": Timer("Elapsed time since NucliaDB ingestion starts since the first find succeeds"),
     }
 
     def logger(msg):
@@ -372,8 +374,16 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     timings["index_delay"].stop(loki_received_processing_bm)
     timings["index"].start(loki_received_processing_bm)
 
-    for timer_name, timer in timings.items():
-        print(f"{timer_name} elapsed: {timer.elapsed}")
+    # Generate results for UI as markdown
+    rows = [(timer_id, timer.desc, f"{timer.elapsed:.2f}") for timer_id, timer in timings.items()]
+    headers = ["Step", "Duration (s)", "Description"]
+
+    table_md = tabulate(rows, headers=headers, tablefmt="github")
+
+    # Write to summary file
+    with Path("benchmark_ingestion_summary.md").open("w") as f:
+        f.write("### 🧪 Ingestion benchmark\n")
+        f.write(table_md + "\n")
 
     push_timings_to_prometheus(
         timings=timings,

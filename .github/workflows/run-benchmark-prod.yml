@@ -40,7 +40,7 @@ jobs:
           private-key: ${{ secrets.GHAPP_NUCLIA_SERVICE_BOT_PK }}
           owner: nuclia
 
-      - name: Checkout another private repo
+      - name: Checkout core-apps repo
         uses: actions/checkout@v4
         with:
           repository: nuclia/core-apps
@@ -61,3 +61,6 @@ jobs:
           CORE_APPS_REPO_PATH: ${{ github.workspace }}/core-apps
         run: |
           TEST_ENV=prod TEST_ZONES="gke-prod-1" pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
+
+      - name: Include benchmark summary
+        run: cat benchmark_ingestion_summary.md >> $GITHUB_STEP_SUMMARY
