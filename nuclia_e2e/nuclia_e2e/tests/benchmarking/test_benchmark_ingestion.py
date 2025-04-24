@@ -402,7 +402,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         instance=f"gha-run-{GHA_RUN_ID}",
         benchmark_type="ingestion",
         cluster=regional_api_config.name,
-        extra_labels={f"version_{component}": version for component, version in running_versions}
+        extra_labels={f"version_{component}": version for component, version in running_versions.items()}
     )
 
     # Delete the kb as a final step
