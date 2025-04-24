@@ -381,7 +381,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         benchmark_type="ingestion",
         cluster=regional_api_config.name,
         extra_labels=extract_versions(
-            ["nucliadb_writer", "nucliadb_ingest", "nidx", "processing", "processing-slow"]
+            ["nucliadb_writer", "nucliadb_ingest", "nidx", "processing", "processing-slow"], cluster=regional_api_config.name
         ),
     )
 
