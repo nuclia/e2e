@@ -6,6 +6,7 @@ on:
       - '**'
     paths:
       - '.github/workflows/run-benchmark-prod.yml'  # Runs only if this file is modified
+      - 'nuclia_e2e/**/benchmarking/**'
   workflow_dispatch:  # Allow manual run from any branch
   schedule:
     # Run every day at 04:25
@@ -55,7 +56,7 @@ jobs:
           TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
-          RUN_ID: ${{ github.run_id }}
+          GHA_RUN_ID: ${{ github.run_id }}
           PROMETHEUS_PUSHGATEWAY: "http://prometheus-cloud-pushgateway-prometheus-pushgateway.svc.cluster.local:9091"
         run: |
           TEST_ENV=prod TEST_ZONES="gke-prod-1" pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
