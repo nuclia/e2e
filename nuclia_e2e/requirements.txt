@@ -10,4 +10,4 @@ pytest-asyncio-cooperative # not compatible with pytest-asyncio
 pytest-shard
 pytest-rerunfailures
 types-aiofiles
-prometheys-client
+prometheus-client
