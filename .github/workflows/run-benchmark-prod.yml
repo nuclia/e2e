@@ -58,5 +58,6 @@ jobs:
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
           GHA_RUN_ID: ${{ github.run_id }}
           PROMETHEUS_PUSHGATEWAY: "http://prometheus-cloud-pushgateway-prometheus-pushgateway.svc.cluster.local:9091"
+          CORE_APPS_REPO_PATH: ${{ github.workspace }}/core-apps
         run: |
           TEST_ENV=prod TEST_ZONES="gke-prod-1" pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
