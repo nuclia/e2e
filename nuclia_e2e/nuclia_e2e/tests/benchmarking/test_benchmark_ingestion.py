@@ -13,17 +13,18 @@ from nuclia_e2e.utils import get_kbid_from_slug
 from nuclia_e2e.utils import wait_for
 from nucliadb_models.metadata import ResourceProcessingStatus
 from nucliadb_sdk.v2.exceptions import ClientError
+from pathlib import Path
+from prometheus_client import CollectorRegistry
+from prometheus_client import Gauge
+from prometheus_client import push_to_gateway
 from textwrap import dedent
 from typing import Any
 
 import aiohttp
-import asyncio
 import backoff
-import pytest
 import os
-
-from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
-from typing import Dict
+import pytest
+import yaml
 
 Logger = Callable[[str], None]
 
@@ -31,14 +32,16 @@ TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "When did they start being high?"
 GH_RUN_ID = os.getenv("RUN_ID", "unknown")
 LOKI_URL = "https://loki.gcp-internal-1.nuclia.cloud"
+PROMETHEUS_PUSHGATEWAY = os.getenv(
+    "PROMETHEUS_PUSHGATEWAY", "http://prometheus-cloud-pushgateway-prometheus-pushgateway:9091"
+)
 
 
 def build_loki_query(cluster: str, namespace: str, app: str, kbid: str, message_pattern: str) -> str:
     return (
         f'{{cluster="{cluster}", namespace="{namespace}", app="{app}"}} '
-        f"| json "
-        f"| context_kbid = `{kbid}` "
-        f"| message =~ `{message_pattern}`"
+        f"|= `{kbid}` "
+        f"|= `{message_pattern}`"
     )
 
 
@@ -46,16 +49,19 @@ def datetime_to_ns(dt: datetime) -> int:
     return int(dt.timestamp() * 1e9)
 
 
-async def query_loki(base_url: str, query: str, start_time: datetime, end_time: datetime) -> list[datetime]:
+async def query_loki(
+    base_url: str, query: str, start_time: datetime, end_time: datetime, logger: Logger
+) -> list[datetime]:
     start_ns = datetime_to_ns(start_time)
     end_ns = datetime_to_ns(end_time)
 
     url = f"{base_url}/loki/api/v1/query_range"
     params = {"query": query, "start": start_ns, "end": end_ns, "limit": 1000, "direction": "backward"}
 
-    async with aiohttp.ClientSession() as session:
-        for attempt in range(100):
-            async with session.get(url, params=params) as resp:
+    def logs_available_on_loki():
+        @wraps(logs_available_on_loki)
+        async def condition() -> tuple[bool, Any]:
+            async with aiohttp.ClientSession() as session, session.get(url, params=params) as resp:
                 data = await resp.json()
 
                 if data["status"] != "success":
@@ -72,12 +78,15 @@ async def query_loki(base_url: str, query: str, start_time: datetime, end_time: 
 
                 timestamps.sort()
                 if len(timestamps) >= 2:
-                    return timestamps[:2]
+                    return True, timestamps[:2]
 
-            await asyncio.sleep(1)
-            print(attempt)
-        err_msg = "Did not receive at least 2 results from Loki after 10 attempts."
-        raise TimeoutError(err_msg)
+                return False, []
+
+        return condition
+
+    success, timestamps = await wait_for(logs_available_on_loki(), logger=logger, max_wait=900, interval=10)
+    assert success, "Failed to get timestamps from loki"
+    return timestamps
 
 
 async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
@@ -192,8 +201,8 @@ def push_timings_to_prometheus(
     instance: str,
     benchmark_type: str,
     cluster: str,
-    extra_labels: Dict[str, str] = None,
-    gateway_url: str = "http://prometheus-cloud-pushgateway-prometheus-pushgateway.svc.cluster.local:9091",
+    extra_labels: dict[str, str] = None,
+    gateway_url: str = PROMETHEUS_PUSHGATEWAY,
 ):
     registry = CollectorRegistry()
 
@@ -223,12 +232,37 @@ def push_timings_to_prometheus(
     push_to_gateway(gateway_url, job=job_name, grouping_key={"instance": instance}, registry=registry)
 
 
+def get_application_set_version(file_path, cluster):
+    try:
+        with Path.open(file_path) as file:
+            yaml_data = yaml.safe_load(file)
+            versions = {
+                item["cluster"]: item["app_chart_version"]
+                for item in yaml_data["spec"]["generators"][0]["list"]["elements"]
+            }
+            if cluster not in versions:
+                raise RuntimeError(f"Cluster {cluster} not defined in {file_path}")
+            return versions[cluster]
+    except FileNotFoundError as exc:
+        err_msg = f"ApplicationSet not found at {file_path}, refresh local repos"
+        raise RuntimeError(err_msg) from exc
+
+
+def extract_versions(components, cluster):
+    versions = {}
+    for component_name in components:
+        app_set_file = f"/tmp/core-apps/apps/{component_name}.applicationSet.yaml"
+        versions[component_name] = get_application_set_version(app_set_file, cluster)
+    return versions
+
+
 @pytest.mark.asyncio_cooperative
 async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_api_config):
     """
     This test ferforms the minimal operations too upload a file and validate that is indexed
     with the purpose of benchmarking the ingestion process
     """
+
     test_start = datetime.now(timezone.utc)
     timings = {
         "upload": Timer(),
@@ -295,31 +329,6 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     timings["process"].stop(processing_finished)
     timings["index_delay"].start(processing_finished)
 
-    # Get timestamps from loki
-    query = build_loki_query(
-        cluster=regional_api_config.name,
-        namespace="nucliadb",
-        app="writer",
-        kbid=kbid,
-        message_pattern="Pushed message to proxy.*",
-    )
-    timestamps = await query_loki(LOKI_URL, query, test_start, test_start + timedelta(minutes=10))
-    loki_push_to_proxy = timestamps[1]
-
-    query = build_loki_query(
-        cluster=regional_api_config.name,
-        namespace="nucliadb",
-        app="ingest-processed-consumer",
-        kbid=kbid,
-        message_pattern="Message processing.*",
-    )
-    timestamps = await query_loki(LOKI_URL, query, test_start, test_start + timedelta(minutes=10))
-    loki_received_processing_bm = timestamps[1]
-
-    timings["process_delay"].start(loki_push_to_proxy)
-    timings["index_delay"].stop(loki_received_processing_bm)
-    timings["index"].start(loki_received_processing_bm)
-
     # Wait for resource to be indexed by searching for a resource based on a content that just
     # the paragraph we're looking for contains, if that responds means the new indexed data is ready
     def resource_is_indexed(rid):
@@ -336,6 +345,31 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     assert success, "File was not indexed in time, not enough paragraphs found on resource"
     timings["index"].stop()
 
+    # Get timestamps from loki
+    query = build_loki_query(
+        cluster=regional_api_config.name,
+        namespace="nucliadb",
+        app="writer",
+        kbid=kbid,
+        message_pattern="Pushed message to proxy",
+    )
+    timestamps = await query_loki(LOKI_URL, query, test_start, test_start + timedelta(minutes=10), logger)
+    loki_push_to_proxy = timestamps[1]
+
+    query = build_loki_query(
+        cluster=regional_api_config.name,
+        namespace="nucliadb",
+        app="ingest",
+        kbid=kbid,
+        message_pattern="Pushed message to ingest",
+    )
+    timestamps = await query_loki(LOKI_URL, query, test_start, test_start + timedelta(minutes=120), logger)
+    loki_received_processing_bm = timestamps[1]
+
+    timings["process_delay"].start(loki_push_to_proxy)
+    timings["index_delay"].stop(loki_received_processing_bm)
+    timings["index"].start(loki_received_processing_bm)
+
     for timer_name, timer in timings.items():
         print(f"{timer_name} elapsed: {timer.elapsed}")
 
@@ -345,7 +379,9 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         instance=f"gh-run-{GH_RUN_ID}",
         benchmark_type="ingestion",
         cluster=regional_api_config.name,
-        extra_labels={"processor_version": "2.1.4", "nucliadb_version": "3.3.7"},
+        extra_labels=extract_versions(
+            ["nucliadb_writer", "nucliadb_ingest", "nidx", "processing", "processing-slow"]
+        ),
     )
 
     # Delete the kb as a final step

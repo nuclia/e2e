@@ -11,3 +11,4 @@ pytest-shard
 pytest-rerunfailures
 types-aiofiles
 prometheus-client
+pyyaml
