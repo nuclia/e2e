@@ -87,8 +87,8 @@ jobs:
         with:
           name: results-${{ matrix.target }}
           path: |
-            ${ID_SUFFIX}__timings.json
-            ${ID_SUFFIX}__versions.json
+            ${{ env.ID_SUFFIX }}__timings.json
+            ${{ env.ID_SUFFIX }}__versions.json
 
   summarize:
     runs-on: ubuntu-latest
