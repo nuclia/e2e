@@ -1,21 +1,25 @@
 name: run-benchmark-prod
 run-name: Running PROD NUCLIA benchmark.
+
 on:
   push:
     branches:
       - '**'
     paths:
-      - '.github/workflows/run-benchmark-prod.yml'  # Runs only if this file is modified
+      - '.github/workflows/run-benchmark-prod.yml'
       - 'nuclia_e2e/**/benchmarking/**'
-  workflow_dispatch:  # Allow manual run from any branch
+  workflow_dispatch:
   schedule:
-    # Run every day at 04:25
     - cron: '25 4 * * *'
+
 jobs:
   benchmark:
     runs-on: nuclia-base
     strategy:
       fail-fast: false
+      matrix:
+        target: [ "prod:gke-prod-1", "prod:aws-us-east-2"]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,7 +32,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install -r nuclia_e2e/requirements.txt
           pip install -e nuclia_e2e
 
@@ -47,20 +50,65 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           path: core-apps
 
+      - name: Extract TEST_ENV and TEST_ZONES
+        run: |
+          IFS=':' read TEST_ENV TEST_ZONES <<< "${{ matrix.target }}"
+          echo "TEST_ENV=$TEST_ENV" >> $GITHUB_ENV
+          echo "TEST_ZONES=$TEST_ZONES" >> $GITHUB_ENV
+          echo "ID_SUFFIX=${TEST_ENV}:${TEST_ZONES}" >> $GITHUB_ENV
+
       - name: Run Benchmark
-        env: # Or as an environment variable
+        env:
           PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           PROD_ROOT_PAT_TOKEN: ${{ secrets.PROD_ROOT_PAT_TOKEN }}
           PROD_GLOBAL_RECAPTCHA: ${{ secrets.PROD_GLOBAL_RECAPTCHA }}
           TEST_EUROPE1_NUCLIA_NUA: ${{ secrets.TEST_EUROPE1_NUCLIA_NUA }}
           TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
+          PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
+          PROGRESS_ROOT_PAT_TOKEN: ${{ secrets.PROD_ROOT_PAT_TOKEN }}
+          PROGRESS_GLOBAL_RECAPTCHA: ${{ secrets.PROD_GLOBAL_RECAPTCHA }}
+          TEST_PROGRESS_PROC_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_PROGRESS_PROC_US_EAST_2_1_NUCLIA_NUA }}
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
           GHA_RUN_ID: ${{ github.run_id }}
           PROMETHEUS_PUSHGATEWAY: "http://prometheus-cloud-pushgateway-prometheus-pushgateway.observability.svc.cluster.local:9091"
           CORE_APPS_REPO_PATH: ${{ github.workspace }}/core-apps
         run: |
-          TEST_ENV=prod TEST_ZONES="gke-prod-1" pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
+          pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
+          # pytest execuition writes: ${ID_SUFFIX}:timings.json and ${ID_SUFFIX}:versions.json
 
-      - name: Include benchmark summary
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ matrix.target }}
+          path: |
+            *:${{ matrix.target }}:timings.json
+            *:${{ matrix.target }}:versions.json
+
+  summarize:
+    runs-on: ubuntu-latest
+    needs: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r nuclia_e2e/requirements-benchmark.txt
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: ./results
+
+      - name: Combine results into summary
+        run: python3 nuclia_e2e/generate_summary.py
+
+      - name: Upload summary
         run: cat benchmark_summary.md >> $GITHUB_STEP_SUMMARY
