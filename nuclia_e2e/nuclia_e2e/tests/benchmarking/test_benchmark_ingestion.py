@@ -219,7 +219,10 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
             "Time elapsed  since upload finished to processing-slow start. This is a rough metric as the processes involved here (scheduling, processor scale up) may alredy have started before the upload finished from the user perspective"
         ),
         "process": Timer("Real running time of the processor up until the broker message is sent."),
-        "index": Timer("Elapsed time since processing sent the Broker message until the resource is searchable. This includes: waiting for the BM, storing metadata, indexing"),
+        "ingest": Timer(
+            "Elapsed time since processing sent the Broker message until the resource is stored as PROCESSED in nucliadb. This includes: waiting for the BM, storing"
+        ),
+        "index_ready": Timer("Elapsed time since NucliaDB stored the processed BM until is ready for search"),
     }
     benchmark_env = regional_api_config.global_config.name
     benchmark_cluster = regional_api_config.name
@@ -257,6 +260,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     def first_resource_is_processed():
         @wraps(first_resource_is_processed)
         async def condition() -> tuple[bool, Any]:
+            timings["ingest"].stop()
             resources = await kb.list(ndb=async_ndb)
             if len(resources.resources) > 0:
                 if resources.resources[0].metadata.status == ResourceProcessingStatus.PROCESSED:
@@ -268,7 +272,9 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
 
         return condition
 
-    success, resource = await wait_for(first_resource_is_processed(), max_wait=180, interval=1, logger=logger)
+    success, resource = await wait_for(
+        first_resource_is_processed(), max_wait=180, interval=0.5, logger=logger
+    )
     assert success, "File was not processed in time, PROCESSED status not found in resource"
 
     # Read timings of processing steps, provided by the processor and stored in extracted metadata
@@ -280,7 +286,8 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     timings["process"].stop(processing_finished)
 
     timings["process_delay"].stop(processing_started)
-    timings["index"].start(processing_finished)
+    timings["ingest"].start(processing_finished)
+    timings["index_ready"].start(timings["ingest"].end_time)
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
     # the paragraph we're looking for contains, if that responds means the new indexed data is ready
@@ -289,15 +296,16 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         async def condition() -> tuple[bool, Any]:
             # Considering that if the index is ready, it was before the request started, so keep updating
             # this until is actually true. This will be probably more accurate than waiting for the request to end.
-            timings["index"].stop()
+            timings["index_ready"].stop()
             result = await kb.search.find(
                 ndb=async_ndb, features=["keyword"], reranker="noop", query="Michiko"
             )
+            print(len(result.resources))
             return len(result.resources) > 0, None
 
         return condition
 
-    success, _ = await wait_for(resource_is_indexed(resource.id), logger=logger, max_wait=120, interval=0.1)
+    success, _ = await wait_for(resource_is_indexed(resource.id), logger=logger, max_wait=60, interval=0.1)
     assert success, "File was not indexed in time, not enough paragraphs found on resource"
 
     running_versions = extract_versions(
@@ -311,7 +319,10 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
 
     # store timings
     with Path(f"{benchmark_env}__{benchmark_cluster}__timings.json").open("w") as f:
-        json_timings = {timer_name: {"elapsed": f"{timer.elapsed:.3f}", "desc": timer.desc} for timer_name, timer in timings.items()}
+        json_timings = {
+            timer_name: {"elapsed": f"{timer.elapsed:.3f}", "desc": timer.desc}
+            for timer_name, timer in timings.items()
+        }
         json.dump(json_timings, f)
 
     # Delete the kb as a final step
@@ -323,5 +334,5 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         instance=f"{GHA_RUN_ID}",
         benchmark_type="ingestion",
         cluster=benchmark_cluster,
-        extra_labels={f"version_{component}": version for component, version in running_versions.items()}
+        extra_labels={f"version_{component}": version for component, version in running_versions.items()},
     )

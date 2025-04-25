@@ -28,7 +28,10 @@ timing_keys = sorted({k for v in timings_data.values() for k in v})
 timing_rows = []
 
 for env_zone in sorted(timings_data):
-    row = [env_zone] + [f'{timings_data[env_zone].get(k, "-"):.3f}' if k in timings_data[env_zone] else "-" for k in timing_keys]
+    row = [env_zone] + [
+        f'{timings_data[env_zone].get(k, "-"):.3f}' if k in timings_data[env_zone] else "-"
+        for k in timing_keys
+    ]
     timing_rows.append(row)
 
 timing_table = tabulate(timing_rows, headers=["Env/Zone"] + timing_keys, tablefmt="github")
