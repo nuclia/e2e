@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from functools import wraps
+import urllib.error
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
@@ -19,9 +20,7 @@ from prometheus_client import Gauge
 from prometheus_client import push_to_gateway
 from textwrap import dedent
 from typing import Any
-
-from tabulate import tabulate
-import aiohttp
+import urllib
 import backoff
 import os
 import pytest
@@ -33,63 +32,10 @@ Logger = Callable[[str], None]
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "When did they start being high?"
 GHA_RUN_ID = os.getenv("GHA_RUN_ID", "unknown")
-LOKI_URL = "https://loki.gcp-internal-1.nuclia.cloud"
 PROMETHEUS_PUSHGATEWAY = os.getenv(
     "PROMETHEUS_PUSHGATEWAY", "http://prometheus-cloud-pushgateway-prometheus-pushgateway:9091"
 )
 CORE_APPS_REPO_PATH = os.getenv("CORE_APPS_REPO_PATH", "/tmp/core-apps")
-
-
-def build_loki_query(cluster: str, namespace: str, app: str, kbid: str, message_pattern: str) -> str:
-    return (
-        f'{{cluster="{cluster}", namespace="{namespace}", app="{app}"}} '
-        f"|= `{kbid}` "
-        f"|= `{message_pattern}`"
-    )
-
-
-def datetime_to_ns(dt: datetime) -> int:
-    return int(dt.timestamp() * 1e9)
-
-
-async def query_loki(
-    base_url: str, query: str, start_time: datetime, end_time: datetime, logger: Logger
-) -> list[datetime]:
-    start_ns = datetime_to_ns(start_time)
-    end_ns = datetime_to_ns(end_time)
-
-    url = f"{base_url}/loki/api/v1/query_range"
-    params = {"query": query, "start": start_ns, "end": end_ns, "limit": 1000, "direction": "backward"}
-
-    def logs_available_on_loki():
-        @wraps(logs_available_on_loki)
-        async def condition() -> tuple[bool, Any]:
-            async with aiohttp.ClientSession() as session, session.get(url, params=params) as resp:
-                data = await resp.json()
-
-                if data["status"] != "success":
-                    raise RuntimeError(f"Loki query failed: {data}")
-
-                results = data["data"]["result"]
-                timestamps = []
-
-                for stream in results:
-                    for value in stream["values"]:
-                        ts_ns = int(value[0])
-                        ts = datetime.fromtimestamp(ts_ns / 1e9, tz=timezone.utc)
-                        timestamps.append(ts)
-
-                timestamps.sort()
-                if len(timestamps) >= 2:
-                    return True, timestamps[:2]
-
-                return False, []
-
-        return condition
-
-    success, timestamps = await wait_for(logs_available_on_loki(), logger=logger, max_wait=900, interval=10)
-    assert success, "Failed to get timestamps from loki"
-    return timestamps
 
 
 async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
@@ -267,15 +213,13 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     This test ferforms the minimal operations too upload a file and validate that is indexed
     with the purpose of benchmarking the ingestion process
     """
-    test_start = datetime.now(timezone.utc)
     timings = {
         "upload": Timer("Client perceived upload time"),
         "process_delay": Timer(
-            "Elapsed time from upload to processing-slow start (nats, processor scale-up)"
+            "Time elapsed  since upload finished to processing-slow start. This is a rough metric as the processes involved here (scheduling, processor scale up) may alredy have started before the upload finished from the user perspective"
         ),
-        "process": Timer("Processing time up to the sending of the BrokerMessage"),
-        "index_delay": Timer("Elapsed time since processing finished until BrokerMessage ingestion starts"),
-        "index": Timer("Elapsed time since NucliaDB ingestion starts since the first find succeeds"),
+        "process": Timer("Real running time of the processor up until the broker message is sent."),
+        "index": Timer("Elapsed time since processing sent the Broker message until the resource is searchable. This includes: waiting for the BM, storing metadata, indexing"),
     }
     benchmark_env = regional_api_config.global_config.name
     benchmark_cluster = regional_api_config.name
@@ -332,16 +276,20 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     processing_started = resource.data.files["file"].extracted.metadata.metadata.last_processing_start
     processing_finished = resource.data.files["file"].extracted.metadata.metadata.last_understanding
 
-    timings["process_delay"].stop(processing_started)
     timings["process"].start(processing_started)
     timings["process"].stop(processing_finished)
-    timings["index_delay"].start(processing_finished)
+
+    timings["process_delay"].stop(processing_started)
+    timings["index"].start(processing_finished)
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
     # the paragraph we're looking for contains, if that responds means the new indexed data is ready
     def resource_is_indexed(rid):
         @wraps(resource_is_indexed)
         async def condition() -> tuple[bool, Any]:
+            # Considering that if the index is ready, it was before the request started, so keep updating
+            # this until is actually true. This will be probably more accurate than waiting for the request to end.
+            timings["index"].stop()
             result = await kb.search.find(
                 ndb=async_ndb, features=["keyword"], reranker="noop", query="Michiko"
             )
@@ -351,32 +299,6 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
 
     success, _ = await wait_for(resource_is_indexed(resource.id), logger=logger, max_wait=120, interval=0.1)
     assert success, "File was not indexed in time, not enough paragraphs found on resource"
-    timings["index"].stop()
-
-    # Get timestamps from loki
-    query = build_loki_query(
-        cluster=benchmark_cluster,
-        namespace="nucliadb",
-        app="writer",
-        kbid=kbid,
-        message_pattern="Pushed message to proxy",
-    )
-    timestamps = await query_loki(LOKI_URL, query, test_start, test_start + timedelta(minutes=10), logger)
-    loki_push_to_proxy = timestamps[1]
-
-    query = build_loki_query(
-        cluster=benchmark_cluster,
-        namespace="nucliadb",
-        app="ingest",
-        kbid=kbid,
-        message_pattern="Pushed message to ingest",
-    )
-    timestamps = await query_loki(LOKI_URL, query, test_start, test_start + timedelta(minutes=120), logger)
-    loki_received_processing_bm = timestamps[1]
-
-    timings["process_delay"].start(loki_push_to_proxy)
-    timings["index_delay"].stop(loki_received_processing_bm)
-    timings["index"].start(loki_received_processing_bm)
 
     running_versions = extract_versions(
         ["nucliadb_writer", "nucliadb_ingest", "nidx", "processing", "processing-slow"],
@@ -392,14 +314,14 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         json_timings = {timer_name: {"elapsed": f"{timer.elapsed:.3f}", "desc": timer.desc} for timer_name, timer in timings.items()}
         json.dump(json_timings, f)
 
+    # Delete the kb as a final step
+    await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
+
     push_timings_to_prometheus(
         timings=timings,
         job_name="daily_benchmark",
-        instance=f"gha-run-{GHA_RUN_ID}",
+        instance=f"{GHA_RUN_ID}",
         benchmark_type="ingestion",
         cluster=benchmark_cluster,
         extra_labels={f"version_{component}": version for component, version in running_versions.items()}
     )
-
-    # Delete the kb as a final step
-    await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)

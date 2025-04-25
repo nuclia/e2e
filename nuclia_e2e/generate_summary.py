@@ -48,7 +48,7 @@ with Path("benchmark_summary.md").open("w") as f:
     f.write("### 🧪 Benchmark Timings\n")
     f.write(timing_table + "\n\n")
 
-    f.write("#### 🗒️ Legend\n")
+    f.write("#### 🗒️ Description of timings\n")
     for key in timing_keys:
         f.write(f"- `{key}`: {descriptions.get(key, '')}\n")
     f.write("\n")

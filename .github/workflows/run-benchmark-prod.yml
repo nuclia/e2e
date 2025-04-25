@@ -10,7 +10,12 @@ on:
       - 'nuclia_e2e/**/benchmarking/**'
   workflow_dispatch:
   schedule:
-    - cron: '25 4 * * *'
+    # Run every day at 03:00 UTC
+    # Chosen to fall safely outside working hours in both Europe (CEST) and US East (EDT):
+    # - 03:00 UTC = 05:00 CEST (Europe) → early morning, before work starts
+    # - 03:00 UTC = 11:00 PM EDT (previous day) → late evening, after work ends
+    # This should minimizes interference from active user traffic
+    - cron: '0 3 * * *'
 
 jobs:
   benchmark:
@@ -21,6 +26,7 @@ jobs:
         target: [
           "prod__gke-prod-1",
           "prod__aws-us-east-2-1",
+          "progress__progress-proc-us-east-2-1"
         ]
 
 
