@@ -70,6 +70,7 @@ def safe_get_progress_env(env_var_name: str) -> str:
 
 @dataclasses.dataclass(slots=True)
 class GlobalConfig:
+    name: str
     base_domain: str
     recaptcha: str
     root_pat_token: str
@@ -104,6 +105,7 @@ class ClusterConfig:
 CLUSTERS_CONFIG = {
     "prod": ClusterConfig(
         global_config=GlobalConfig(
+            name="prod",
             base_domain="nuclia.cloud",
             recaptcha=safe_get_prod_env("PROD_GLOBAL_RECAPTCHA"),
             root_pat_token=safe_get_prod_env("PROD_ROOT_PAT_TOKEN"),
@@ -138,6 +140,7 @@ CLUSTERS_CONFIG = {
     ),
     "stage": ClusterConfig(
         global_config=GlobalConfig(
+            name="stage",
             base_domain="stashify.cloud",
             recaptcha=safe_get_stage_env("STAGE_GLOBAL_RECAPTCHA"),
             root_pat_token=safe_get_stage_env("STAGE_ROOT_PAT_TOKEN"),
@@ -158,6 +161,7 @@ CLUSTERS_CONFIG = {
     ),
     "progress": ClusterConfig(
         global_config=GlobalConfig(
+            name="progress",
             base_domain="syntha.progress.com",
             recaptcha=safe_get_progress_env("PROGRESS_GLOBAL_RECAPTCHA"),
             root_pat_token=safe_get_progress_env("PROGRESS_ROOT_PAT_TOKEN"),

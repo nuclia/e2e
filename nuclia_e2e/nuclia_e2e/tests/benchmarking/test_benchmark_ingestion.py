@@ -26,6 +26,7 @@ import backoff
 import os
 import pytest
 import yaml
+import json
 
 Logger = Callable[[str], None]
 
@@ -266,7 +267,6 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     This test ferforms the minimal operations too upload a file and validate that is indexed
     with the purpose of benchmarking the ingestion process
     """
-
     test_start = datetime.now(timezone.utc)
     timings = {
         "upload": Timer("Client perceived upload time"),
@@ -277,6 +277,8 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         "index_delay": Timer("Elapsed time since processing finished until BrokerMessage ingestion starts"),
         "index": Timer("Elapsed time since NucliaDB ingestion starts since the first find succeeds"),
     }
+    benchmark_env = regional_api_config.global_config.name
+    benchmark_cluster = regional_api_config.name
 
     def logger(msg):
         print(f"{request.node.name} ::: {msg}")
@@ -353,7 +355,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
 
     # Get timestamps from loki
     query = build_loki_query(
-        cluster=regional_api_config.name,
+        cluster=benchmark_cluster,
         namespace="nucliadb",
         app="writer",
         kbid=kbid,
@@ -363,7 +365,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     loki_push_to_proxy = timestamps[1]
 
     query = build_loki_query(
-        cluster=regional_api_config.name,
+        cluster=benchmark_cluster,
         namespace="nucliadb",
         app="ingest",
         kbid=kbid,
@@ -378,30 +380,24 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
 
     running_versions = extract_versions(
         ["nucliadb_writer", "nucliadb_ingest", "nidx", "processing", "processing-slow"],
-        cluster=regional_api_config.name,
+        cluster=benchmark_cluster,
     )
 
-    # Benchmark timings tabke
-    timing_rows = [(timer_name, f"{timer.elapsed:.2f}", timer.desc) for timer_name, timer in timings.items()]
-    timing_table = tabulate(timing_rows, headers=["Step", "Duration (s)", "Description"], tablefmt="github")
+    # store running versions
+    with Path(f"{benchmark_env}:{benchmark_cluster}:versions.json").open("w") as f:
+        json.dump(running_versions, f)
 
-    # Running versions table
-    version_rows = list(running_versions.items())
-    version_table = tabulate(version_rows, headers=["Component", "Version"], tablefmt="github")
-
-    # Final markdown
-    with Path("benchmark_summary.md").open("w") as f:
-        f.write("### 🧪 Benchmark Timings\n")
-        f.write(timing_table + "\n\n")
-        f.write("### 🔢 Running Versions\n")
-        f.write(version_table + "\n")
+    # store timings
+    with Path(f"{benchmark_env}:{benchmark_cluster}:timings.json").open("w") as f:
+        json_timings = {timer_name: {"elapsed": f"{timer.elapsed:.3f}", "desc": timer.desc} for timer_name, timer in timings.items()}
+        json.dump(json_timings, f)
 
     push_timings_to_prometheus(
         timings=timings,
         job_name="daily_benchmark",
         instance=f"gha-run-{GHA_RUN_ID}",
         benchmark_type="ingestion",
-        cluster=regional_api_config.name,
+        cluster=benchmark_cluster,
         extra_labels={f"version_{component}": version for component, version in running_versions.items()}
     )
 
