@@ -56,8 +56,8 @@ jobs:
 
       - name: Extract vars
         run: |
-          TEST_ENV=$(echo "${{ matrix.target }}" | cut -d':' -f1)
-          TEST_ZONES=$(echo "${{ matrix.target }}" | cut -d':' -f2-)
+          TEST_ENV=$(echo "${{ matrix.target }}" | cut -d'_' -f1)
+          TEST_ZONES=$(echo "${{ matrix.target }}" | cut -d'_' -f3-)
           echo "TEST_ENV=$TEST_ENV" >> $GITHUB_ENV
           echo "TEST_ZONES=$TEST_ZONES" >> $GITHUB_ENV
           echo "ID_SUFFIX=${TEST_ENV}__${TEST_ZONES}" >> $GITHUB_ENV
