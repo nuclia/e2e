@@ -384,11 +384,11 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     )
 
     # store running versions
-    with Path(f"{benchmark_env}:{benchmark_cluster}:versions.json").open("w") as f:
+    with Path(f"{benchmark_env}__{benchmark_cluster}__versions.json").open("w") as f:
         json.dump(running_versions, f)
 
     # store timings
-    with Path(f"{benchmark_env}:{benchmark_cluster}:timings.json").open("w") as f:
+    with Path(f"{benchmark_env}__{benchmark_cluster}__timings.json").open("w") as f:
         json_timings = {timer_name: {"elapsed": f"{timer.elapsed:.3f}", "desc": timer.desc} for timer_name, timer in timings.items()}
         json.dump(json_timings, f)
 
