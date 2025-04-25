@@ -26,9 +26,9 @@ jobs:
         target: [
           "prod__gke-prod-1",
           "prod__aws-us-east-2-1",
-          "progress__progress-proc-us-east-2-1"
+          "prod__aws-il-central-1-1",
+          "progress__progress-proc-us-east-2-1",
         ]
-
 
     steps:
       - name: Checkout
@@ -75,6 +75,7 @@ jobs:
           PROD_GLOBAL_RECAPTCHA: ${{ secrets.PROD_GLOBAL_RECAPTCHA }}
           TEST_EUROPE1_NUCLIA_NUA: ${{ secrets.TEST_EUROPE1_NUCLIA_NUA }}
           TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
+          TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA }}
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
           PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           PROGRESS_ROOT_PAT_TOKEN: ${{ secrets.PROGRESS_ROOT_PAT_TOKEN }}
