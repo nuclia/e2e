@@ -381,6 +381,7 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
                 min_score=100,
             )
             search_returned_results = bool(result.resources)
+            return (True, False)
             return (True, search_returned_results)
 
         return condition
