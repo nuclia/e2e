@@ -11,3 +11,6 @@ pytest-asyncio-cooperative # not compatible with pytest-asyncio
 pytest-shard
 pytest-rerunfailures
 types-aiofiles
+prometheus-client
+pyyaml
+tabulate

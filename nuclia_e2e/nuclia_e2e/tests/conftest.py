@@ -31,6 +31,7 @@ import pytest  # noqa: E402
 import random  # noqa: E402
 import re  # noqa: E402
 import string  # noqa: E402
+import sys  # noqa: E402
 import tempfile  # noqa: E402
 
 
@@ -61,8 +62,15 @@ def safe_get_stage_env(env_var_name: str) -> str:
     return safe_get_env(env_var_name)
 
 
+def safe_get_progress_env(env_var_name: str) -> str:
+    if TEST_ENV != "progress":
+        return ""
+    return safe_get_env(env_var_name)
+
+
 @dataclasses.dataclass(slots=True)
 class GlobalConfig:
+    name: str
     base_domain: str
     recaptcha: str
     root_pat_token: str
@@ -97,6 +105,7 @@ class ClusterConfig:
 CLUSTERS_CONFIG = {
     "prod": ClusterConfig(
         global_config=GlobalConfig(
+            name="prod",
             base_domain="nuclia.cloud",
             recaptcha=safe_get_prod_env("PROD_GLOBAL_RECAPTCHA"),
             root_pat_token=safe_get_prod_env("PROD_ROOT_PAT_TOKEN"),
@@ -107,7 +116,7 @@ CLUSTERS_CONFIG = {
         ),
         zones=[
             ZoneConfig(
-                name="europe-1",
+                name="gke-prod-1",
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",
@@ -120,17 +129,18 @@ CLUSTERS_CONFIG = {
                 permanent_kb_slug="pre-existing-kb",
                 permanent_nua_key=safe_get_prod_env("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
             ),
-            # ZoneConfig(
-            #     name="aws-il-central-1-1",
-            #     zone_slug="aws-il-central-1-1",
-            #     test_kb_slug="nuclia-e2e-live-aws-il-central-1-1",
-            #     permanent_kb_slug="pre-existing-kb",
-            #     permanent_nua_key=safe_get_prod_env("TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA"),
-            # ),
+            ZoneConfig(
+                name="aws-il-central-1-1",
+                zone_slug="aws-il-central-1-1",
+                test_kb_slug="nuclia-e2e-live-aws-il-central-1-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=safe_get_prod_env("TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA"),
+            ),
         ],
     ),
     "stage": ClusterConfig(
         global_config=GlobalConfig(
+            name="stage",
             base_domain="stashify.cloud",
             recaptcha=safe_get_stage_env("STAGE_GLOBAL_RECAPTCHA"),
             root_pat_token=safe_get_stage_env("STAGE_ROOT_PAT_TOKEN"),
@@ -141,7 +151,7 @@ CLUSTERS_CONFIG = {
         ),
         zones=[
             ZoneConfig(
-                name="europe-1",
+                name="gke-stage-1",
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",
@@ -149,9 +159,44 @@ CLUSTERS_CONFIG = {
             )
         ],
     ),
+    "progress": ClusterConfig(
+        global_config=GlobalConfig(
+            name="progress",
+            base_domain="syntha.progress.com",
+            recaptcha=safe_get_progress_env("PROGRESS_GLOBAL_RECAPTCHA"),
+            root_pat_token=safe_get_progress_env("PROGRESS_ROOT_PAT_TOKEN"),
+            permanent_account_owner_pat_token=safe_get_progress_env(
+                "PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"
+            ),
+            gmail_app_password=safe_get_progress_env("TEST_GMAIL_APP_PASSWORD"),
+            permanent_account_slug="automated-testing",
+            permanent_account_id="0e515342-3b5c-4778-acf0-0723a71eafa3",
+        ),
+        zones=[
+            ZoneConfig(
+                name="progress-proc-us-east-2-1",
+                zone_slug="progress-proc-us-east-2-1",
+                test_kb_slug="nuclia-e2e-live-progress-proc-us-east-2-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=safe_get_progress_env("TEST_PROGRESS_PROC_US_EAST_2_1_NUCLIA_NUA"),
+            ),
+        ],
+    ),
 }
 
 TEST_CLUSTER = CLUSTERS_CONFIG[TEST_ENV.lower()]
+
+ALL_TEST_ZONES = [zone.name for zone in TEST_CLUSTER.zones]
+TEST_ZONES = os.environ.get("TEST_ZONES", None)
+if TEST_ZONES is None:
+    ENABLED_ZONES = ALL_TEST_ZONES
+else:
+    ENABLED_ZONES = [zone.strip(" ") for zone in TEST_ZONES.split(",") if zone.strip(" ")]
+TEST_CLUSTER.zones = [zone for zone in TEST_CLUSTER.zones if zone.name in ENABLED_ZONES]
+
+if not TEST_CLUSTER.zones:
+    print("Exiting, no zones defined or all of them filtered")
+    sys.exit(1)
 
 
 class ManagerAPI:
