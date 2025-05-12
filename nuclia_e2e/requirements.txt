@@ -1,6 +1,7 @@
 mypy-extensions==1.0.0
 mypy==1.15.0
 nuclia>=4.8.1
+nucliadb-protos
 pytest-timeout
 pytest==8.3.4
 ruff==0.8.1
