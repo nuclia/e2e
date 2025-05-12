@@ -10,14 +10,17 @@ versions_data = {}
 descriptions = {}
 
 
-def generate_grafana_explore_url(base_url: str, cluster_name: str, kbid: str, tempo_datasource: str) -> str:
+def generate_last_upload_trace_url(base_url: str, cluster_name: str, kbid: str, tempo_datasource: str) -> str:
+    """
+        Using the PATCH tusupload as a reference of the request that will contain the /processing/push
+    """
     to_ts = int(time.time() * 1000)
     from_ts = to_ts - (60 * 60 * 1000)  # 1 hour ago
 
     traceql_query = (
         f'{{resource.k8s.cluster="{cluster_name}" '
-        f'&& span.http.method="POST" '
-        f'&& span.http.url=~".*{kbid}.*/resources"}}'
+        f'&& span.http.method="PATCH" '
+        f'&& span.http.url=~".*{kbid}.*tusupload.*"}}'
     )
 
     payload = {
@@ -76,7 +79,7 @@ if __name__ == "__main__":
         env, zone = env_zone.split("__", 1)
         with open(file) as f:
             ids = json.load(f)
-        url = generate_grafana_explore_url(
+        url = generate_last_upload_trace_url(
             base_url=ids["grafana_url"],
             cluster_name=zone,
             kbid=ids["kbid"],
@@ -98,7 +101,7 @@ if __name__ == "__main__":
 
         f.write("\n### 🔍 Trace Links\n")
         f.write(
-            "\nThis traces correspond to the nucliadb call that sends to process. Any processing attempt trace will be linked as the last span named 'Processing attempt #1'\n"
+            "\nThis traces correspond to the nucliadb call that sends to process the file. Any processing attempt trace will be linked as the last span named 'Processing attempt #1'\n"
         )
         f.write(grafana_table + "\n")
 
