@@ -171,11 +171,11 @@ async def wait_for_task_completion(
         elapsed_time = asyncio.get_event_loop().time() - start_time
         grafana_task_log__url = get_grafana_task_url(task_id)
         if elapsed_time > max_duration:
-            raise TimeoutError(
-                f"Task {task_id} didn't complete within the maximum allowed time of {max_duration} seconds.\n"
-                f"You may find more information on the task log: {grafana_task_log__url}, if you see some"
-                "SIGTERM on it, preemtion ocurred and the task won't be retried."
-            )
+            raise TimeoutError(f"""
+                Task {task_id} didn't complete within the maximum allowed time of {max_duration} seconds.
+                You may find more information on the task log: {grafana_task_log__url}, if you see: "SIGTERM"
+                on it, preemtion ocurred and the task won't be retried."
+            """)
 
         resp = await client.get(
             f"/api/v1/dataset/{dataset_id}/task/{task_id}/inspect",
