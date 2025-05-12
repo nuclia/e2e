@@ -3,7 +3,7 @@ from tabulate import tabulate
 import urllib.parse
 import json
 import datetime
-from datetime import timezone, timedelta
+from datetime import datetime, timezone, timedelta
 
 
 results_dir = Path("./results")
