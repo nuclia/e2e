@@ -14,15 +14,15 @@ descriptions = {}
 
 def generate_last_upload_trace_url(base_url: str, cluster_name: str, kbid: str, tempo_datasource: str) -> str:
     """
-        Using the PATCH tusupload as a reference of the request that will contain the /processing/push
+    Using the PATCH tusupload as a reference of the request that will contain the /processing/push
     """
     # Compute the time range: last 1 hour
     now = datetime.now(timezone.utc)
     one_hour_ago = now - timedelta(hours=1)
 
     # Format to ISO8601 with Zulu time (UTC)
-    from_str = one_hour_ago.isoformat(timespec='milliseconds').replace("+00:00", "Z")
-    to_str = now.isoformat(timespec='milliseconds').replace("+00:00", "Z")
+    from_str = one_hour_ago.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    to_str = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
     traceql_query = (
         f'{{resource.k8s.cluster="{cluster_name}" '
@@ -32,16 +32,8 @@ def generate_last_upload_trace_url(base_url: str, cluster_name: str, kbid: str, 
 
     payload = {
         "datasource": "P95F6455D1776E941",  # Customize if needed
-        "queries": [
-            {
-                "refId": "A",
-                "query": traceql_query
-            }
-        ],
-        "range": {
-            "from": from_str,
-            "to": to_str
-        }
+        "queries": [{"refId": "A", "query": traceql_query}],
+        "range": {"from": from_str, "to": to_str},
     }
 
     left_param = urllib.parse.quote(json.dumps(payload))

@@ -207,6 +207,7 @@ def extract_versions(components, cluster):
     return versions
 
 
+@pytest.mark.skipif(os.getenv("BENCHMARK") != "1", reason="Benchmark not enabled")
 @pytest.mark.asyncio_cooperative
 async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_api_config):
     """

@@ -28,7 +28,6 @@ ALL_LLMS = [
     "gemini-1-5-flash",
     # "gemini-1-5-flash-vision",             EXCLUDED because it shares same implementation as non-vision
     "mistral",
-    "chatgpt4",
     "chatgpt4o",
     "chatgpt4o-mini",
     "chatgpt-o1-preview",
@@ -91,7 +90,6 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     "gemini-1-5-flash",
     "gemini-1-5-flash-vision",
     # "mistral",
-    "chatgpt4",
     "chatgpt4o",
     "chatgpt4o-mini",
     # "chatgpt-o1-preview",                                WHY EXCLUDED ?
