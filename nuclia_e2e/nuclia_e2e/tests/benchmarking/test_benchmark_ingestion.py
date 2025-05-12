@@ -336,8 +336,8 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         }
         json.dump(json_timings, f)
 
-    # Delete the kb as a final step
-    await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
+    # # Delete the kb as a final step
+    # await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
 
     push_timings_to_prometheus(
         timings=timings,
