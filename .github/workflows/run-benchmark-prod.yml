@@ -1,5 +1,5 @@
 name: run-benchmark-prod
-run-name: Running PROD NUCLIA benchmark
+run-name: Running PROD Nuclia benchmark
 
 on:
   push:

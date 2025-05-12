@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
         f.write("\n### 🔍 Trace Links\n")
         f.write(
-            "\nThis traces correspond to the nucliadb call that sends to process. Any processing attempt trace will be linked as the last span named 'Processing attempt #1'"
+            "\nThis traces correspond to the nucliadb call that sends to process. Any processing attempt trace will be linked as the last span named 'Processing attempt #1'\n"
         )
         f.write(grafana_table + "\n")
 
