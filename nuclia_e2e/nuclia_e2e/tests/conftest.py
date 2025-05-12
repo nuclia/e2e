@@ -48,6 +48,7 @@ def safe_get_env(env_var_name: str) -> str:
 
 TEST_ENV = safe_get_env("TEST_ENV").lower()
 GRAFANA_URL = safe_get_env("GRAFANA_URL")
+TEMPO_DATASOURCE_ID = "P95F6455D1776E941"  # is the same one on progress and our clusters
 
 
 def safe_get_prod_env(env_var_name: str) -> str:
@@ -78,6 +79,8 @@ class GlobalConfig:
     gmail_app_password: str
     permanent_account_slug: str
     permanent_account_id: str
+    grafana_url: str
+    tempo_datasource_id: str
 
 
 @dataclasses.dataclass(slots=True)
@@ -113,6 +116,8 @@ CLUSTERS_CONFIG = {
             gmail_app_password=safe_get_prod_env("TEST_GMAIL_APP_PASSWORD"),
             permanent_account_slug="automated-testing",
             permanent_account_id="8c7db65c-3b7e-4140-8165-d37bb4e6e9b8",
+            grafana_url="http://platform.grafana.nuclia.com",
+            tempo_datasource_id=TEMPO_DATASOURCE_ID,
         ),
         zones=[
             ZoneConfig(
@@ -148,6 +153,8 @@ CLUSTERS_CONFIG = {
             gmail_app_password=safe_get_stage_env("TEST_GMAIL_APP_PASSWORD"),
             permanent_account_slug="automated-testing",
             permanent_account_id="f2edd58e-431f-4197-be76-6fc611082fe8",
+            grafana_url="http://platform.grafana.nuclia.com",
+            tempo_datasource_id=TEMPO_DATASOURCE_ID,
         ),
         zones=[
             ZoneConfig(
@@ -171,6 +178,8 @@ CLUSTERS_CONFIG = {
             gmail_app_password=safe_get_progress_env("TEST_GMAIL_APP_PASSWORD"),
             permanent_account_slug="automated-testing",
             permanent_account_id="0e515342-3b5c-4778-acf0-0723a71eafa3",
+            grafana_url="http://platform.grafana.nuclia.com",
+            tempo_datasource_id=TEMPO_DATASOURCE_ID,
         ),
         zones=[
             ZoneConfig(

@@ -319,7 +319,12 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
 
     with Path(f"{benchmark_env}__{benchmark_cluster}__ids.json").open("w") as f:
         json.dump(
-            {"kbid": kbid, "rid": resource.id, "grafana_url": regional_api_config.global_config.grafana_url},
+            {
+                "kbid": kbid,
+                "rid": resource.id,
+                "grafana_url": regional_api_config.global_config.grafana_url,
+                "tempo_datasource_id": regional_api_config.global_config.tempo_datasource_id,
+            },
             f,
         )
 

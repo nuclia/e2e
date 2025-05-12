@@ -80,7 +80,7 @@ if __name__ == "__main__":
             base_url=ids["grafana_url"],
             cluster_name=zone,
             kbid=ids["kbid"],
-            tempo_datasource=ids["tempo_datasource"],
+            tempo_datasource=ids["tempo_datasource_id"],
         )
         grafana_rows.append((env, zone, f"[View processing push Trace]({url})"))
 
