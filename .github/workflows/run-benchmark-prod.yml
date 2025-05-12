@@ -87,15 +87,16 @@ jobs:
           CORE_APPS_REPO_PATH: ${{ github.workspace }}/core-apps
         run: |
           pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
-          # pytest execuition writes: ${ID_SUFFIX}:timings.json and ${ID_SUFFIX}:versions.json
 
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: results-${{ matrix.target }}
+          # pytest execuition creates this files
           path: |
             ${{ env.ID_SUFFIX }}__timings.json
             ${{ env.ID_SUFFIX }}__versions.json
+            ${{ env.ID_SUFFIX }}__ids.json
 
   summarize:
     runs-on: ubuntu-latest
