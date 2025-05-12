@@ -27,7 +27,7 @@ def generate_grafana_explore_url(base_url: str, cluster_name: str, kbid: str, te
     }
 
     left_param = urllib.parse.quote(json.dumps(payload))
-    return f"{base_url}?orgId=1&left={left_param}"
+    return f"{base_url}/explore?orgId=1&left={left_param}"
 
 
 if __name__ == "__main__":

@@ -178,7 +178,7 @@ CLUSTERS_CONFIG = {
             gmail_app_password=safe_get_progress_env("TEST_GMAIL_APP_PASSWORD"),
             permanent_account_slug="automated-testing",
             permanent_account_id="0e515342-3b5c-4778-acf0-0723a71eafa3",
-            grafana_url="http://platform.grafana.nuclia.com",
+            grafana_url="https://progress-global-us-east-2-1.grafana.nuclia.com",
             tempo_datasource_id=TEMPO_DATASOURCE_ID,
         ),
         zones=[
