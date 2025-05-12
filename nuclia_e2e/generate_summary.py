@@ -1,8 +1,10 @@
 from pathlib import Path
 from tabulate import tabulate
 import urllib.parse
-import time
 import json
+import datetime
+from datetime import timezone, timedelta
+
 
 results_dir = Path("./results")
 timings_data = {}
@@ -14,23 +16,36 @@ def generate_last_upload_trace_url(base_url: str, cluster_name: str, kbid: str, 
     """
         Using the PATCH tusupload as a reference of the request that will contain the /processing/push
     """
-    to_ts = int(time.time() * 1000)
-    from_ts = to_ts - (60 * 60 * 1000)  # 1 hour ago
+    # Compute the time range: last 1 hour
+    now = datetime.now(timezone.utc)
+    one_hour_ago = now - timedelta(hours=1)
+
+    # Format to ISO8601 with Zulu time (UTC)
+    from_str = one_hour_ago.isoformat(timespec='milliseconds').replace("+00:00", "Z")
+    to_str = now.isoformat(timespec='milliseconds').replace("+00:00", "Z")
 
     traceql_query = (
         f'{{resource.k8s.cluster="{cluster_name}" '
-        f'&& span.http.method="PATCH" '
-        f'&& span.http.url=~".*{kbid}.*tusupload.*"}}'
+        f'&& span.http.method="POST" '
+        f'&& span.http.url=~".*{kbid}.*"}}'
     )
 
     payload = {
-        "datasource": tempo_datasource,
-        "queries": [{"refId": "A", "query": traceql_query}],
-        "range": {"from": from_ts, "to": to_ts},
+        "datasource": "P95F6455D1776E941",  # Customize if needed
+        "queries": [
+            {
+                "refId": "A",
+                "query": traceql_query
+            }
+        ],
+        "range": {
+            "from": from_str,
+            "to": to_str
+        }
     }
 
     left_param = urllib.parse.quote(json.dumps(payload))
-    return f"{base_url}/explore?orgId=1&left={left_param}"
+    return f"{base_url}?orgId=1&left={left_param}"
 
 
 if __name__ == "__main__":
