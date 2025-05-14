@@ -8,6 +8,8 @@ from pathlib import Path
 from time import monotonic
 from typing import Any
 
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
+
 import asyncio
 
 ASSETS_FILE_PATH = Path(__file__).parent.joinpath("assets")
@@ -20,6 +22,27 @@ Logger = Callable[[str], None]
 def get_asset_file_path(file: str):
     return str(ASSETS_FILE_PATH.joinpath(file))
 
+
+async def create_test_kb(regional_api_config, kb_slug, logger: Logger = print) -> str:
+    kbs = AsyncNucliaKBS()
+    new_kb = await kbs.add(
+        zone=regional_api_config.zone_slug,
+        slug=kb_slug,
+        sentence_embedder="en-2024-04-24",
+    )
+
+    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    assert kbid is not None
+    logger(f"Created kb {new_kb['id']}")
+    return kbid
+
+async def delete_test_kb(regional_api_config, kbid, kb_slug, logger):
+    kbs = AsyncNucliaKBS()
+    logger("Deleting kb {kbid}")
+    await kbs.delete(zone=regional_api_config.zone_slug, id=kbid)
+
+    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    assert kbid is None
 
 async def wait_for(
     condition: Callable[[], Awaitable[tuple[bool, Any]]],
@@ -95,3 +118,11 @@ def get_sync_kb_ndb_client(
 
     ndb = NucliaDBClient(environment=Environment.CLOUD, url=kb_base_url, region=zone, **auth_params)
     return ndb
+
+
+def make_retry_async(attempts=3, delay=10):
+    return retry(
+        stop=stop_after_attempt(attempts),
+        wait=wait_fixed(delay),
+        reraise=True,
+    )

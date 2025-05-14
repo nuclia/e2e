@@ -1,9 +1,10 @@
 # Extracted from
-#  https://github.com/nuclia/learning/blob/main/libraries/learning_models/learning_models/generative.py
+#  https://github.com/nuclia/learning/blob/main/libraries/learning_models/src/learning_models/generative.py
 # specifically from `DefaultGenerativeModels``
 #
 # WARNING: some of them are excluded from the original, commented down here on purpose.
 # Try to keep the original order to make diffs more useful
+# Also delete only the model if it has been deleted on the original
 import re
 
 ALL_LLMS = [
@@ -19,29 +20,35 @@ ALL_LLMS = [
     "claude-3-fast",
     "claude-3-5-fast",
     "claude-3-5-small",
-    # "gemini-2.0-flash-thinking-exp-1219",  EXCLUDED because they are not currently available in production
-    # "gemini-2.0-flash-exp",                EXCLUDED because they are not currently available in production
     # "gemini-2.0-flash-lite",               EXCLUDED because they are not currently available in production
     "gemini-2.0-flash",
     "gemini-1-5-pro",
     # "gemini-1-5-pro-vision",               EXCLUDED because it shares same implementation as non-vision
     "gemini-1-5-flash",
     # "gemini-1-5-flash-vision",             EXCLUDED because it shares same implementation as non-vision
+    # "gemini-2-5-pro",                      EXCLUDED because only available in US
+    # "gemini-2.5-flash",                    EXCLUDED because only available in US
     "mistral",
+    # "azure-mistral",                       DISCONTINUED
     "chatgpt4o",
     "chatgpt4o-mini",
     "chatgpt-o1-preview",
     "chatgpt-o1-mini",
     "chatgpt-o1",
     "chatgpt-o3-mini",
+    "chatgpt-4.1",
     # "huggingface"                          EXCLUDED as not a model,just a driver, that needs a key to work
     "llama-3.2-90b-vision-instruct-maas",
+    "llama-4-maverick-17b-128e-instruct-maas",
+    "llama-4-scout-17b-16e-instruct-maas",
     # "deepseek-reasoner",                   EXCLUDED as it is too slow and messing all the e2e runs
     "deepseek-chat",
     # "azure-deepseek-r1",                   EXCLUDED as it is too slow
     "azure-mistral-large-2",
     "gcp-claude-3-5-sonnet-v2",
     "gcp-claude-3-7-sonnet",
+    # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
+    # "deepseek-chat-openai-compat"           EXCLUDED as not a model,just a driver, that needs a key to work
 ]
 
 
@@ -53,11 +60,12 @@ def is_reasoning_model(model: str) -> bool:
 NON_REASONING_LLMS = [model for model in ALL_LLMS if not is_reasoning_model(model)]
 
 # Extracted from
-#  https://github.com/nuclia/learning/blob/main/libraries/learning_models/learning_models/encoder.py
+#  https://github.com/nuclia/learning/blob/main/libraries/learning_models/src/learning_models/encoder.py
 # specifically from `SemanticModel`
 #
 # WARNING: some of them are excluded from the original, commented down here on purpose.
 # Try to keep the original order to make diffs more useful
+# Also delete only the model if it has been deleted on the original
 ALL_ENCODERS = {
     "en-2024-04-24": 768,
     "multilingual-2024-05-06": 1024,
@@ -83,25 +91,33 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     "claude-3-fast",
     "claude-3-5-fast",
     "claude-3-5-small",
-    # "gemini-2.0-flash-thinking-exp-1219",
-    # "gemini-2.0-flash-exp",
+    # "gemini-2.0-flash-lite",
+    "gemini-2.0-flash",
     "gemini-1-5-pro",
-    "gemini-1-5-pro-vision",
+    # "gemini-1-5-pro-vision",
     "gemini-1-5-flash",
-    "gemini-1-5-flash-vision",
+    # "gemini-1-5-flash-vision",
+    # "gemini-2-5-pro",
+    # "gemini-2.5-flash",
     # "mistral",
+    # "azure-mistral",
     "chatgpt4o",
     "chatgpt4o-mini",
     # "chatgpt-o1-preview",                                WHY EXCLUDED ?
     # "chatgpt-o1-mini",                                   WHY EXCLUDED ?
     # "chatgpt-o1",
     "chatgpt-o3-mini",
+    "chatgpt-4.1",
     # "huggingface"
     "llama-3.2-90b-vision-instruct-maas",
+    "llama-4-maverick-17b-128e-instruct-maas",
+    "llama-4-scout-17b-16e-instruct-maas",
     # "deepseek-reasoner",
     "deepseek-chat",
     # "azure-deepseek-r1",
     "azure-mistral-large-2",
     "gcp-claude-3-5-sonnet-v2",
     "gcp-claude-3-7-sonnet",
+    # "openai-compatible",
+    # "deepseek-chat-openai-compat"
 ]

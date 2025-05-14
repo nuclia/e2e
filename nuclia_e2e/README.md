@@ -74,7 +74,13 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
      - in this kb there are two resources "omelette" and "roasted-chicken" setup to validate security groups.
      - in this kb you may see a service account named "test-e2e-kb-auth", that is dynamically created by the e2e.
    - `nuclia-e2e-live-{region}`: Dynamically created KBs for tests. They are cleaned up automatically, and the slug is reused.
-   - `base-e2e` (stage only): A source of exports for certain tests. **Do not modify or delete** if you don't now what you are doing.
+   - `base-e2e` (stage only): A source of exports for certain tests. **Do not modify or delete** if you don't now what you are doing. In case the export needs to be redone again (for example if the embedings model is deprecated) run this commands:
+   ```
+      BASE_DOMAIN=stashify.cloud nuclia auth login
+      BASE_NUCLIA_DOMAIN=stashify.cloud nuclia kbs default base-e2e
+      BASE_NUCLIA_DOMAIN=stashify.cloud nuclia kb exports start
+      BASE_NUCLIA_DOMAIN=stashify.cloud nuclia kb exports download --export_id {id_from previous start command} --path assets/e2e.financial.mini.export
+   ```
 
 ---
 

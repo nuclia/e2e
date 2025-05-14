@@ -3,7 +3,6 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from functools import wraps
-import urllib.error
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
@@ -20,12 +19,13 @@ from prometheus_client import Gauge
 from prometheus_client import push_to_gateway
 from textwrap import dedent
 from typing import Any
-import urllib
+
 import backoff
 import os
 import pytest
 import yaml
 import json
+from nuclia_e2e.utils import get_kbid_from_slug, create_test_kb, delete_test_kb
 
 Logger = Callable[[str], None]
 
@@ -36,20 +36,6 @@ PROMETHEUS_PUSHGATEWAY = os.getenv(
     "PROMETHEUS_PUSHGATEWAY", "http://prometheus-cloud-pushgateway-prometheus-pushgateway:9091"
 )
 CORE_APPS_REPO_PATH = os.getenv("CORE_APPS_REPO_PATH", "/tmp/core-apps")
-
-
-async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
-    kbs = AsyncNucliaKBS()
-    new_kb = await kbs.add(
-        zone=regional_api_config.zone_slug,
-        slug=kb_slug,
-        sentence_embedder="en-2024-04-24",
-    )
-
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
-    assert kbid is not None
-    logger(f"Created kb {new_kb['id']}")
-    return kbid
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
@@ -114,15 +100,6 @@ async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Lo
         generative_model=model,
     )
     assert "earlier" in ask_more_result.answer.decode().lower()
-
-
-async def run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger):
-    kbs = AsyncNucliaKBS()
-    logger("deleting " + kbid)
-    await kbs.delete(zone=regional_api_config.zone_slug, id=kbid)
-
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
-    assert kbid is None
 
 
 class Timer:
@@ -241,7 +218,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
+    kbid = await create_test_kb(regional_api_config, kb_slug, logger)
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
@@ -337,9 +314,6 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         }
         json.dump(json_timings, f)
 
-    # # Delete the kb as a final step
-    # await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
-
     push_timings_to_prometheus(
         timings=timings,
         job_name="daily_benchmark",
@@ -348,3 +322,6 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
         cluster=benchmark_cluster,
         extra_labels={f"version_{component}": version for component, version in running_versions.items()},
     )
+
+    # Delete the kb as a final step
+    await delete_test_kb(regional_api_config, kbid, kb_slug, logger)

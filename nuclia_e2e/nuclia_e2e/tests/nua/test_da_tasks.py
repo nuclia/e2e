@@ -64,31 +64,30 @@ class TaskTestInput:
     validate_output: Callable[[BrokerMessage], None]
 
 
+from contextlib import asynccontextmanager
+
 @pytest.fixture(scope="session")
-def aiohttp_client() -> (
-    Callable[[str, str | None, str | None, int], Coroutine[Any, Any, aiohttp.ClientSession]]
-):
+def aiohttp_client():
+    @asynccontextmanager
     async def create_aiohttp_client(
         base_url: str,
         nua_key: str | None = None,
         pat_key: str | None = None,
         timeout: int = 30,
-    ) -> aiohttp.ClientSession:
+    ):
         headers = (
             {"X-NUCLIA-NUAKEY": f"Bearer {nua_key}"} if nua_key else {"Authorization": f"Bearer {pat_key}"}
         )
         timeout_config = aiohttp.ClientTimeout(total=timeout)
 
-        # Create the session but return it directly instead of yielding
-        session = aiohttp.ClientSession(
+        async with aiohttp.ClientSession(
             base_url=base_url,
             headers=headers,
             timeout=timeout_config,
-        )
-        return session  # Return the session instead of yielding
+        ) as session:
+            yield session
 
-    return create_aiohttp_client  # Return the async function
-
+    return create_aiohttp_client
 
 async def create_nua_key(client: aiohttp.ClientSession, account_id: str, title: str) -> tuple[str, str]:
     body = {
@@ -524,6 +523,9 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
 ]
 
 
+import pytest
+from typing import AsyncGenerator
+
 @pytest.fixture
 async def tmp_nua_key(
     nua_client: AsyncNuaClient,
@@ -532,23 +534,24 @@ async def tmp_nua_key(
     global_api_config,
 ) -> AsyncGenerator[str, None]:
     account_id = global_api_config.permanent_account_id
-    pat_client_generator = aiohttp_client(
+
+    # Use async with because aiohttp_client is now an async context manager
+    async with aiohttp_client(
         base_url=nua_client.url,
         pat_key=global_api_config.permanent_account_owner_pat_token,
         timeout=300,
-    )
-    pat_client = await pat_client_generator
-    nua_client_id, nua_key = await create_nua_key(
-        client=pat_client,
-        account_id=account_id,
-        title=f"E2E DA AGENTS - {nua_client.region}",
-    )
-    try:
-        yield nua_key
-    finally:
-        await delete_nua_key(client=pat_client, account_id=account_id, nua_client_id=nua_client_id)
-        await nua_client.stream_client.aclose()
-        await nua_client.client.aclose()
+    ) as pat_client:
+        nua_client_id, nua_key = await create_nua_key(
+            client=pat_client,
+            account_id=account_id,
+            title=f"E2E DA AGENTS - {nua_client.region}",
+        )
+        try:
+            yield nua_key
+        finally:
+            await delete_nua_key(client=pat_client, account_id=account_id, nua_client_id=nua_client_id)
+            await nua_client.stream_client.aclose()
+            await nua_client.client.aclose()
 
 
 @pytest.mark.asyncio_cooperative
@@ -563,34 +566,34 @@ async def test_da_agent_tasks(
     dataset_id = None
     task_id = None
     start_time = asyncio.get_event_loop().time()
-    try:
-        nua_client_generator = aiohttp_client(base_url=nua_client.url, nua_key=tmp_nua_key, timeout=30)
-        client = await nua_client_generator
 
-        dataset_id = await create_dataset(client=client)
-        await push_data_to_dataset(client=client, dataset_id=dataset_id, filename=test_input.filename)
+    # Create and auto-close the aiohttp session
+    async with aiohttp_client(base_url=nua_client.url, nua_key=tmp_nua_key, timeout=30) as client:
+        try:
+            dataset_id = await create_dataset(client=client)
+            await push_data_to_dataset(client=client, dataset_id=dataset_id, filename=test_input.filename)
 
-        task_id = await start_task(
-            client=client,
-            dataset_id=dataset_id,
-            task_name=test_input.task_name,
-            parameters=test_input.parameters,
-        )
-        print(f"{request.node.name} ::  task_id: {task_id}")
-        task_request = await wait_for_task_completion(client=client, dataset_id=dataset_id, task_id=task_id)
-        assert task_request["completed"] is True
-        assert task_request["failed"] is False
+            task_id = await start_task(
+                client=client,
+                dataset_id=dataset_id,
+                task_name=test_input.task_name,
+                parameters=test_input.parameters,
+            )
+            print(f"{request.node.name} ::  task_id: {task_id}")
+            task_request = await wait_for_task_completion(client=client, dataset_id=dataset_id, task_id=task_id)
+            assert task_request["completed"] is True
+            assert task_request["failed"] is False
 
-        await validate_task_output(
-            client=client,
-            validation=test_input.validate_output,
-        )
-    finally:
-        if dataset_id is not None:
-            if task_id is not None:
-                await stop_task(client=client, dataset_id=dataset_id, task_id=task_id)
-                await delete_task(client=client, dataset_id=dataset_id, task_id=task_id)
-            await delete_dataset(client=client, dataset_id=dataset_id)
-        end_time = asyncio.get_event_loop().time()
-        elapsed_time = end_time - start_time
-        print(f"{request.node.name} :: Task completed in {elapsed_time:.2f} seconds.")
+            await validate_task_output(
+                client=client,
+                validation=test_input.validate_output,
+            )
+        finally:
+            if dataset_id is not None:
+                if task_id is not None:
+                    await stop_task(client=client, dataset_id=dataset_id, task_id=task_id)
+                    await delete_task(client=client, dataset_id=dataset_id, task_id=task_id)
+                await delete_dataset(client=client, dataset_id=dataset_id)
+            end_time = asyncio.get_event_loop().time()
+            elapsed_time = end_time - start_time
+            print(f"{request.node.name} :: Task completed in {elapsed_time:.2f} seconds.")
