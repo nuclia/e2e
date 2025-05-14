@@ -66,6 +66,7 @@ class TaskTestInput:
 
 from contextlib import asynccontextmanager
 
+
 @pytest.fixture(scope="session")
 def aiohttp_client():
     @asynccontextmanager
@@ -88,6 +89,7 @@ def aiohttp_client():
             yield session
 
     return create_aiohttp_client
+
 
 async def create_nua_key(client: aiohttp.ClientSession, account_id: str, title: str) -> tuple[str, str]:
     body = {
@@ -526,6 +528,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
 import pytest
 from typing import AsyncGenerator
 
+
 @pytest.fixture
 async def tmp_nua_key(
     nua_client: AsyncNuaClient,
@@ -580,7 +583,9 @@ async def test_da_agent_tasks(
                 parameters=test_input.parameters,
             )
             print(f"{request.node.name} ::  task_id: {task_id}")
-            task_request = await wait_for_task_completion(client=client, dataset_id=dataset_id, task_id=task_id)
+            task_request = await wait_for_task_completion(
+                client=client, dataset_id=dataset_id, task_id=task_id
+            )
             assert task_request["completed"] is True
             assert task_request["failed"] is False
 

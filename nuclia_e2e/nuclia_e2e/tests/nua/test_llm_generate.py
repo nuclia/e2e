@@ -6,7 +6,6 @@ import pytest
 from nuclia_e2e.utils import make_retry_async
 
 
-
 # We use a retry wrapper function instead of a context manager
 # because async context managers yield inside a retry loop,
 # which leads to runtime errors when retries stop unexpectedly.

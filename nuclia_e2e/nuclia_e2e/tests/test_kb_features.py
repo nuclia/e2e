@@ -51,9 +51,7 @@ async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> 
     new_kb = await kbs.add(
         zone=regional_api_config.zone_slug,
         slug=kb_slug,
-        learning_configuration={
-            "semantic_models": ["en-2024-04-24"]
-        }
+        learning_configuration={"semantic_models": ["en-2024-04-24"]},
     )
 
     kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)

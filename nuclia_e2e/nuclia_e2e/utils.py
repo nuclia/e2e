@@ -36,6 +36,7 @@ async def create_test_kb(regional_api_config, kb_slug, logger: Logger = print) -
     logger(f"Created kb {new_kb['id']}")
     return kbid
 
+
 async def delete_test_kb(regional_api_config, kbid, kb_slug, logger):
     kbs = AsyncNucliaKBS()
     logger("Deleting kb {kbid}")
@@ -43,6 +44,7 @@ async def delete_test_kb(regional_api_config, kbid, kb_slug, logger):
 
     kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
     assert kbid is None
+
 
 async def wait_for(
     condition: Callable[[], Awaitable[tuple[bool, Any]]],

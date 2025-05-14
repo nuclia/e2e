@@ -8,8 +8,11 @@ from nuclia_e2e.utils import get_kbid_from_slug, create_test_kb, delete_test_kb
 
 Logger = Callable[[str], None]
 
+
 @pytest.mark.asyncio_cooperative
-async def test_kb_vectorsets(request: pytest.FixtureRequest, regional_api: RegionalAPI, regional_api_config: ZoneConfig):
+async def test_kb_vectorsets(
+    request: pytest.FixtureRequest, regional_api: RegionalAPI, regional_api_config: ZoneConfig
+):
     def logger(msg):
         print(f"{request.node.name} ::: {msg}")
 

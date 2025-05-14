@@ -14,6 +14,7 @@ from typing import Callable
 
 Logger = Callable[[str], None]
 
+
 @pytest.mark.asyncio_cooperative
 async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: ZoneConfig):
     def logger(msg):
