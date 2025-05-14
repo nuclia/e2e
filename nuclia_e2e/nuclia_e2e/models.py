@@ -109,9 +109,9 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     "chatgpt-o3-mini",
     "chatgpt-4.1",
     # "huggingface"
-    "llama-3.2-90b-vision-instruct-maas",
-    "llama-4-maverick-17b-128e-instruct-maas",
-    "llama-4-scout-17b-16e-instruct-maas",
+    # "llama-3.2-90b-vision-instruct-maas",               EXCLUDED because they are pretty lame at JSON
+    # "llama-4-maverick-17b-128e-instruct-maas",          EXCLUDED because they are pretty lame at JSON
+    # "llama-4-scout-17b-16e-instruct-maas",              EXCLUDED because they are pretty lame at JSON
     # "deepseek-reasoner",
     "deepseek-chat",
     # "azure-deepseek-r1",
