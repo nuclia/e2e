@@ -9,8 +9,14 @@ from pathlib import Path
 from time import monotonic
 from typing import Any
 
-from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryCallState
-
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_fixed,
+    retry_if_exception,
+    retry_if_exception_type,
+    RetryCallState,
+)
 import asyncio
 import httpx
 
@@ -144,9 +150,15 @@ class Retriable(Generic[T]):
         # This is hacky, would be better to fix the nuclia.py to return a better exception, but i didn't want
         # to mess with the sdk that has been raising a RuntimError for long, just for the tests...
         if isinstance(exc, RuntimeError):
-            codes = '|'.join(map(str, self.RETRIABLE_STATUS_CODES))
-            match = re.search(fr"[^\d]({codes})[^\d]", str(exc))
+            codes = "|".join(map(str, self.RETRIABLE_STATUS_CODES))
+            match = re.search(rf"[^\d]({codes})[^\d]", str(exc))
             return match is not None
+
+        # Maybe this is not transient, but as we cannot see for sue the source of this errors, probably always
+        # some networking, we'll retry anyway, if it does all retries, then probably there's something pretty
+        # broken
+        if isinstance(exc, httpx.ReadError):  # noqa: SIM103
+            return True
 
         return False
 
@@ -210,9 +222,23 @@ def get_sync_kb_ndb_client(
     return Retriable.wrap_sync(ndb)
 
 
-def make_retry_async(attempts=3, delay=10):
-    return retry(
-        stop=stop_after_attempt(attempts),
-        wait=wait_fixed(delay),
-        reraise=True,
-    )
+def make_retry_async(attempts=3, delay=10, exceptions=None):
+    def _log_before_sleep(retry_state: RetryCallState):
+        fn_name = retry_state.fn.__name__
+        attempt_number = retry_state.attempt_number
+        exception = retry_state.outcome.exception()
+        print(
+            f"[Retry] Attempt {attempt_number} for function '{fn_name}' due to {type(exception).__name__}: {exception}"
+        )
+
+    kwargs = {
+        "stop": stop_after_attempt(attempts),
+        "wait": wait_fixed(delay),
+        "before_sleep": _log_before_sleep,
+        "reraise": True,
+    }
+
+    if exceptions:
+        kwargs["retry"] = retry_if_exception_type(tuple(exceptions))
+
+    return retry(**kwargs)
