@@ -1,5 +1,6 @@
 from collections.abc import Awaitable
 from collections.abc import Callable
+from nuclia.exceptions import NuaAPIException
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.lib.kb import Environment
 from nuclia.lib.kb import NucliaDBClient
@@ -8,13 +9,21 @@ from pathlib import Path
 from time import monotonic
 from typing import Any
 
-from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryCallState
 
 import asyncio
+import httpx
+
+from functools import wraps
+from typing import Callable, Any, ClassVar, Generic, overload, TypeVar, cast
+import inspect
+import httpx
+import requests
+import re
+
 
 ASSETS_FILE_PATH = Path(__file__).parent.joinpath("assets")
 NUCLIADB_KB_ENDPOINT = "/api/v1/kb/{kb}"
-
 
 Logger = Callable[[str], None]
 
@@ -71,6 +80,85 @@ async def get_kbid_from_slug(zone: str, slug: str) -> str | None:
     return kbid
 
 
+T = TypeVar("T")
+
+
+class Retriable(Generic[T]):
+    RETRIABLE_STATUS_CODES: ClassVar[set[int]] = {502, 503, 504, 512}
+
+    def __init__(self, client: T, is_async: bool):  # noqa: FBT001
+        self._client = client
+        self._is_async = is_async
+
+    def __getattr__(self, name: str):
+        attr = getattr(self._client, name)
+
+        if callable(attr) and not name.startswith("_"):
+            if self._is_async and inspect.iscoroutinefunction(attr):
+                return self._wrap_async(attr, name)
+            if not self._is_async and not inspect.iscoroutinefunction(attr):
+                return self._wrap_sync(attr, name)
+        return attr
+
+    def _wrap_sync(self, func: Callable, func_name: str):
+        @wraps(func)
+        @self._retry_on_transient_errors(func_name)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    def _wrap_async(self, func: Callable, func_name: str):
+        @wraps(func)
+        @self._retry_on_transient_errors(func_name)
+        async def wrapper(*args, **kwargs):
+            return await func(*args, **kwargs)
+
+        return wrapper
+
+    def _retry_on_transient_errors(self, func_name: str):
+        def log_before_sleep(retry_state: RetryCallState):
+            attempt = retry_state.attempt_number
+            exc = retry_state.outcome.exception()
+            print(f"[Retry #{attempt} of] Retrying '{func_name}' due to {type(exc).__name__}: {exc}")
+
+        # Wait up to 2 minutes,
+        return retry(
+            stop=stop_after_attempt(24),
+            wait=wait_fixed(5),
+            retry=retry_if_exception(self._is_transient_exception),
+            before_sleep=log_before_sleep,
+            reraise=True,
+        )
+
+    def _is_transient_exception(self, exc: Exception) -> bool:
+        if isinstance(exc, httpx.HTTPStatusError):
+            return exc.response.status_code in self.RETRIABLE_STATUS_CODES
+
+        if isinstance(exc, requests.HTTPError) and exc.response is not None:
+            return exc.response.status_code in self.RETRIABLE_STATUS_CODES
+
+        if isinstance(exc, NuaAPIException):
+            return getattr(exc, "code", None) in self.RETRIABLE_STATUS_CODES
+
+        # This is hacky, would be better to fix the nuclia.py to return a better exception, but i didn't want
+        # to mess with the sdk that has been raising a RuntimError for long, just for the tests...
+        if isinstance(exc, RuntimeError):
+            codes = '|'.join(map(str, self.RETRIABLE_STATUS_CODES))
+            match = re.search(fr"[^\d]({codes})[^\d]", str(exc))
+            return match is not None
+
+        return False
+
+    @classmethod
+    def wrap_sync(cls, client: T) -> T:
+        return cast(T, cls(client, is_async=False))
+
+    @classmethod
+    def wrap_async(cls, client: T) -> T:
+        return cast(T, cls(client, is_async=True))
+
+
 def get_async_kb_ndb_client(
     zone: str,
     kbid: str,
@@ -93,7 +181,7 @@ def get_async_kb_ndb_client(
         auth_params["api_key"] = service_account_token
 
     ndb = AsyncNucliaDBClient(environment=Environment.CLOUD, url=kb_base_url, region=zone, **auth_params)
-    return ndb
+    return Retriable.wrap_async(ndb)
 
 
 def get_sync_kb_ndb_client(
@@ -119,7 +207,7 @@ def get_sync_kb_ndb_client(
         auth_params["api_key"] = service_account_token
 
     ndb = NucliaDBClient(environment=Environment.CLOUD, url=kb_base_url, region=zone, **auth_params)
-    return ndb
+    return Retriable.wrap_sync(ndb)
 
 
 def make_retry_async(attempts=3, delay=10):

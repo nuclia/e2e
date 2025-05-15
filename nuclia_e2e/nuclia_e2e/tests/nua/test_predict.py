@@ -4,7 +4,6 @@ from nuclia.sdk.predict import AsyncNucliaPredict
 from nuclia_e2e.models import ALL_ENCODERS
 from nuclia_e2e.models import NON_REASONING_LLMS
 from nuclia_models.predict.remi import RemiRequest
-from nuclia_e2e.utils import make_retry_async
 
 import pytest
 
@@ -62,13 +61,9 @@ async def test_predict_rephrase(nua_client: AsyncNuaClient, model):
     # Check that rephrase is working for all models
     np = AsyncNucliaPredict()
 
-    @make_retry_async(attempts=3, delay=10)
-    async def retryable_block():
-        rephrased = await np.rephrase(question="Barcelona best coffe", model=model, nc=nua_client)
-        assert rephrased != "Barcelona best coffe"
-        assert rephrased != ""
-
-    await retryable_block()
+    rephrased = await np.rephrase(question="Barcelona best coffe", model=model, nc=nua_client)
+    assert rephrased != "Barcelona best coffe"
+    assert rephrased != ""
 
 
 @pytest.mark.asyncio_cooperative
