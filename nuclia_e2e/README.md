@@ -100,6 +100,10 @@ If at some point we hit concurrency issues, we can limit this with `--max-asynci
 
  Aside of this, as we suspect (not 100% sure) that there are asyncio related issues that causes some timeuts (httpx  ReadTimeout and ConnectTimeout mostly), we ended up using `pytest-shard` so all tests are splitted into 3 different pytest instances.
 
+### Retry Strategy for Transient Failures
+
+To improve test reliability and reduce flakiness caused by intermittent backend issues, we implemented a retry strategy for all client calls that may fail due to transient HTTP errors (e.g., 502, 503, 504, 512). This is achieved by wrapping API clients using a `nuclia_e2e.utils.Retriable` helper, which transparently intercepts method calls and retries them using the tenacity library. Both synchronous and asynchronous clients are supported, and retries are triggered automatically for known transient exceptions. This design allows test without needing to add explicit retry logic in individual tests.
+
 
 ### Configuration
 - All needed config is defined in `conftest.py` under `CLUSTERS_CONFIG`, secrets loaded from GHA injected env vars.
