@@ -1,0 +1,128 @@
+name: run-benchmark-prod
+run-name: Running PROD NUCLIA benchmark
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - '.github/workflows/run-benchmark-prod.yml'
+      - 'nuclia_e2e/**/benchmarking/**'
+  workflow_dispatch:
+  schedule:
+    # Run every day at 03:00 UTC
+    # Chosen to fall safely outside working hours in both Europe (CEST) and US East (EDT):
+    # - 03:00 UTC = 05:00 CEST (Europe) → early morning, before work starts
+    # - 03:00 UTC = 11:00 PM EDT (previous day) → late evening, after work ends
+    # This should minimizes interference from active user traffic
+    - cron: '0 3 * * *'
+
+jobs:
+  benchmark:
+    runs-on: nuclia-base
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [
+          "prod__gke-prod-1",
+          "prod__aws-us-east-2-1",
+          "prod__aws-il-central-1-1",
+          "progress__progress-proc-us-east-2-1",
+        ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r nuclia_e2e/requirements.txt
+          pip install -e nuclia_e2e
+
+      - name: Generate a token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.GHAPP_NUCLIA_SERVICE_BOT_ID }}
+          private-key: ${{ secrets.GHAPP_NUCLIA_SERVICE_BOT_PK }}
+          owner: nuclia
+
+      - name: Checkout core-apps repo
+        uses: actions/checkout@v4
+        with:
+          repository: nuclia/core-apps
+          token: ${{ steps.app-token.outputs.token }}
+          path: core-apps
+
+      - name: Extract vars
+        run: |
+          TEST_ENV=$(echo "${{ matrix.target }}" | cut -d'_' -f1)
+          TEST_ZONES=$(echo "${{ matrix.target }}" | cut -d'_' -f3-)
+          echo "TEST_ENV=$TEST_ENV" >> $GITHUB_ENV
+          echo "TEST_ZONES=$TEST_ZONES" >> $GITHUB_ENV
+          echo "ID_SUFFIX=${TEST_ENV}__${TEST_ZONES}" >> $GITHUB_ENV
+
+      - name: Run Benchmark
+        env:
+          BENCHMARK: 1
+          PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
+          PROD_ROOT_PAT_TOKEN: ${{ secrets.PROD_ROOT_PAT_TOKEN }}
+          PROD_GLOBAL_RECAPTCHA: ${{ secrets.PROD_GLOBAL_RECAPTCHA }}
+          TEST_EUROPE1_NUCLIA_NUA: ${{ secrets.TEST_EUROPE1_NUCLIA_NUA }}
+          TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
+          TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA }}
+          TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
+          PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
+          PROGRESS_ROOT_PAT_TOKEN: ${{ secrets.PROGRESS_ROOT_PAT_TOKEN }}
+          PROGRESS_GLOBAL_RECAPTCHA: ${{ secrets.PROGRESS_GLOBAL_RECAPTCHA }}
+          TEST_PROGRESS_PROC_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_PROGRESS_PROC_US_EAST_2_1_NUCLIA_NUA }}
+          GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
+          GHA_RUN_ID: ${{ github.run_id }}
+          PROMETHEUS_PUSHGATEWAY: "http://prometheus-cloud-pushgateway-prometheus-pushgateway.observability.svc.cluster.local:9091"
+          CORE_APPS_REPO_PATH: ${{ github.workspace }}/core-apps
+        run: |
+          pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests/benchmarking --durations=0
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ matrix.target }}
+          # pytest execuition creates this files
+          path: |
+            ${{ env.ID_SUFFIX }}__timings.json
+            ${{ env.ID_SUFFIX }}__versions.json
+            ${{ env.ID_SUFFIX }}__ids.json
+
+  summarize:
+    runs-on: ubuntu-latest
+    needs: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r nuclia_e2e/requirements-benchmark.txt
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: ./results
+
+      - name: Combine results into summary
+        run: python3 nuclia_e2e/generate_summary.py
+
+      - name: Upload summary
+        run: cat benchmark_summary.md >> $GITHUB_STEP_SUMMARY

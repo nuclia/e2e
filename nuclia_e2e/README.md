@@ -74,7 +74,13 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
      - in this kb there are two resources "omelette" and "roasted-chicken" setup to validate security groups.
      - in this kb you may see a service account named "test-e2e-kb-auth", that is dynamically created by the e2e.
    - `nuclia-e2e-live-{region}`: Dynamically created KBs for tests. They are cleaned up automatically, and the slug is reused.
-   - `base-e2e` (stage only): A source of exports for certain tests. **Do not modify or delete** if you don't now what you are doing.
+   - `base-e2e` (stage only): A source of exports for certain tests. **Do not modify or delete** if you don't now what you are doing. In case the export needs to be redone again (for example if the embedings model is deprecated) run this commands:
+   ```
+      BASE_DOMAIN=stashify.cloud nuclia auth login
+      BASE_NUCLIA_DOMAIN=stashify.cloud nuclia kbs default base-e2e
+      BASE_NUCLIA_DOMAIN=stashify.cloud nuclia kb exports start
+      BASE_NUCLIA_DOMAIN=stashify.cloud nuclia kb exports download --export_id {id_from previous start command} --path assets/e2e.financial.mini.export
+   ```
 
 ---
 
@@ -93,6 +99,10 @@ If at some point we hit concurrency issues, we can limit this with `--max-asynci
  - long requests without enough yields (e.g upload operations without streaming)
 
  Aside of this, as we suspect (not 100% sure) that there are asyncio related issues that causes some timeuts (httpx  ReadTimeout and ConnectTimeout mostly), we ended up using `pytest-shard` so all tests are splitted into 3 different pytest instances.
+
+### Retry Strategy for Transient Failures
+
+To improve test reliability and reduce flakiness caused by intermittent backend issues, we implemented a retry strategy for all client calls that may fail due to transient HTTP errors (e.g., 502, 503, 504, 512). This is achieved by wrapping API clients using a `nuclia_e2e.utils.Retriable` helper, which transparently intercepts method calls and retries them using the tenacity library. Both synchronous and asynchronous clients are supported, and retries are triggered automatically for known transient exceptions. This design allows test without needing to add explicit retry logic in individual tests.
 
 
 ### Configuration
