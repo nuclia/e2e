@@ -15,7 +15,7 @@ from nuclia_e2e.utils import make_retry_async
 async def test_llm_generate(nua_client: AsyncNuaClient, model):
     np = AsyncNucliaPredict()
 
-    @make_retry_async(attempts=3, delay=10, exceptions=(AssertionError))
+    @make_retry_async(attempts=3, delay=10, exceptions=(AssertionError,))
     async def test_nua_generate():
         generated = await np.generate("Which is the capital of Catalonia?", model=model, nc=nua_client)
         assert "Barcelona" in generated.answer

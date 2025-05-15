@@ -15,7 +15,7 @@ import pytest
 async def test_llm_rag(nua_client: AsyncNuaClient, model):
     np = AsyncNucliaPredict()
 
-    @make_retry_async(attempts=3, delay=10, exceptions=(AssertionError))
+    @make_retry_async(attempts=3, delay=10, exceptions=(AssertionError,))
     async def retryable_block():
         generated = await np.rag(
             question="Which is the CEO of Nuclia?",
