@@ -65,7 +65,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "⚠️ Tests failed on PROD\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "⚠️ Tests failed on STAGE\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
