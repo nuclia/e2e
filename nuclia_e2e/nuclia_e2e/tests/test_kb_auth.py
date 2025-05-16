@@ -49,7 +49,7 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
 
     # There are two resources describing to recipes
     #  - omelette          groups = apprentices, chefs
-    #  - roasted chicken   groups = apprentices, chefs
+    #  - roasted chicken   groups = chefs
     # This setup is used to test failing to ask for roasted chicken if you are an apprentice
     # while testing different scenarios on how we provide security(or don't)
 
