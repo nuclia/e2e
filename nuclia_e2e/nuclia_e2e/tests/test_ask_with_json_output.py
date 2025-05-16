@@ -26,7 +26,7 @@ async def test_ask_with_json_output(regional_api_config: ZoneConfig):
             reranker=RerankerName.PREDICT_RERANKER,
             features=["keyword", "semantic", "relations"],
             query="how to cook an omelette?",
-            generate_model="chatgpt-azure-4o-mini",
+            generative_model="chatgpt-azure-4o-mini",
             prompt=dedent(
                 """
             Answer the following question based **only** on the provided context. Do **not** use any outside
