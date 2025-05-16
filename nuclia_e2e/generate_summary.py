@@ -24,9 +24,10 @@ def generate_last_upload_trace_url(base_url: str, cluster_name: str, kbid: str, 
     from_str = one_hour_ago.isoformat(timespec="milliseconds").replace("+00:00", "Z")
     to_str = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
+    # For current ingestion test, this identifies the last upload request that triggers the processing push
     traceql_query = (
         f'{{resource.k8s.cluster="{cluster_name}" '
-        f'&& span.http.method="POST" '
+        f'&& span.http.method="PATCH" '
         f'&& span.http.url=~".*{kbid}.*"}}'
     )
 
