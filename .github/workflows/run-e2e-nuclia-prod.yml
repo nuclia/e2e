@@ -54,10 +54,14 @@ jobs:
         with:
           report_paths: 'nuclia-*.xml'
 
-      - name: Slack notification
-        id: slack
+
+  notify:
+    if: ${{ failure() && github.ref_name == 'main' }}
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
         uses: slackapi/slack-github-action@v1.24.0
-        if: ${{ failure() && github.ref_name == 'main' }}
         with:
           payload: |
             {

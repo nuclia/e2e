@@ -55,14 +55,17 @@ jobs:
         with:
           report_paths: 'nuclia-*.xml' # Collect all test reports from parallel runs
 
-      - name: Slack notification
-        id: slack
+  notify:
+    if: ${{ failure() && github.ref_name == 'main' }}
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
         uses: slackapi/slack-github-action@v1.24.0
-        if: ${{ failure() && github.ref_name == 'main' }}
         with:
           payload: |
             {
-              "text": "⚠️ Tests failed on STAGE\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "⚠️ Tests failed on PROD\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
