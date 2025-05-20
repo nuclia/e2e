@@ -13,7 +13,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-22.04
-    name: test-${{ matrix.zone }}-${{ matrix.shard_index }}
+    name: test-${{ matrix.zone }}_#${{ matrix.shard_index }}
     continue-on-error: true
     strategy:
       fail-fast: false
@@ -102,3 +102,10 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      # Always run to check if any zone failed. THis is needed because otherwise the `continue-on-error: true on the test config would make it always a success`
+      - name: Mark workflow as failed if any zone failed
+        if: ${{ steps.collect.outputs.failed_zones != '' }}
+        run: |
+          echo "One or more test zones failed: ${{ steps.collect.outputs.failed_zones }}"
+          exit 1
