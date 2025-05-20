@@ -26,6 +26,7 @@ import inspect
 import httpx
 import requests
 import re
+import nucliadb_sdk
 
 
 ASSETS_FILE_PATH = Path(__file__).parent.joinpath("assets")
@@ -95,6 +96,7 @@ class Retriable(Generic[T]):
     def __init__(self, client: T, is_async: bool):  # noqa: FBT001
         self._client = client
         self._is_async = is_async
+        self.max_attempts = 24
 
     def __getattr__(self, name: str):
         attr = getattr(self._client, name)
@@ -126,11 +128,13 @@ class Retriable(Generic[T]):
         def log_before_sleep(retry_state: RetryCallState):
             attempt = retry_state.attempt_number
             exc = retry_state.outcome.exception()
-            print(f"[Retry #{attempt} of] Retrying '{func_name}' due to {type(exc).__name__}: {exc}")
+            print(
+                f"[Retry #{attempt}/{self.max_attempts}] Retrying '{func_name}' due to {type(exc).__name__}: {exc}"
+            )
 
         # Wait up to 2 minutes,
         return retry(
-            stop=stop_after_attempt(24),
+            stop=stop_after_attempt(self.max_attempts),
             wait=wait_fixed(5),
             retry=retry_if_exception(self._is_transient_exception),
             before_sleep=log_before_sleep,
@@ -148,8 +152,8 @@ class Retriable(Generic[T]):
             return getattr(exc, "code", None) in self.RETRIABLE_STATUS_CODES
 
         # This is hacky, would be better to fix the nuclia.py to return a better exception, but i didn't want
-        # to mess with the sdk that has been raising a RuntimError for long, just for the tests...
-        if isinstance(exc, RuntimeError):
+        # to mess with the sdk that has been raising those exceptions for long, only for the tests...
+        if isinstance(exc, RuntimeError | nucliadb_sdk.v2.exceptions.UnknownError):
             codes = "|".join(map(str, self.RETRIABLE_STATUS_CODES))
             match = re.search(rf"[^\d]({codes})[^\d]", str(exc))
             return match is not None
@@ -157,7 +161,7 @@ class Retriable(Generic[T]):
         # Maybe this is not transient, but as we cannot see for sue the source of this errors, probably always
         # some networking, we'll retry anyway, if it does all retries, then probably there's something pretty
         # broken
-        if isinstance(exc, httpx.ReadError):  # noqa: SIM103
+        if isinstance(exc, httpx.ReadError | httpx.RemoteProtocolError):  # noqa: SIM103
             return True
 
         return False
