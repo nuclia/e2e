@@ -43,7 +43,7 @@ import pytest
 Logger = Callable[[str], None]
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
-TEST_CHOCO_ASK_MORE = "When did they start being high?"
+TEST_CHOCO_ASK_MORE = "how has this impacted customers?"
 
 
 async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
@@ -455,7 +455,8 @@ async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Lo
         query=TEST_CHOCO_ASK_MORE,
         generative_model="chatgpt-azure-4o-mini",
     )
-    assert "earlier" in ask_more_result.answer.decode().lower()
+    #  It increased the price of its permanent collection of chocolate bars from $13 to $14 and raised the price of its bonbons by 7%-8%.
+    assert "14" in ask_more_result.answer.decode().lower()
 
 
 async def run_test_activity_log(regional_api_config, ndb, logger):
