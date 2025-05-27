@@ -149,7 +149,7 @@ async def start_task(
 
 
 async def stop_task(client: aiohttp.ClientSession, dataset_id: str, task_id: str):
-    resp = await client.post(f"/api/v1/dataset/{dataset_id}/task/{task_id}/stop")
+    resp = await client.post(f"/api/v1/dataset/{dataset_id}/task/{task_id}/stop", json={})
     assert resp.status == 200, await resp.text()
 
 
