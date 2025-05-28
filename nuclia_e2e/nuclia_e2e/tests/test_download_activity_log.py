@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timedelta
 from nuclia.data import get_auth
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia_e2e.tests.conftest import EmailUtil
