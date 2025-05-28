@@ -4,17 +4,22 @@ from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia.sdk.search import AsyncNucliaSearch
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
-from nuclia_e2e.utils import wait_for
+from nuclia_e2e.utils import wait_for, get_kbid_from_slug
 from nuclia_models.accounts.backups import BackupCreate
 from nuclia_models.accounts.backups import BackupRestore
 
+
 import pytest
-import random
-import string
+from typing import Callable
+
+Logger = Callable[[str], None]
 
 
 @pytest.mark.asyncio_cooperative
 async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: ZoneConfig):
+    def logger(msg):
+        print(f"{request.node.name} ::: {msg}")
+
     kb_id = regional_api_config.permanent_kb_id
     zone = regional_api_config.zone_slug
     account_slug = regional_api_config.global_config.permanent_account_slug
@@ -33,8 +38,14 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
 
     await wait_for(condition=check_backup_finished, max_wait=180, interval=10)
 
+    new_kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_backup"
+
+    # Make sure the kb used for this test is deleted, as the slug is reused:
+    old_kbid = await get_kbid_from_slug(regional_api_config.zone_slug, new_kb_slug)
+    if old_kbid is not None:
+        await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
+
     # Restore Backup
-    new_kb_slug = "BackupTestE2E" + "".join(random.choices(string.ascii_letters, k=4))
     new_kb = await sdk.AsyncNucliaBackup().restore(
         restore=BackupRestore(slug=new_kb_slug, title="Test E2E Backup (can be deleted)"),
         backup_id=backup_create.id,

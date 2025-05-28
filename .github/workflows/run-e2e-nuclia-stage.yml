@@ -45,7 +45,7 @@ jobs:
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
         run: |
-          TEST_ENV=stage pytest -sxvr nuclia_e2e/nuclia_e2e/tests \
+          TEST_ENV=stage pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests \
             --durations=0 --junitxml=nuclia-${{ matrix.shard_index }}.xml \
             --shard-id=${{ matrix.shard_index }} --num-shards=3
 
@@ -55,10 +55,13 @@ jobs:
         with:
           report_paths: 'nuclia-*.xml' # Collect all test reports from parallel runs
 
-      - name: Slack notification
-        id: slack
+  notify:
+    if: ${{ failure() && github.ref_name == 'main' }}
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack notification
         uses: slackapi/slack-github-action@v1.24.0
-        if: ${{ failure() && github.ref_name == 'main' }}
         with:
           payload: |
             {

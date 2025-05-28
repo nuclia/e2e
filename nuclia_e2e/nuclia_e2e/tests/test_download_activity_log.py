@@ -33,7 +33,11 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
     auth = get_auth()
     async_ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
 
-    date = datetime.now() - timedelta(days=31)
+    date = datetime.now()
+
+    # Very simple ask to ensure at least we have something in the database for this month and kb
+    kb = AsyncNucliaKB()
+    await kb.search.ask(ndb=async_ndb, query="omelette")
 
     test_email = email_util.generate_email_address()
     query = DownloadActivityLogsChatQuery(

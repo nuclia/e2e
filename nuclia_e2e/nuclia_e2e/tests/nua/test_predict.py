@@ -55,13 +55,12 @@ async def test_predict_tokens(nua_client: AsyncNuaClient):
 # - asyncio loop overload
 # - Transient error
 # For any t of hese reasons, make sense not to retry immediately
-@pytest.mark.flaky(reruns=4, reruns_delay=10)
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("model", NON_REASONING_LLMS)
 async def test_predict_rephrase(nua_client: AsyncNuaClient, model):
     # Check that rephrase is working for all models
     np = AsyncNucliaPredict()
-    # TODO: Test that custom rephrase prompt works once SDK supports it
+
     rephrased = await np.rephrase(question="Barcelona best coffe", model=model, nc=nua_client)
     assert rephrased != "Barcelona best coffe"
     assert rephrased != ""

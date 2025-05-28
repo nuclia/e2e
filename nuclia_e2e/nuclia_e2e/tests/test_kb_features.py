@@ -43,7 +43,7 @@ import pytest
 Logger = Callable[[str], None]
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
-TEST_CHOCO_ASK_MORE = "When did they start being high?"
+TEST_CHOCO_ASK_MORE = "how has this impacted customers?"
 
 
 async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
@@ -51,7 +51,7 @@ async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> 
     new_kb = await kbs.add(
         zone=regional_api_config.zone_slug,
         slug=kb_slug,
-        sentence_embedder="en-2024-04-24",
+        learning_configuration={"semantic_models": ["en-2024-04-24"]},
     )
 
     kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
@@ -104,7 +104,8 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
     """
     kb = AsyncNucliaKB()
 
-    await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export", ndb=ndb)
+    response = await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export", ndb=ndb)
+    logger(f"Import started with id {response.import_id}")
 
     def resources_are_imported(resources):
         @wraps(resources_are_imported)
@@ -454,7 +455,8 @@ async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Lo
         query=TEST_CHOCO_ASK_MORE,
         generative_model="chatgpt-azure-4o-mini",
     )
-    assert "earlier" in ask_more_result.answer.decode().lower()
+    #  It increased the price of its permanent collection of chocolate bars from $13 to $14 and raised the price of its bonbons by 7%-8%.
+    assert "14" in ask_more_result.answer.decode().lower()
 
 
 async def run_test_activity_log(regional_api_config, ndb, logger):
@@ -709,7 +711,7 @@ async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, glo
     zone = regional_api_config.zone_slug
     account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
-    kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_auth"
+    kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_usage"
 
     # Make sure the kb used for this test is deleted, as the slug is reused:
     old_kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
