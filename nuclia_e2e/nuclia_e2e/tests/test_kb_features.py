@@ -8,6 +8,8 @@ from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kbs import AsyncNucliaKBS
+from nuclia_e2e.tests.conftest import GlobalAPI
+from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
@@ -564,7 +566,7 @@ async def run_test_tokens_on_activity_log(
     assert activity_log_nuclia_tokens == expected_accounting_tokens
 
 
-async def run_test_tokens_on_accounting(global_api, account, kbid, logger):
+async def run_test_tokens_on_accounting(global_api: GlobalAPI, account: str, kbid: str, logger):
     def nuclia_tokens_stored_on_accounting():
         @wraps(nuclia_tokens_stored_on_accounting)
         async def condition() -> tuple[bool, Any]:
@@ -690,7 +692,9 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb_usage(request: pytest.FixtureRequest, regional_api_config, global_api):
+async def test_kb_usage(
+    request: pytest.FixtureRequest, regional_api_config: ZoneConfig, global_api: GlobalAPI
+):
     """
     This test is conducted separately from the main test_kb to ensure more deterministic results. The retries
     that typically occur in test_kb make it difficult to achieve the level of precision required for this

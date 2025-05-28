@@ -1,10 +1,12 @@
+from collections.abc import Callable
+from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia_e2e.tests.conftest import RegionalAPI
 from nuclia_e2e.tests.conftest import ZoneConfig
-import pytest
-from nuclia.sdk.kbs import AsyncNucliaKBS
-from typing import Callable
-from nuclia_e2e.utils import get_kbid_from_slug, create_test_kb, delete_test_kb
+from nuclia_e2e.utils import create_test_kb
+from nuclia_e2e.utils import delete_test_kb
+from nuclia_e2e.utils import get_kbid_from_slug
 
+import pytest
 
 Logger = Callable[[str], None]
 

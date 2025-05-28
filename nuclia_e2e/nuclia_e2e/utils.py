@@ -1,33 +1,31 @@
 from collections.abc import Awaitable
 from collections.abc import Callable
+from functools import wraps
 from nuclia.exceptions import NuaAPIException
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.lib.kb import Environment
 from nuclia.lib.kb import NucliaDBClient
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from pathlib import Path
+from tenacity import retry
+from tenacity import retry_if_exception
+from tenacity import retry_if_exception_type
+from tenacity import RetryCallState
+from tenacity import stop_after_attempt
+from tenacity import wait_fixed
 from time import monotonic
 from typing import Any
+from typing import cast
+from typing import ClassVar
+from typing import Generic
+from typing import TypeVar
 
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_fixed,
-    retry_if_exception,
-    retry_if_exception_type,
-    RetryCallState,
-)
 import asyncio
 import httpx
-
-from functools import wraps
-from typing import Callable, Any, ClassVar, Generic, overload, TypeVar, cast
 import inspect
-import httpx
-import requests
-import re
 import nucliadb_sdk
-
+import re
+import requests
 
 ASSETS_FILE_PATH = Path(__file__).parent.joinpath("assets")
 NUCLIADB_KB_ENDPOINT = "/api/v1/kb/{kb}"
