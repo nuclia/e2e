@@ -11,12 +11,11 @@ from copy import deepcopy  # noqa: E402
 from datetime import datetime  # noqa: E402
 from datetime import timedelta  # noqa: E402
 from email.header import decode_header  # noqa: E402
-from functools import partial, wraps  # noqa: E402
+from functools import partial  # noqa: E402
 from nuclia.config import reset_config_file  # noqa: E402
 from nuclia.config import set_config_file  # noqa: E402
 from nuclia.data import get_async_auth  # noqa: E402
 from nuclia.data import get_config  # noqa: E402
-from nuclia.exceptions import NuaAPIException  # noqa: E402
 from nuclia.lib.nua import AsyncNuaClient  # noqa: E402
 from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
 from nuclia_e2e.utils import Retriable  # noqa: E402

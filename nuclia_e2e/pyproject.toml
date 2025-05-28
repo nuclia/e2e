@@ -118,6 +118,9 @@ lint.ignore = [
     "RET504",
     "SIM102",
     "B007",
+    "PLR0915",
+    "PLR0913",
+    "PTH123",
 ]
 
 exclude = [

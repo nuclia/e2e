@@ -1,16 +1,16 @@
+from collections.abc import Callable
 from nuclia import sdk
 from nuclia.data import get_auth
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia.sdk.search import AsyncNucliaSearch
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
-from nuclia_e2e.utils import wait_for, get_kbid_from_slug
+from nuclia_e2e.utils import get_kbid_from_slug
+from nuclia_e2e.utils import wait_for
 from nuclia_models.accounts.backups import BackupCreate
 from nuclia_models.accounts.backups import BackupRestore
 
-
 import pytest
-from typing import Callable
 
 Logger = Callable[[str], None]
 

@@ -2,6 +2,7 @@ from nuclia.lib.nua import AsyncNuaClient
 from nuclia.sdk.predict import AsyncNucliaPredict
 from nuclia_e2e.models import ALL_LLMS
 from nuclia_e2e.utils import make_retry_async
+
 import pytest
 
 

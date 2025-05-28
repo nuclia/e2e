@@ -2,9 +2,8 @@ from nuclia.lib.nua import AsyncNuaClient
 from nuclia.sdk.process import AsyncNucliaProcessing
 from nuclia_e2e.utils import get_asset_file_path
 
-import pytest
 import asyncio
-
+import pytest
 
 #
 # NOTE

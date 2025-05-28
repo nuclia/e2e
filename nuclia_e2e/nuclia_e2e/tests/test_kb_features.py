@@ -273,7 +273,7 @@ async def run_test_create_da_labeller_with_label_filter(
     title = "The rise of climbing gyms across the US"
     text = """The rise of climbing gyms across the US has been a boon for the climbing industry.
     With the rise of climbing gyms, more people are getting into the sport and the industry is growing.
-    Items like climbing shoes, ropes, and harnesses are flying off the shelves as more people take up the sport."""
+    Items like climbing shoes, ropes, and harnesses are flying off the shelves as more people take up the sport."""  # noqa: E501
     article = TextField(body=text)
 
     # Create a resource talking about climbing that contains the label that should trigger the labeller agent
@@ -285,7 +285,8 @@ async def run_test_create_da_labeller_with_label_filter(
         texts={"article": article},
     )
 
-    # Create a resource talking about climbing that does not contain the label that should NOT trigger the labeller agent
+    # Create a resource talking about climbing that does not contain the label
+    # that should NOT trigger the labeller agent
     await kb.resource.create(
         ndb=ndb,
         title=title,
@@ -457,7 +458,8 @@ async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Lo
         query=TEST_CHOCO_ASK_MORE,
         generative_model="chatgpt-azure-4o-mini",
     )
-    #  It increased the price of its permanent collection of chocolate bars from $13 to $14 and raised the price of its bonbons by 7%-8%.
+    # It increased the price of its permanent collection of chocolate bars
+    # from $13 to $14 and raised the price of its bonbons by 7%-8%.
     assert "14" in ask_more_result.answer.decode().lower()
 
 
@@ -744,7 +746,7 @@ async def test_kb_usage(
         generative_model="chatgpt-azure-4o-mini",
     )
 
-    accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)
+    accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)  # noqa: F841
     # Disable check nuclia tokens on activity log for now, as under heavy loads it takes several hours
     # to be up to date, and so the logs won't be available on most of the tests runs.
     # await run_test_tokens_on_activity_log(async_ndb, accounting_tokens, logger)

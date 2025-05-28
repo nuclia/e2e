@@ -127,7 +127,8 @@ class Retriable(Generic[T]):
             attempt = retry_state.attempt_number
             exc = retry_state.outcome.exception()
             print(
-                f"[Retry #{attempt}/{self.max_attempts}] Retrying '{func_name}' due to {type(exc).__name__}: {exc}"
+                f"[Retry #{attempt}/{self.max_attempts}] "
+                f"Retrying '{func_name}' due to {type(exc).__name__}: {exc}"
             )
 
         # Wait up to 2 minutes,
@@ -230,7 +231,8 @@ def make_retry_async(attempts=3, delay=10, exceptions=None):
         attempt_number = retry_state.attempt_number
         exception = retry_state.outcome.exception()
         print(
-            f"[Retry] Attempt {attempt_number} for function '{fn_name}' due to {type(exception).__name__}: {exception}"
+            f"[Retry] Attempt {attempt_number} for function '{fn_name}'"
+            f" due to {type(exception).__name__}: {exception}"
         )
 
     kwargs = {
