@@ -11,6 +11,44 @@ on:
     # Run every day at 04:25
     - cron: '25 4 * * *'
 jobs:
+  build-virtual-env:
+    runs-on: ubuntu-22.04
+    name: Build virtual environment
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install venv
+        run: uv sync --project nuclia_e2e
+
+      - name: Upload virtualenv to cache
+        uses: actions/cache/save@v4
+        with:
+          path: nuclia_e2e/.venv
+          key: venv-${{ github.sha }}
+
+  pre-checks:
+    runs-on: ubuntu-22.04
+    name: Python pre-checks
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore venv
+        uses: actions/cache/restore@v4
+        with:
+          path: nuclia_e2e/.venv
+          key: venv-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Run pre-checks
+        run: |
+          source nuclia_e2e/.venv/bin/activate
+          make -C nuclia_e2e/ lint format-check
+
   test:
     runs-on: ubuntu-22.04
     name: test-${{ matrix.zone }}_#${{ matrix.shard_index }}
@@ -24,16 +62,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Install venv
-        run: uv sync --project nuclia_e2e
-
-      - name: Run pre-checks
-        run: |
-          source nuclia_e2e/.venv/bin/activate
-          make -C nuclia_e2e/ lint format-check
+      - name: Restore venv
+        uses: actions/cache/restore@v4
+        with:
+          path: nuclia_e2e/.venv
+          key: venv-${{ github.sha }}
+          fail-on-cache-miss: true
 
       - name: "Run tests"
         env: # Or as an environment variable
