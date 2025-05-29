@@ -54,8 +54,8 @@ jobs:
           make -C nuclia_e2e/ lint format-check
 
   test:
-    name: e2e tests
     runs-on: ubuntu-22.04
+    name: e2e tests
     strategy:
       fail-fast: false
       matrix:

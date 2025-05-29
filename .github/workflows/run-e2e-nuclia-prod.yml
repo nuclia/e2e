@@ -52,7 +52,6 @@ jobs:
           make -C nuclia_e2e/ lint format-check
 
   test:
-    name: e2e tests
     runs-on: ubuntu-22.04
     name: test-${{ matrix.zone }}_#${{ matrix.shard_index }}
     continue-on-error: true
