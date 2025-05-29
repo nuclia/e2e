@@ -30,6 +30,10 @@ jobs:
       - name: Install venv
         run: uv sync --project nuclia_e2e
 
+      - name: Run pre-checks: lints and typing
+        run: |
+          make -C nuclia_e2e/ lint
+
       - name: Run tests (Shard ${{ matrix.shard_index }})
         env:
           TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}

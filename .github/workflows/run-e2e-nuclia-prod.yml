@@ -30,6 +30,10 @@ jobs:
       - name: Install venv
         run: uv sync --project nuclia_e2e
 
+      - name: Run pre-checks: lints and typing
+        run: |
+          make -C nuclia_e2e/ lint
+
       - name: "Run tests"
         env: # Or as an environment variable
           PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
