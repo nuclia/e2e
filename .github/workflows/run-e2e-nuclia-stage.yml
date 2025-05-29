@@ -29,7 +29,7 @@ jobs:
       - name: Upload virtualenv to cache
         uses: actions/cache/save@v4
         with:
-          path: .venv
+          path: nuclia_e2e/.venv
           key: venv-${{ github.sha }}
 
   pre-checks:
@@ -44,7 +44,7 @@ jobs:
       - name: Restore venv
         uses: actions/cache/restore@v4
         with:
-          path: .venv
+          path: nuclia_e2e/.venv
           key: venv-${{ github.sha }}
           fail-on-cache-miss: true
 
@@ -71,7 +71,7 @@ jobs:
       - name: Restore venv
         uses: actions/cache/restore@v4
         with:
-          path: .venv
+          path: nuclia_e2e/.venv
           key: venv-${{ github.sha }}
           fail-on-cache-miss: true
 
