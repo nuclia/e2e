@@ -3,6 +3,7 @@ from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nucliadb_models.search import AskRequest
+from nucliadb_models.search import ChatOptions
 from nucliadb_models.search import RerankerName
 from textwrap import dedent
 
@@ -24,7 +25,11 @@ async def test_ask_with_json_output(regional_api_config: ZoneConfig):
             autofilter=True,
             rephrase=True,
             reranker=RerankerName.PREDICT_RERANKER,
-            features=["keyword", "semantic", "relations"],
+            features=[
+                ChatOptions.KEYWORD,
+                ChatOptions.SEMANTIC,
+                ChatOptions.RELATIONS,
+            ],
             query="how to cook an omelette?",
             generative_model="chatgpt-azure-4o-mini",
             prompt=dedent(

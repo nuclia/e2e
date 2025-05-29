@@ -3,7 +3,9 @@ from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.search import AskAnswer
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nucliadb_models.search import AskRequest
+from nucliadb_models.search import ChatOptions
 from nucliadb_models.search import RequestSecurity
+from nucliadb_models.search import RerankerName
 
 import pytest
 
@@ -39,10 +41,10 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
             ndb=client,
             query=AskRequest(
                 query=question,
-                reranker="predict",
+                reranker=RerankerName.PREDICT_RERANKER,
                 rephrase=False,
                 generative_model="chatgpt-azure-4o-mini",
-                features=["semantic"],
+                features=[ChatOptions.SEMANTIC],
                 security=RequestSecurity(groups=security_groups) if security_groups is not None else None,
             ),
         )

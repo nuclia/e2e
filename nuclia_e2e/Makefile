@@ -8,7 +8,6 @@ lint:
 lint-autofix:
 	ruff format .
 	ruff check . --fix
-	mypy .
 
 format-check:
 	ruff format . --check

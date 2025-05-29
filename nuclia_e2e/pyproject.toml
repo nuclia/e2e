@@ -5,13 +5,10 @@ description = "Your project description"
 readme = "README.md"  # Relative to nuclia_e2e
 requires-python = ">=3.10"
 dependencies = [
-    "mypy-extensions==1.0.0",
-    "mypy==1.15.0",
     "nuclia>=4.8.9",
     "nucliadb-protos",
     "pytest-timeout",
     "pytest==8.3.4",
-    "ruff==0.8.1",
     "backoff",
     "aiohttp",
     "pytest-asyncio-cooperative", # not compatible with pytest-asyncio
@@ -21,6 +18,21 @@ dependencies = [
     "prometheus-client",
     "pyyaml",
     "tenacity",
+    # Lint and format
+    "ruff==0.8.1",
+    # Typing
+    "mypy==1.15.0",
+    "mypy-extensions==1.0.0",
+    "types-colorama",
+    "types-deprecated",
+    "types-docutils",
+    "types-pexpect",
+    "types-pygments",
+    "types-pyyaml",
+    "types-requests",
+    "types-setuptools",
+    "types-tabulate",
+    "types-tqdm",
 ]
 
 [project.optional-dependencies]
