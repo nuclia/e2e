@@ -14,7 +14,6 @@ from tenacity import RetryCallState
 from tenacity import stop_after_attempt
 from tenacity import wait_fixed
 from time import monotonic
-from typing import Any
 from typing import cast
 from typing import ClassVar
 from typing import Generic
@@ -31,6 +30,9 @@ ASSETS_FILE_PATH = Path(__file__).parent.joinpath("assets")
 NUCLIADB_KB_ENDPOINT = "/api/v1/kb/{kb}"
 
 Logger = Callable[[str], None]
+
+
+T = TypeVar("T")
 
 
 def get_asset_file_path(file: str):
@@ -61,11 +63,11 @@ async def delete_test_kb(regional_api_config, kbid, kb_slug, logger):
 
 
 async def wait_for(
-    condition: Callable[[], Awaitable[tuple[bool, Any]]],
-    max_wait: int = 60,
-    interval: int = 5,
+    condition: Callable[[], Awaitable[tuple[bool, T]]],
+    max_wait: float = 60,
+    interval: float = 5,
     logger: Logger = print,
-) -> tuple[bool, Any]:
+) -> tuple[bool, T]:
     func_name = condition.__name__
     logger(f"start wait_for '{func_name}', max_wait={max_wait}s")
     start = monotonic()
@@ -83,9 +85,6 @@ async def get_kbid_from_slug(zone: str, slug: str) -> str | None:
     kbids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kbid = kbids_by_slug.get(slug)
     return kbid
-
-
-T = TypeVar("T")
 
 
 class Retriable(Generic[T]):
@@ -125,6 +124,7 @@ class Retriable(Generic[T]):
     def _retry_on_transient_errors(self, func_name: str):
         def log_before_sleep(retry_state: RetryCallState):
             attempt = retry_state.attempt_number
+            assert retry_state.outcome is not None
             exc = retry_state.outcome.exception()
             print(
                 f"[Retry #{attempt}/{self.max_attempts}] "
@@ -140,7 +140,7 @@ class Retriable(Generic[T]):
             reraise=True,
         )
 
-    def _is_transient_exception(self, exc: Exception) -> bool:
+    def _is_transient_exception(self, exc: BaseException) -> bool:
         if isinstance(exc, httpx.HTTPStatusError):
             return exc.response.status_code in self.RETRIABLE_STATUS_CODES
 
@@ -227,8 +227,10 @@ def get_sync_kb_ndb_client(
 
 def make_retry_async(attempts=3, delay=10, exceptions=None):
     def _log_before_sleep(retry_state: RetryCallState):
+        assert retry_state.fn is not None
         fn_name = retry_state.fn.__name__
         attempt_number = retry_state.attempt_number
+        assert retry_state.outcome is not None
         exception = retry_state.outcome.exception()
         print(
             f"[Retry] Attempt {attempt_number} for function '{fn_name}'"

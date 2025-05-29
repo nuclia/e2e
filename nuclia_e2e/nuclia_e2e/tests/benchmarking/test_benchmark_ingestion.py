@@ -103,8 +103,8 @@ async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Lo
 
 
 class Timer:
-    def __init__(self, desc):
-        self.desc: str = desc
+    def __init__(self, desc: str):
+        self.desc = desc
         self.start_time: datetime | None = None
         self.end_time: datetime | None = None
 

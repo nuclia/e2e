@@ -8,9 +8,12 @@ from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
 from nuclia_e2e.utils import wait_for
 from nuclia_models.accounts.backups import BackupCreate
+from nuclia_models.accounts.backups import BackupResponse
 from nuclia_models.accounts.backups import BackupRestore
+from nucliadb_models.search import CatalogResponse
 
 import pytest
+import uuid
 
 Logger = Callable[[str], None]
 
@@ -22,14 +25,17 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
 
     kb_id = regional_api_config.permanent_kb_id
     zone = regional_api_config.zone_slug
+    assert regional_api_config.global_config is not None
     account_slug = regional_api_config.global_config.permanent_account_slug
     sdk.NucliaAccounts().default(account_slug)
 
     # Create Backup
-    backup_create = await sdk.AsyncNucliaBackup().create(backup=BackupCreate(kb_id=kb_id), zone=zone)
+    backup_create = await sdk.AsyncNucliaBackup().create(
+        backup=BackupCreate(kb_id=uuid.UUID(kb_id)), zone=zone
+    )
 
     # Wait till backup is finished
-    async def check_backup_finished() -> bool:
+    async def check_backup_finished() -> tuple[bool, BackupResponse]:
         backups = await sdk.AsyncNucliaBackup().list(zone=zone)
         backup_list = [b for b in backups if b.id == backup_create.id]
         assert len(backup_list) == 1
@@ -61,7 +67,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     ndb = get_async_kb_ndb_client(zone=zone, kbid=new_kb.id, user_token=auth._config.token)
     search = AsyncNucliaSearch()
 
-    async def check_restore_completed() -> bool:
+    async def check_restore_completed() -> tuple[bool, CatalogResponse]:
         catalog = await search.catalog(ndb=ndb)
         return len(catalog.resources) > 0, catalog
 
