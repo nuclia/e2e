@@ -1,13 +1,12 @@
 from datetime import datetime
-from datetime import timedelta
 from nuclia.data import get_auth
-from nuclia.lib.kb import LogType
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia_e2e.tests.conftest import EmailUtil
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_models.events.activity_logs import DownloadActivityLogsChatQuery
 from nuclia_models.events.activity_logs import DownloadFormat
+from nuclia_models.events.activity_logs import EventType
 from nuclia_models.events.activity_logs import QueryFiltersChat
 
 import aiohttp
@@ -49,7 +48,7 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
     )
     kb = AsyncNucliaKB()
     request = await kb.logs.download(
-        ndb=async_ndb, type=LogType.CHAT, query=query, download_format=DownloadFormat.NDJSON, wait=True
+        ndb=async_ndb, type=EventType.CHAT, query=query, download_format=DownloadFormat.NDJSON, wait=True
     )
     data = await fetch_ndjson_async(request.download_url)
     assert len(data) > 1

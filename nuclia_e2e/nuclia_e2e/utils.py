@@ -1,33 +1,31 @@
 from collections.abc import Awaitable
 from collections.abc import Callable
+from functools import wraps
 from nuclia.exceptions import NuaAPIException
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.lib.kb import Environment
 from nuclia.lib.kb import NucliaDBClient
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from pathlib import Path
+from tenacity import retry
+from tenacity import retry_if_exception
+from tenacity import retry_if_exception_type
+from tenacity import RetryCallState
+from tenacity import stop_after_attempt
+from tenacity import wait_fixed
 from time import monotonic
 from typing import Any
+from typing import cast
+from typing import ClassVar
+from typing import Generic
+from typing import TypeVar
 
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_fixed,
-    retry_if_exception,
-    retry_if_exception_type,
-    RetryCallState,
-)
 import asyncio
 import httpx
-
-from functools import wraps
-from typing import Callable, Any, ClassVar, Generic, overload, TypeVar, cast
 import inspect
-import httpx
-import requests
-import re
 import nucliadb_sdk
-
+import re
+import requests
 
 ASSETS_FILE_PATH = Path(__file__).parent.joinpath("assets")
 NUCLIADB_KB_ENDPOINT = "/api/v1/kb/{kb}"
@@ -129,7 +127,8 @@ class Retriable(Generic[T]):
             attempt = retry_state.attempt_number
             exc = retry_state.outcome.exception()
             print(
-                f"[Retry #{attempt}/{self.max_attempts}] Retrying '{func_name}' due to {type(exc).__name__}: {exc}"
+                f"[Retry #{attempt}/{self.max_attempts}] "
+                f"Retrying '{func_name}' due to {type(exc).__name__}: {exc}"
             )
 
         # Wait up to 2 minutes,
@@ -232,7 +231,8 @@ def make_retry_async(attempts=3, delay=10, exceptions=None):
         attempt_number = retry_state.attempt_number
         exception = retry_state.outcome.exception()
         print(
-            f"[Retry] Attempt {attempt_number} for function '{fn_name}' due to {type(exception).__name__}: {exception}"
+            f"[Retry] Attempt {attempt_number} for function '{fn_name}'"
+            f" due to {type(exception).__name__}: {exception}"
         )
 
     kwargs = {

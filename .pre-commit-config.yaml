@@ -1,0 +1,45 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_language_version:
+    python: python3
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-docstring-first
+      # https://github.com/docker/for-mac/issues/5029
+      #- id: check-executables-have-shebangs
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-xml
+      - id: check-yaml
+        exclude: templates/
+        args:
+          - "--unsafe"
+      - id: check-json
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+        args:
+          - "--fix=lf"
+      - id: no-commit-to-branch
+        args:
+          - "--branch"
+          - master
+      - id: pretty-format-json
+        args:
+          - "--autofix"
+          - "--indent=4"
+          - "--no-sort-keys"
+      - id: sort-simple-yaml
+      - id: trailing-whitespace
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.8.1"
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format

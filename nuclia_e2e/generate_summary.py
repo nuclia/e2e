@@ -1,10 +1,11 @@
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 from pathlib import Path
 from tabulate import tabulate
-import urllib.parse
-import json
-import datetime
-from datetime import datetime, timezone, timedelta
 
+import json
+import urllib.parse
 
 results_dir = Path("./results")
 timings_data = {}
@@ -68,7 +69,7 @@ if __name__ == "__main__":
         ]
         timing_rows.append(row)
 
-    timing_table = tabulate(timing_rows, headers=["Env/Zone"] + timing_keys, tablefmt="github")
+    timing_table = tabulate(timing_rows, headers=["Env/Zone", *timing_keys], tablefmt="github")
 
     # Build version table
     version_keys = sorted({k for v in versions_data.values() for k in v})
@@ -78,7 +79,7 @@ if __name__ == "__main__":
         row = [env_zone] + [versions_data[env_zone].get(k, "-") for k in version_keys]
         version_rows.append(row)
 
-    version_table = tabulate(version_rows, headers=["Env/Zone"] + version_keys, tablefmt="github")
+    version_table = tabulate(version_rows, headers=["Env/Zone", *version_keys], tablefmt="github")
 
     # Build trace links table
     grafana_rows = []
@@ -109,7 +110,8 @@ if __name__ == "__main__":
 
         f.write("\n### 🔍 Trace Links\n")
         f.write(
-            "\nThis traces correspond to the nucliadb call that sends to process the file. Any processing attempt trace will be linked as the last span named 'Processing attempt #1'\n"
+            "\nThis traces correspond to the nucliadb call that sends to process the file."
+            " Any processing attempt trace will be linked as the last span named 'Processing attempt #1'\n"
         )
         f.write(grafana_table + "\n")
 

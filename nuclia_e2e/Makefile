@@ -1,6 +1,5 @@
 install:
-	pip install -r requirements.txt
-	pip install -e .
+	uv sync --project nuclia_e2e --all-extras
 
 lint:
 	ruff check .

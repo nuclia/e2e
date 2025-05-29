@@ -6,7 +6,7 @@ on:
       - '**'
     paths:
       - '.github/workflows/run-e2e-stage.yml'
-      - 'cypress/**'      
+      - 'cypress/**'
   workflow_dispatch:
     branches:
       - main
@@ -71,7 +71,7 @@ jobs:
         run: |
           docker logs nucliadb-server > nucliadb-server.log 2>&1
           docker logs pg > postgres.log
-    
+
       - name: Upload Docker Logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -80,7 +80,7 @@ jobs:
           path: |
             nucliadb-server.log
             postgres.log
-          if-no-files-found: ignore          
+          if-no-files-found: ignore
       - name: Slack notification
         id: slack
         uses: slackapi/slack-github-action@v1.25.0

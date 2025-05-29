@@ -1,6 +1,5 @@
 from collections.abc import Callable
 from datetime import datetime
-from datetime import timedelta
 from datetime import timezone
 from functools import wraps
 from nuclia.data import get_auth
@@ -8,6 +7,8 @@ from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia_e2e.utils import ASSETS_FILE_PATH
+from nuclia_e2e.utils import create_test_kb
+from nuclia_e2e.utils import delete_test_kb
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
 from nuclia_e2e.utils import wait_for
@@ -21,11 +22,10 @@ from textwrap import dedent
 from typing import Any
 
 import backoff
+import json
 import os
 import pytest
 import yaml
-import json
-from nuclia_e2e.utils import get_kbid_from_slug, create_test_kb, delete_test_kb
 
 Logger = Callable[[str], None]
 
@@ -128,7 +128,7 @@ def push_timings_to_prometheus(
     instance: str,
     benchmark_type: str,
     cluster: str,
-    extra_labels: dict[str, str] = None,
+    extra_labels: dict[str, str] | None = None,
     gateway_url: str = PROMETHEUS_PUSHGATEWAY,
 ):
     registry = CollectorRegistry()
@@ -194,11 +194,14 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     timings = {
         "upload": Timer("Client perceived upload time"),
         "process_delay": Timer(
-            "Time elapsed  since upload finished to processing-slow start. This is a rough metric as the processes involved here (scheduling, processor scale up) may alredy have started before the upload finished from the user perspective"
+            "Time elapsed  since upload finished to processing-slow start. This is a rough metric as the"
+            " processes involved here (scheduling, processor scale up) may alredy have started before the"
+            " upload finished from the user perspective"
         ),
         "process": Timer("Real running time of the processor up until the broker message is sent."),
         "ingest": Timer(
-            "Elapsed time since processing sent the Broker message until the resource is stored as PROCESSED in nucliadb. This includes: waiting for the BM, storing"
+            "Elapsed time since processing sent the Broker message until the resource is stored as PROCESSED"
+            " in nucliadb. This includes: waiting for the BM, storing"
         ),
         "index_ready": Timer("Elapsed time since NucliaDB stored the processed BM until is ready for search"),
     }
@@ -272,8 +275,8 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     def resource_is_indexed(rid):
         @wraps(resource_is_indexed)
         async def condition() -> tuple[bool, Any]:
-            # Considering that if the index is ready, it was before the request started, so keep updating
-            # this until is actually true. This will be probably more accurate than waiting for the request to end.
+            # Considering that if the index is ready, it was before the request started, so keep updating this
+            # until is actually true. This will be probably more accurate than waiting for the request to end.
             timings["index_ready"].stop()
             result = await kb.search.find(
                 ndb=async_ndb, features=["keyword"], reranker="noop", query="Michiko"

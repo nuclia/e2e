@@ -1,6 +1,7 @@
 from _pytest.mark.structures import ParameterSet
 from collections.abc import AsyncGenerator
 from collections.abc import Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from nuclia.lib.nua import AsyncNuaClient
 from nuclia_e2e.tests.conftest import GRAFANA_URL
@@ -22,15 +23,13 @@ from nuclia_models.worker.tasks import PARAMETERS_TYPING
 from nuclia_models.worker.tasks import TaskName
 from nuclia_models.worker.tasks import TaskStart
 from nucliadb_protos.writer_pb2 import BrokerMessage
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+
 import aiofiles
 import aiohttp
 import asyncio
 import base64
 import json
 import pytest
-
 
 LLAMA_GUARD_DISABLED = True
 PROMPT_GUARD_DISABLED = TEST_ENV == "prod"
