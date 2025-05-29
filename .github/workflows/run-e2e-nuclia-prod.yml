@@ -32,6 +32,7 @@ jobs:
 
       - name: Run pre-checks
         run: |
+          source nuclia_e2e/.venv/bin/activate
           make -C nuclia_e2e/ lint format-check
 
       - name: "Run tests"
