@@ -30,9 +30,9 @@ jobs:
       - name: Install venv
         run: uv sync --project nuclia_e2e
 
-      - name: Run pre-checks: lints and typing
+      - name: Run pre-checks
         run: |
-          make -C nuclia_e2e/ lint
+          make -C nuclia_e2e/ lint format-check
 
       - name: "Run tests"
         env: # Or as an environment variable
