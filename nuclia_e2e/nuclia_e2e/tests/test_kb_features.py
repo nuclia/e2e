@@ -32,6 +32,9 @@ from nuclia_models.worker.tasks import TaskName
 from nucliadb_models import TextField
 from nucliadb_models import UserClassification
 from nucliadb_models import UserMetadata
+from nucliadb_models.graph.requests import GraphNodesSearchRequest
+from nucliadb_models.graph.requests import GraphRelationsSearchRequest
+from nucliadb_models.graph.requests import GraphSearchRequest
 from nucliadb_models.metadata import ResourceProcessingStatus
 from nucliadb_sdk.v2.exceptions import ClientError
 from nucliadb_sdk.v2.exceptions import NotFoundError
@@ -398,7 +401,7 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
-async def run_test_find(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
+async def run_test_find(ndb: AsyncNucliaDBClient):
     kb = AsyncNucliaKB()
 
     result = await kb.search.find(
@@ -416,7 +419,40 @@ async def run_test_find(regional_api_config, ndb: AsyncNucliaDBClient, logger: L
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
-async def run_test_ask(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
+async def run_test_graph(ndb: AsyncNucliaDBClient, kbid: str):
+    paths = await ndb.ndb.graph_search(
+        kbid=kbid,
+        content=GraphSearchRequest.model_validate(
+            {
+                "query": {
+                    "prop": "path",
+                    "source": {
+                        "value": "Apple",
+                    },
+                    "destination": {"value": "China"},
+                }
+            }
+        ),
+    )
+    assert len(paths.paths) > 0
+
+    nodes = await ndb.ndb.graph_nodes(
+        kbid=kbid,
+        content=GraphNodesSearchRequest.model_validate({"query": {"prop": "node", "value": "Apple"}}),
+    )
+    assert len(nodes.nodes) > 0
+
+    relations = await ndb.ndb.graph_relations(
+        kbid=kbid,
+        content=GraphRelationsSearchRequest.model_validate(
+            {"query": {"prop": "relation", "label": "operating system"}}
+        ),
+    )
+    assert len(relations.relations) > 0
+
+
+@backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
+async def run_test_ask(ndb: AsyncNucliaDBClient):
     kb = AsyncNucliaKB()
 
     ask_result = await kb.search.ask(
@@ -675,10 +711,11 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     await asyncio.gather(
         run_test_check_da_labeller_output(regional_api_config, async_ndb, logger),
         run_test_check_embedding_model_migration(async_ndb, embedding_migration_task_id, logger),
-        run_test_find(regional_api_config, async_ndb, logger),
+        run_test_find(async_ndb),
+        run_test_graph(async_ndb, kbid),
         run_test_check_da_labeller_with_label_filter_output(regional_api_config, async_ndb, logger),
     )
-    await run_test_ask(regional_api_config, async_ndb, logger)
+    await run_test_ask(async_ndb)
 
     # Validate that all the data about the usage we generated is correctly stored on the activity log
     # and can be queried, and that the remi quality metrics. Even if the remi metrics won't be computed until
