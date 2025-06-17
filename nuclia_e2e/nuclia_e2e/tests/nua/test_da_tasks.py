@@ -190,15 +190,15 @@ async def validate_task_output(client: aiohttp.ClientSession, validation: Callab
     last_retry_exc = None
     for _ in range(max_retries):
         try:
-            resp = await client.get("/api/v1/processing/pull", params={"from_cursor": 0, "limit": 1})
+            resp = await client.post("/api/v2/processing/pull", json={"limit": 1})
             assert resp.status == 200, await resp.text()
             pull_response = await resp.json()
-            payloads = pull_response.get("payloads", [])
-            assert len(payloads) > 0, "No payload received"
-            assert len(payloads) == 1, f"Only one payload expected, got {len(payloads)}"
+            messages = pull_response.get("messages", [])
+            assert len(messages) > 0, "No payload received"
+            assert len(messages) == 1, f"Only one payload expected, got {len(messages)}"
 
             message = BrokerMessage()
-            message.ParseFromString(base64.b64decode(payloads[0]))
+            message.ParseFromString(base64.b64decode(messages[0]["payload"]))
             validation(message)
 
         except AssertionError as exc:
