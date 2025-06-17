@@ -190,7 +190,7 @@ async def validate_task_output(client: aiohttp.ClientSession, validation: Callab
     last_retry_exc = None
     for _ in range(max_retries):
         try:
-            resp = await client.get("/api/v1/processing/pull", params={"from_cursor": 0, "limit": 1})
+            resp = await client.post("/api/v2/processing/pull", json={"limit": 1})
             assert resp.status == 200, await resp.text()
             pull_response = await resp.json()
             payloads = pull_response.get("payloads", [])
