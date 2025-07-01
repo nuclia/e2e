@@ -4,6 +4,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from functools import wraps
+from nuclia_models.worker.tasks import TaskResponse
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
@@ -23,6 +24,7 @@ from nuclia_models.worker.proto import ApplyTo
 from nuclia_models.worker.proto import Filter
 from nuclia_models.worker.proto import Label
 from nuclia_models.worker.proto import LabelOperation
+from nuclia_models.worker.proto import AskOperation
 from nuclia_models.worker.proto import LLMConfig
 from nuclia_models.worker.proto import Operation
 from nuclia_models.worker.tasks import ApplyOptions
@@ -128,6 +130,113 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
         resources_are_imported(["disney", "hp", "vaccines"]), max_wait=120, logger=logger
     )
     assert success, "Expected imported resources not found"
+
+
+async def run_test_da_ask_worker(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger) -> str:
+    """
+    Creates a config to run on all current resources and on all future ones
+    """
+    kb = AsyncNucliaKB()
+    tr: TaskResponse = await kb.task.start(
+        ndb=ndb,
+        task_name=TaskName.ASK,
+        apply=ApplyOptions.ALL,
+        parameters=DataAugmentation(
+            name="test-ask",
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[
+                Operation(
+                    ask=AskOperation(
+                        question="What is the document about? Summarize it in a single sentence.",
+                        destination="custom-summary",
+                    )
+                )
+            ],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+    )
+    return tr.id
+
+
+async def run_test_check_da_ask_output(
+    regional_api_config, ask_task_id: str, ndb: AsyncNucliaDBClient, logger: Logger
+):
+    kb = AsyncNucliaKB()
+
+    resource_slugs = [
+        "disney",
+        "hp",
+        "chocolatier",
+        "vaccines",
+    ]
+
+    async def has_custom_summary_field(resource_slug: str) -> bool:
+        """
+        Check if the resource has a custom summary field extracted.
+        """
+        try:
+            res = await kb.resource.get(slug=resource_slug, show=["extracted"], ndb=ndb)
+        except NotFoundError:
+            # some resource may still be missing from nucliadb, let's wait more
+            return False
+        try:
+            custom_summary_field = res.data.texts["custom-summary"]
+        except KeyError:
+            # Not found yet, let's wait more
+            return False
+        try:
+            return custom_summary_field.extracted.text.text is not None
+        except TypeError:
+            # If the field does not have extracted text, it means it was not processed yet
+            return False
+
+    def resources_are_summarized(resource_slugs):
+        @wraps(resources_are_summarized)
+        async def condition() -> tuple[bool, Any]:
+            # Return true only if all resources have the custom summary field extracted
+            return all(
+                await asyncio.gather(
+                    *(has_custom_summary_field(resource_slug) for resource_slug in resource_slugs)
+                ),
+                None,
+            )
+
+        return condition
+
+    success, _ = await wait_for(
+        condition=resources_are_summarized(resource_slugs),
+        max_wait=180,
+        interval=20,
+        logger=logger,
+    )
+    assert success, "Expected custom summary text fields not found in resources"
+
+    # Now schedule the cleanup and make sure that all custom-summary fields are gone
+    kb = AsyncNucliaKB()
+    await kb.task.delete(
+        ndb=ndb,
+        task_id=ask_task_id,
+        cleanup=True,
+    )
+
+    def custom_summary_fields_deleted():
+        @wraps(custom_summary_fields_deleted)
+        async def condition() -> tuple[bool, Any]:
+            return all(
+                await asyncio.gather(
+                    *(not await has_custom_summary_field(resource_slug) for resource_slug in resource_slugs)
+                ),
+                None,
+            )
+
+    success, _ = await wait_for(
+        condition=custom_summary_fields_deleted,
+        max_wait=180,
+        interval=20,
+        logger=logger,
+    )
+    assert success, "Expected custom summary text fields not deleted from resources after cleanup"
 
 
 async def run_test_create_da_labeller(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
@@ -694,10 +803,11 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     # Create a labeller configuration that runs only on new resources that have a specific label
     # This will test the filtering capabilities of the labeller
     #
-    (_, embedding_migration_task_id, _) = await asyncio.gather(
+    (_, embedding_migration_task_id, _, ask_task_id) = await asyncio.gather(
         run_test_create_da_labeller(regional_api_config, async_ndb, logger),
         run_test_start_embedding_model_migration_task(async_ndb),
         run_test_create_da_labeller_with_label_filter(regional_api_config, async_ndb, logger),
+        run_test_da_ask_worker(regional_api_config, async_ndb, logger),
     )
 
     # Upload a new resource and validate that is correctly processed and stored in nuclia
@@ -714,6 +824,7 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         run_test_find(async_ndb),
         run_test_graph(async_ndb, kbid),
         run_test_check_da_labeller_with_label_filter_output(regional_api_config, async_ndb, logger),
+        run_test_check_da_ask_output(regional_api_config, ask_task_id, async_ndb, logger),
     )
     await run_test_ask(async_ndb)
 
