@@ -195,11 +195,10 @@ async def run_test_check_da_ask_output(
         @wraps(resources_are_summarized)
         async def condition() -> tuple[bool, Any]:
             # Return true only if all resources have the custom summary field extracted
-            result = all(
-                await asyncio.gather(
-                    *(has_custom_summary_field(resource_slug) for resource_slug in resource_slugs)
-                )
+            resources_have_field = await asyncio.gather(
+                *[has_custom_summary_field(resource_slug) for resource_slug in resource_slugs]
             )
+            result = all(resources_have_field)
             return (result, None)
 
         return condition
@@ -223,11 +222,10 @@ async def run_test_check_da_ask_output(
     def custom_summary_fields_deleted():
         @wraps(custom_summary_fields_deleted)
         async def condition() -> tuple[bool, Any]:
-            result = all(
-                await asyncio.gather(
-                    *(not await has_custom_summary_field(resource_slug) for resource_slug in resource_slugs)
-                )
+            resources_have_field = await asyncio.gather(
+                *[has_custom_summary_field(resource_slug) for resource_slug in resource_slugs]
             )
+            result = not any(resources_have_field)
             return (result, None)
 
     success, _ = await wait_for(
