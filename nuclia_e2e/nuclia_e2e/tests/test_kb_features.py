@@ -4,7 +4,6 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from functools import wraps
-from nuclia_models.worker.tasks import TaskResponse
 from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
@@ -21,16 +20,17 @@ from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
 from nuclia_models.events.activity_logs import EventType
 from nuclia_models.events.activity_logs import QueryFiltersChat
 from nuclia_models.worker.proto import ApplyTo
+from nuclia_models.worker.proto import AskOperation
 from nuclia_models.worker.proto import Filter
 from nuclia_models.worker.proto import Label
 from nuclia_models.worker.proto import LabelOperation
-from nuclia_models.worker.proto import AskOperation
 from nuclia_models.worker.proto import LLMConfig
 from nuclia_models.worker.proto import Operation
 from nuclia_models.worker.tasks import ApplyOptions
 from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import SemanticModelMigrationParams
 from nuclia_models.worker.tasks import TaskName
+from nuclia_models.worker.tasks import TaskResponse
 from nucliadb_models import TextField
 from nucliadb_models import UserClassification
 from nucliadb_models import UserMetadata
