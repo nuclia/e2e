@@ -182,8 +182,12 @@ async def run_test_check_da_ask_output(
             return False
         try:
             custom_summary_field = res.data.texts["customsummary"]
-            return custom_summary_field.extracted.text.text is not None
         except (TypeError, KeyError):
+            # Not found yet, let's wait more
+            return False
+        try:
+            return custom_summary_field.extracted.text.text is not None
+        except TypeError:
             # Not found yet, let's wait more
             return False
 
