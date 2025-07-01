@@ -176,19 +176,15 @@ async def run_test_check_da_ask_output(
         Check if the resource has a custom summary field extracted.
         """
         try:
-            res = await kb.resource.get(slug=resource_slug, show=["extracted"], ndb=ndb)
+            res = await kb.resource.get(slug=resource_slug, show=["values", "extracted"], ndb=ndb)
         except NotFoundError:
             # some resource may still be missing from nucliadb, let's wait more
             return False
         try:
             custom_summary_field = res.data.texts["customsummary"]
-        except KeyError:
-            # Not found yet, let's wait more
-            return False
-        try:
             return custom_summary_field.extracted.text.text is not None
-        except TypeError:
-            # If the field does not have extracted text, it means it was not processed yet
+        except (TypeError, KeyError):
+            # Not found yet, let's wait more
             return False
 
     def resources_are_summarized(resource_slugs):
