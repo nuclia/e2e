@@ -211,7 +211,7 @@ async def run_test_check_da_ask_output(
     )
     assert success, "Expected custom summary text fields not found in resources"
 
-    # Now schedule the cleanup and make sure that all custom-summary fields are gone
+    # Now schedule the cleanup and make sure that all custom-summary fields are gone.
     kb = AsyncNucliaKB()
     await kb.task.delete(
         ndb=ndb,
