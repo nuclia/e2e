@@ -149,7 +149,7 @@ async def run_test_da_ask_worker(regional_api_config, ndb: AsyncNucliaDBClient, 
                 Operation(
                     ask=AskOperation(
                         question="What is the document about? Summarize it in a single sentence.",
-                        destination="custom-summary",
+                        destination="customsummary",
                     )
                 )
             ],
@@ -181,7 +181,7 @@ async def run_test_check_da_ask_output(
             # some resource may still be missing from nucliadb, let's wait more
             return False
         try:
-            custom_summary_field = res.data.texts["custom-summary"]
+            custom_summary_field = res.data.texts["customsummary"]
         except KeyError:
             # Not found yet, let's wait more
             return False
