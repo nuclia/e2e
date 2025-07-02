@@ -188,7 +188,8 @@ async def run_test_check_da_ask_output(
             for fid, data in res.data.texts.items():
                 if fid.startswith(expected_field_id_prefix) and data.extracted.text.text is not None:
                     return True
-            return False
+            else:
+                return False
         except (TypeError, AttributeError):
             # If the resource does not have the expected structure, let's wait more
             return False
