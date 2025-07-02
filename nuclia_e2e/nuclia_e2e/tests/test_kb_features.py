@@ -171,11 +171,13 @@ async def run_test_check_da_ask_output(
         "vaccines",
     ]
 
-    expected_field_id = "da-customsummary-f-file"
+    # The expected field id for the generated field. This should match the
+    # `destination` field in the AskOperation above: `da-{destination}`
+    expected_field_id_prefix = "da-customsummary"
 
-    async def has_custom_summary_field(resource_slug: str) -> bool:
+    async def has_generated_field(resource_slug: str) -> bool:
         """
-        Check if the resource has a custom summary field extracted.
+        Check if the resource has the extracted text for the generated field.
         """
         try:
             res = await kb.resource.get(slug=resource_slug, show=["values", "extracted"], ndb=ndb)
@@ -183,22 +185,19 @@ async def run_test_check_da_ask_output(
             # some resource may still be missing from nucliadb, let's wait more
             return False
         try:
-            custom_summary_field = res.data.texts[expected_field_id]
-        except (TypeError, KeyError):
-            # Not found yet, let's wait more
+            for fid, data in res.data.texts.items():
+                if fid.startswith(expected_field_id_prefix) and data.extracted.text.text is not None:
+                    return True
             return False
-        try:
-            return custom_summary_field.extracted.text.text is not None
-        except TypeError:
-            # Not found yet, let's wait more
+        except (TypeError, AttributeError):
+            # If the resource does not have the expected structure, let's wait more
             return False
 
-    def resources_are_summarized(resource_slugs):
-        @wraps(resources_are_summarized)
+    def resources_have_generated_fields(resource_slugs):
+        @wraps(resources_have_generated_fields)
         async def condition() -> tuple[bool, Any]:
-            # Return true only if all resources have the custom summary field extracted
             resources_have_field = await asyncio.gather(
-                *[has_custom_summary_field(resource_slug) for resource_slug in resource_slugs]
+                *[has_generated_field(resource_slug) for resource_slug in resource_slugs]
             )
             result = all(resources_have_field)
             return (result, None)
@@ -206,12 +205,12 @@ async def run_test_check_da_ask_output(
         return condition
 
     success, _ = await wait_for(
-        condition=resources_are_summarized(resource_slugs),
+        condition=resources_have_generated_fields(resource_slugs),
         max_wait=5 * 60,  # 5 minutes
         interval=20,
         logger=logger,
     )
-    assert success, f"Expected custom summary text fields not found in resources. task_id: {ask_task_id}"
+    assert success, f"Expected generated text fields not found in resources. task_id: {ask_task_id}"
 
     # Now schedule the cleanup and make sure that all custom-summary fields are gone.
     kb = AsyncNucliaKB()
@@ -221,11 +220,11 @@ async def run_test_check_da_ask_output(
         cleanup=True,
     )
 
-    def custom_summary_fields_deleted(resource_slugs):
-        @wraps(custom_summary_fields_deleted)
+    def generated_fields_deleted_from_resources(resource_slugs):
+        @wraps(generated_fields_deleted_from_resources)
         async def condition() -> tuple[bool, Any]:
             resources_have_field = await asyncio.gather(
-                *[has_custom_summary_field(resource_slug) for resource_slug in resource_slugs]
+                *[has_generated_field(resource_slug) for resource_slug in resource_slugs]
             )
             result = not any(resources_have_field)
             return (result, None)
@@ -233,14 +232,12 @@ async def run_test_check_da_ask_output(
         return condition
 
     success, _ = await wait_for(
-        condition=custom_summary_fields_deleted(resource_slugs),
+        condition=generated_fields_deleted_from_resources(resource_slugs),
         max_wait=5 * 60,  # 5 minutes
         interval=20,
         logger=logger,
     )
-    assert (
-        success
-    ), f"Expected custom summary text fields not deleted from resources after cleanup. task_id: {ask_task_id}"
+    assert success, f"Generated fields have not been deleted from resources. task_id: {ask_task_id}"
 
 
 async def run_test_create_da_labeller(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
