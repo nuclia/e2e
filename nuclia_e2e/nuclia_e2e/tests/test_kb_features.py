@@ -171,6 +171,8 @@ async def run_test_check_da_ask_output(
         "vaccines",
     ]
 
+    expected_field_id = "da-customsummary-f-file"
+
     async def has_custom_summary_field(resource_slug: str) -> bool:
         """
         Check if the resource has a custom summary field extracted.
@@ -181,7 +183,7 @@ async def run_test_check_da_ask_output(
             # some resource may still be missing from nucliadb, let's wait more
             return False
         try:
-            custom_summary_field = res.data.texts["customsummary"]
+            custom_summary_field = res.data.texts[expected_field_id]
         except (TypeError, KeyError):
             # Not found yet, let's wait more
             return False
