@@ -159,7 +159,7 @@ async def run_test_da_ask_worker(regional_api_config, ndb: AsyncNucliaDBClient, 
     return tr.id
 
 
-async def run_test_check_da_ask_output(
+async def run_test_check_da_ask_output(  # noqa: C901
     regional_api_config, ask_task_id: str, ndb: AsyncNucliaDBClient, logger: Logger
 ):
     kb = AsyncNucliaKB()
