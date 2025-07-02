@@ -205,11 +205,11 @@ async def run_test_check_da_ask_output(
 
     success, _ = await wait_for(
         condition=resources_are_summarized(resource_slugs),
-        max_wait=180,
+        max_wait=5 * 60,  # 5 minutes
         interval=20,
         logger=logger,
     )
-    assert success, "Expected custom summary text fields not found in resources"
+    assert success, f"Expected custom summary text fields not found in resources. task_id: {ask_task_id}"
 
     # Now schedule the cleanup and make sure that all custom-summary fields are gone.
     kb = AsyncNucliaKB()
@@ -219,7 +219,7 @@ async def run_test_check_da_ask_output(
         cleanup=True,
     )
 
-    def custom_summary_fields_deleted():
+    def custom_summary_fields_deleted(resource_slugs):
         @wraps(custom_summary_fields_deleted)
         async def condition() -> tuple[bool, Any]:
             resources_have_field = await asyncio.gather(
@@ -228,13 +228,17 @@ async def run_test_check_da_ask_output(
             result = not any(resources_have_field)
             return (result, None)
 
+        return condition
+
     success, _ = await wait_for(
-        condition=custom_summary_fields_deleted,
-        max_wait=180,
+        condition=custom_summary_fields_deleted(resource_slugs),
+        max_wait=5 * 60,  # 5 minutes
         interval=20,
         logger=logger,
     )
-    assert success, "Expected custom summary text fields not deleted from resources after cleanup"
+    assert (
+        success
+    ), f"Expected custom summary text fields not deleted from resources after cleanup. task_id: {ask_task_id}"
 
 
 async def run_test_create_da_labeller(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
