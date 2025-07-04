@@ -20,6 +20,7 @@ from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
 from nuclia_models.events.activity_logs import EventType
 from nuclia_models.events.activity_logs import QueryFiltersChat
 from nuclia_models.worker.proto import ApplyTo
+from nuclia_models.worker.proto import AskOperation
 from nuclia_models.worker.proto import Filter
 from nuclia_models.worker.proto import Label
 from nuclia_models.worker.proto import LabelOperation
@@ -29,6 +30,7 @@ from nuclia_models.worker.tasks import ApplyOptions
 from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import SemanticModelMigrationParams
 from nuclia_models.worker.tasks import TaskName
+from nuclia_models.worker.tasks import TaskResponse
 from nucliadb_models import TextField
 from nucliadb_models import UserClassification
 from nucliadb_models import UserMetadata
@@ -128,6 +130,115 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
         resources_are_imported(["disney", "hp", "vaccines"]), max_wait=120, logger=logger
     )
     assert success, "Expected imported resources not found"
+
+
+async def run_test_da_ask_worker(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger) -> str:
+    """
+    Creates a config to run on all current resources and on all future ones
+    """
+    kb = AsyncNucliaKB()
+    tr: TaskResponse = await kb.task.start(
+        ndb=ndb,
+        task_name=TaskName.ASK,
+        apply=ApplyOptions.ALL,
+        parameters=DataAugmentation(
+            name="test-ask",
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[
+                Operation(
+                    ask=AskOperation(
+                        question="What is the document about? Summarize it in a single sentence.",
+                        destination="customsummary",
+                    )
+                )
+            ],
+            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+        ),
+    )
+    return tr.id
+
+
+async def run_test_check_da_ask_output(  # noqa: C901
+    regional_api_config, ask_task_id: str, ndb: AsyncNucliaDBClient, logger: Logger
+):
+    kb = AsyncNucliaKB()
+
+    resource_slugs = [
+        "disney",
+        "hp",
+        "chocolatier",
+        "vaccines",
+    ]
+
+    # The expected field id for the generated field. This should match the
+    # `destination` field in the AskOperation above: `da-{destination}`
+    expected_field_id_prefix = "da-customsummary"
+
+    async def has_generated_field(resource_slug: str) -> bool:
+        """
+        Check if the resource has the extracted text for the generated field.
+        """
+        try:
+            res = await kb.resource.get(slug=resource_slug, show=["values", "extracted"], ndb=ndb)
+        except NotFoundError:
+            # some resource may still be missing from nucliadb, let's wait more
+            return False
+        try:
+            for fid, data in res.data.texts.items():
+                if fid.startswith(expected_field_id_prefix) and data.extracted.text.text is not None:
+                    return True
+        except (TypeError, AttributeError):
+            # If the resource does not have the expected structure, let's wait more
+            return False
+        else:
+            # If we reach here, it means the field was not found
+            return False
+
+    def resources_have_generated_fields(resource_slugs):
+        @wraps(resources_have_generated_fields)
+        async def condition() -> tuple[bool, Any]:
+            resources_have_field = await asyncio.gather(
+                *[has_generated_field(resource_slug) for resource_slug in resource_slugs]
+            )
+            result = all(resources_have_field)
+            return (result, None)
+
+        return condition
+
+    success, _ = await wait_for(
+        condition=resources_have_generated_fields(resource_slugs),
+        max_wait=5 * 60,  # 5 minutes
+        interval=20,
+        logger=logger,
+    )
+    assert success, f"Expected generated text fields not found in resources. task_id: {ask_task_id}"
+
+    # Now schedule the cleanup and make sure that all custom-summary fields are gone.
+    await kb.task.delete(
+        ndb=ndb,
+        task_id=ask_task_id,
+        cleanup=True,
+    )
+
+    def generated_fields_deleted_from_resources(resource_slugs):
+        @wraps(generated_fields_deleted_from_resources)
+        async def condition() -> tuple[bool, Any]:
+            resources_have_field = await asyncio.gather(
+                *[has_generated_field(resource_slug) for resource_slug in resource_slugs]
+            )
+            result = not any(resources_have_field)
+            return (result, None)
+
+        return condition
+
+    success, _ = await wait_for(
+        condition=generated_fields_deleted_from_resources(resource_slugs),
+        max_wait=5 * 60,  # 5 minutes
+        interval=20,
+        logger=logger,
+    )
+    assert success, f"Generated fields have not been deleted from resources. task_id: {ask_task_id}"
 
 
 async def run_test_create_da_labeller(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
@@ -694,10 +805,11 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     # Create a labeller configuration that runs only on new resources that have a specific label
     # This will test the filtering capabilities of the labeller
     #
-    (_, embedding_migration_task_id, _) = await asyncio.gather(
+    (_, embedding_migration_task_id, _, ask_task_id) = await asyncio.gather(
         run_test_create_da_labeller(regional_api_config, async_ndb, logger),
         run_test_start_embedding_model_migration_task(async_ndb),
         run_test_create_da_labeller_with_label_filter(regional_api_config, async_ndb, logger),
+        run_test_da_ask_worker(regional_api_config, async_ndb, logger),
     )
 
     # Upload a new resource and validate that is correctly processed and stored in nuclia
@@ -714,6 +826,7 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         run_test_find(async_ndb),
         run_test_graph(async_ndb, kbid),
         run_test_check_da_labeller_with_label_filter_output(regional_api_config, async_ndb, logger),
+        run_test_check_da_ask_output(regional_api_config, ask_task_id, async_ndb, logger),
     )
     await run_test_ask(async_ndb)
 
