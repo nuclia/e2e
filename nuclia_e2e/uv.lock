@@ -611,7 +611,7 @@ wheels = [
 
 [[package]]
 name = "nuclia"
-version = "4.8.10"
+version = "4.9.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -630,9 +630,9 @@ dependencies = [
     { name = "tabulate" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/10/e4/496e3ce6071ba8cc80eead3f713eea84d247187fa60d138899210780559d/nuclia-4.8.10.tar.gz", hash = "sha256:d5d842868820de99cb0de24ff479e6db448bbdc58e416ed8d0d7902507a0e61e", size = 235541, upload-time = "2025-05-28T10:33:20.548Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/13/9a/0a54e0b7202d5c5634c08c752922c37ed8a410780450626b34900b4803df/nuclia-4.9.5.tar.gz", hash = "sha256:2d061ec965083fb24e38cbaf1b34989f81ea4c52801910a37ae44cf11b835b86", size = 238646, upload-time = "2025-07-01T12:09:37.657Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/37/af/1f020e9026a993b36ee3210f78087c237335918977a2a13a657c099b38bc/nuclia-4.8.10-py3-none-any.whl", hash = "sha256:bedbe2fd9556438df642a58013bb52ca31658e5b31326bed70434aef3276d9d4", size = 71566, upload-time = "2025-05-28T10:33:18.787Z" },
+    { url = "https://files.pythonhosted.org/packages/49/52/51f0f52bda5fae69ea5da92a361868ff418b520b85bfb9ab3aa4e2bed304/nuclia-4.9.5-py3-none-any.whl", hash = "sha256:d7db1a903a201bc08e200a0b7672c9cd2f804f2a0ef1c49cecf94c8e0a79d50f", size = 74754, upload-time = "2025-07-01T12:09:36.416Z" },
 ]
 
 [[package]]
@@ -679,7 +679,7 @@ requires-dist = [
     { name = "backoff" },
     { name = "mypy", specifier = "==1.15.0" },
     { name = "mypy-extensions", specifier = "==1.0.0" },
-    { name = "nuclia", specifier = ">=4.8.9" },
+    { name = "nuclia", specifier = ">=4.9.5" },
     { name = "nucliadb-protos" },
     { name = "prometheus-client" },
     { name = "pytest", specifier = "==8.3.4" },
@@ -707,25 +707,25 @@ provides-extras = ["benchmark"]
 
 [[package]]
 name = "nuclia-models"
-version = "0.41.1"
+version = "0.45.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic", extra = ["email"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/90/fb/fa638f4732d4dbd2308ec5c2d7684133a51e24607b85d9fc39b264430a15/nuclia_models-0.41.1.tar.gz", hash = "sha256:726cc7974bcffd2329fc3fbd17e14b0b7f79bfcd5f88131764d94b931fe9c873", size = 21608, upload-time = "2025-05-26T08:59:04.815Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/f8/3b3e8f621737f170052e5d055668139c4e8aa6b2df8181786bd04d17f95e/nuclia_models-0.45.0.tar.gz", hash = "sha256:80170f60b88ddb6fb5d9ba69571878a8346006da8ccc3f90445b1b49dfb7a08b", size = 21879, upload-time = "2025-06-06T12:19:54.695Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0c/38/fdfd9c05377bca3955790a367b73e1fbfeef0054a43f855a38fbd79d753a/nuclia_models-0.41.1-py3-none-any.whl", hash = "sha256:25ca89d1c688ad0351e0f9f8b8b3e6a92109bc4505757453570e08cf6ee3db82", size = 25677, upload-time = "2025-05-26T08:59:03.347Z" },
+    { url = "https://files.pythonhosted.org/packages/23/e1/21a5bfdd273b11d764fd1fa47801e3c8b2433a3bb3aec2fa546bb0b53d65/nuclia_models-0.45.0-py3-none-any.whl", hash = "sha256:56e86754602a4c64f4cbc12488fb1bfbb2e4cad518c9aacdeba11eedbddc3d1f", size = 26156, upload-time = "2025-06-06T12:19:53.779Z" },
 ]
 
 [[package]]
 name = "nucliadb-models"
-version = "6.4.2.post4403"
+version = "6.6.1.post4633"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fa/09/3c85eb09b2f1ec42e0469c1202bf0013b4fd333670b5a819eb4168e72528/nucliadb_models-6.4.2.post4403-py3-none-any.whl", hash = "sha256:8c10c141f501f4bf05f1abd0ec048e0f98772fac55294aabdf33870449234973", size = 62856, upload-time = "2025-05-28T13:49:43.468Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/89/259204649a017d5db74dcd6d7ea06f2188a27b984bb5d1bb1ff3907263d8/nucliadb_models-6.6.1.post4633-py3-none-any.whl", hash = "sha256:2f26168eba5775ca1cd9d4a43874b73252327ad0fe547ed5b86988d6fd8f2180", size = 64324, upload-time = "2025-06-27T14:40:30.851Z" },
 ]
 
 [[package]]
@@ -743,7 +743,7 @@ wheels = [
 
 [[package]]
 name = "nucliadb-sdk"
-version = "6.4.2.post4403"
+version = "6.6.1.post4633"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -753,7 +753,7 @@ dependencies = [
     { name = "pydantic" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/f8/15ee28ee69be402d2fe2a4da7161dfd1017560628915d4ced7bb355ecbcb/nucliadb_sdk-6.4.2.post4403-py3-none-any.whl", hash = "sha256:0f73063c7c99423cd494fe6b91e6c337a8e574852fab5653690e365994cb7674", size = 16534, upload-time = "2025-05-28T13:49:47.722Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/08/297474c2e62567b7339818b019547a5d04f5eeb476efb1646b8df3918c8b/nucliadb_sdk-6.6.1.post4633-py3-none-any.whl", hash = "sha256:057c14fb1c915bfcea8e1a8966d52404f966c867dae4cbf6a957a4600f716ff5", size = 16707, upload-time = "2025-06-27T14:40:34.999Z" },
 ]
 
 [[package]]
@@ -966,7 +966,7 @@ wheels = [
 
 [[package]]
 name = "pydantic"
-version = "2.11.5"
+version = "2.11.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
@@ -974,9 +974,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f0/86/8ce9040065e8f924d642c58e4a344e33163a07f6b57f836d0d734e0ad3fb/pydantic-2.11.5.tar.gz", hash = "sha256:7f853db3d0ce78ce8bbb148c401c2cdd6431b3473c0cdff2755c7690952a7b7a", size = 787102, upload-time = "2025-05-22T21:18:08.761Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/00/dd/4325abf92c39ba8623b5af936ddb36ffcfe0beae70405d456ab1fb2f5b8c/pydantic-2.11.7.tar.gz", hash = "sha256:d989c3c6cb79469287b1569f7447a17848c998458d49ebe294e975b9baf0f0db", size = 788350, upload-time = "2025-06-14T08:33:17.137Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b5/69/831ed22b38ff9b4b64b66569f0e5b7b97cf3638346eb95a2147fdb49ad5f/pydantic-2.11.5-py3-none-any.whl", hash = "sha256:f9c26ba06f9747749ca1e5c94d6a85cb84254577553c8785576fd38fa64dc0f7", size = 444229, upload-time = "2025-05-22T21:18:06.329Z" },
+    { url = "https://files.pythonhosted.org/packages/6a/c0/ec2b1c8712ca690e5d61979dee872603e92b8a32f94cc1b72d53beab008a/pydantic-2.11.7-py3-none-any.whl", hash = "sha256:dde5df002701f6de26248661f6835bbe296a47bf73990135c7d07ce741b9623b", size = 444782, upload-time = "2025-06-14T08:33:14.905Z" },
 ]
 
 [package.optional-dependencies]

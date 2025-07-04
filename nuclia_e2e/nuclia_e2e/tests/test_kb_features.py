@@ -215,7 +215,6 @@ async def run_test_check_da_ask_output(  # noqa: C901
     assert success, f"Expected generated text fields not found in resources. task_id: {ask_task_id}"
 
     # Now schedule the cleanup and make sure that all custom-summary fields are gone.
-    kb = AsyncNucliaKB()
     await kb.task.delete(
         ndb=ndb,
         task_id=ask_task_id,
