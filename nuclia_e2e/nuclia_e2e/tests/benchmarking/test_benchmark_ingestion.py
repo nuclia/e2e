@@ -290,7 +290,7 @@ async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_a
     assert success, "File was not indexed in time, not enough paragraphs found on resource"
 
     running_versions = extract_versions(
-        ["nucliadb_writer", "nucliadb_ingest", "nidx", "processing", "processing-slow"],
+        ["nucliadb-writer", "nucliadb-ingest", "nidx", "processing", "processing-slow"],
         cluster=benchmark_cluster,
     )
 
