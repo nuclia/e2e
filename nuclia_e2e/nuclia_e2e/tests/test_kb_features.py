@@ -897,7 +897,11 @@ async def test_kb_usage(
         generative_model="chatgpt-azure-4o-mini",
     )
 
-    accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)  # noqa: F841
+    # ⚠️⚠️⚠️ WARNING
+    # Disabled test as this subtest used root access to be able to query any account usage stats
+    # Enable again when we have some alternate way of doing this
+    # ⚠️⚠️⚠️
+    # accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)  # noqa: F841
     # Disable check nuclia tokens on activity log for now, as under heavy loads it takes several hours
     # to be up to date, and so the logs won't be available on most of the tests runs.
     # await run_test_tokens_on_activity_log(async_ndb, accounting_tokens, logger)
