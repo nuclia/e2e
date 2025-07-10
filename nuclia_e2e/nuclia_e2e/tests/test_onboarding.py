@@ -4,6 +4,7 @@ from nuclia_e2e.data import TEST_ONBOARD_INQUIRY
 import pytest
 
 
+@pytest.mark.skip(reason="Disabled as we cannot cleanup accounts right now without root access")
 @pytest.mark.asyncio_cooperative
 async def test_onboarding(request, global_api, email_util, cleanup_test_account, aiohttp_session):
     # Request signup using a random alias email
