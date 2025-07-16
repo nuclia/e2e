@@ -47,6 +47,7 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
         generative_model=qwen3_8b,
     )
     assert answer.answer is not None
+    print(f"Answer: {answer.answer}")
 
     # Remove the model
     await remove_all_models(auth, zone, account_slug)
