@@ -94,7 +94,7 @@ async def delete_model(auth: AsyncNucliaAuth, zone: str, account_id: str, model_
 async def remove_all_models(auth: AsyncNucliaAuth, zone: str, account_id: str):
     models = await list_models(auth, zone, account_id)
     for model in models:
-        await delete_model(auth, zone, account_id, model["id"])
+        await delete_model(auth, zone, account_id, model["model_id"])
 
 
 async def root_request(
