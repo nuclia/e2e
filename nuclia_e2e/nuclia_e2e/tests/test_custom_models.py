@@ -3,6 +3,7 @@ from nuclia import sdk
 from nuclia.data import get_async_auth
 from nuclia.sdk.auth import AsyncNucliaAuth
 from nuclia_e2e.tests.conftest import ZoneConfig
+from nuclia_e2e.utils import get_async_kb_ndb_client
 
 import os
 import pytest
@@ -44,7 +45,9 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
     )
 
     # Ask a question using the new model
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     answer = await sdk.AsyncNucliaSearch().ask(
+        ndb=ndb,
         query="how to cook an omelette?",
         generative_model=qwen3_8b,
     )
