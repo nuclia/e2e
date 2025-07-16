@@ -4,10 +4,14 @@ from nuclia.data import get_async_auth
 from nuclia.sdk.auth import AsyncNucliaAuth
 from nuclia_e2e.tests.conftest import ZoneConfig
 
+import os
 import pytest
+
+TEST_ENV = os.environ.get("TEST_ENV")
 
 
 @pytest.mark.asyncio_cooperative
+@pytest.mark.skipif(TEST_ENV != "stage")
 async def test_generative(request: pytest.FixtureRequest, regional_api_config: ZoneConfig):
     kb_id = regional_api_config.permanent_kb_id
     zone = regional_api_config.zone_slug
@@ -21,7 +25,7 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
     qwen3_8b = "openai_compat:qwen3-8b"
 
     # Make sure all the models
-    await remove_all_models(sdk.get_async_auth(), zone, account_slug)
+    await remove_all_models(auth, zone, account_slug)
     assert len(await list_models(auth, zone, account_slug)) == 0
 
     # Configure a new generative model
