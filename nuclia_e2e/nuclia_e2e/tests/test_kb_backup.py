@@ -79,7 +79,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     await wait_for(condition=check_restore_completed, max_wait=180, interval=10)
 
     # Check that extract strategies are restored
-    ndb = get_async_kb_ndb_client(zone=zone, kbid=new_kb, user_token=auth._config.token)
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=new_kb.id, user_token=auth._config.token)
     extract_strategies = await sdk.AsyncNucliaKB().extract_strategies.list(ndb=ndb)
     assert any(config.name == "strategy1" for config in extract_strategies.values())
 
