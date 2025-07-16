@@ -29,6 +29,11 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     account_slug = regional_api_config.global_config.permanent_account_slug
     sdk.NucliaAccounts().default(account_slug)
 
+    # Create an extract configuration for the source KB
+    auth = get_auth()
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    await sdk.AsyncNucliaKB().extract_strategies.add(ndb=ndb, config={"name": "strategy1", "vllm_config": {}})
+
     # Create Backup
     backup_create = await sdk.AsyncNucliaBackup().create(
         backup=BackupCreate(kb_id=uuid.UUID(kb_id)), zone=zone
@@ -72,6 +77,11 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
         return len(catalog.resources) > 0, catalog
 
     await wait_for(condition=check_restore_completed, max_wait=180, interval=10)
+
+    # Check that extract strategies are restored
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=new_kb, user_token=auth._config.token)
+    extract_strategies = await sdk.AsyncNucliaKB().extract_strategies.list(ndb=ndb)
+    assert "strategy1" in extract_strategies
 
     # Delete the restored KB
     await kbs.delete(id=new_kb.id, zone=zone)
