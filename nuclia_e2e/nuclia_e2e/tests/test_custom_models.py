@@ -65,28 +65,58 @@ async def add_model(
 ):
     # Add model to the account
     path = get_regional_url(zone, f"/api/v1/account/{account_id}/models")
-    response = await auth._request("POST", path, data=model_data)
+    response = await root_request(auth, "POST", path, data=model_data)
+    assert response is not None
     model_id = response["id"]
 
     # Add model to the kbs
     for kb in kbs:
         path = get_regional_url(zone, f"/api/v1/account/{account_id}/models/{kb}")
-        await auth._request("POST", path, data={"id": model_id})
+        await root_request(auth, "POST", path, data={"id": model_id})
 
 
 async def list_models(auth: AsyncNucliaAuth, zone: str, account_id: str) -> list:
     path = get_regional_url(zone, f"/api/v1/account/{account_id}/models")
-    models = await auth._request("GET", path)
-
+    models = await root_request(auth, "GET", path)
+    assert models is not None
+    assert isinstance(models, list)
     return models
 
 
 async def delete_model(auth: AsyncNucliaAuth, zone: str, account_id: str, model_id: str):
     path = get_regional_url(zone, f"/api/v1/account/{account_id}/model/{model_id}")
-    await auth._request("DELETE", path)
+    await root_request(auth, "DELETE", path)
 
 
 async def remove_all_models(auth: AsyncNucliaAuth, zone: str, account_id: str):
     models = await list_models(auth, zone, account_id)
     for model in models:
         await delete_model(auth, zone, account_id, model["id"])
+
+
+async def root_request(
+    auth: AsyncNucliaAuth,
+    method: str,
+    path: str,
+    data: dict | None = None,
+    headers: dict | None = None,
+) -> dict | None:
+    """
+    Make a request to the API with root credentials. This is not currently supported by the SDK,
+    so we need to do it manually.
+    """
+    headers = headers or {}
+    headers["Authorization"] = f"Bearer {os.environ["STAGE_ROOT_PAT_TOKEN"]}"
+    resp = await auth.client.request(
+        method,
+        path,
+        json=data,
+        headers=headers,
+    )
+    if resp.status_code == 204:
+        return None
+    if resp.status_code >= 200 and resp.status_code < 300:
+        return resp.json()
+    if resp.status_code >= 300 and resp.status_code < 400:
+        return None
+    raise Exception({"status": resp.status_code, "message": resp.text})  # noqa: TRY002
