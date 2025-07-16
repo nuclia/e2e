@@ -106,7 +106,8 @@ async def root_request(
     so we need to do it manually.
     """
     headers = headers or {}
-    headers["Authorization"] = f"Bearer {os.environ["STAGE_ROOT_PAT_TOKEN"]}"
+    stage_root_pat_token = os.environ["STAGE_ROOT_PAT_TOKEN"]
+    headers["Authorization"] = f"Bearer {stage_root_pat_token}"
     resp = await auth.client.request(
         method,
         path,
