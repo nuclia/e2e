@@ -36,9 +36,9 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
         zone,
         account_id,
         model_data={
-            "name": "test_model",
-            "id": qwen3_8b,
-            "type": "GENERATIVE",
+            "description": "test_model",
+            "location": qwen3_8b,
+            "model_type": "GENERATIVE",
         },
         kbs=[kb_id],
     )
