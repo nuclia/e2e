@@ -11,7 +11,7 @@ TEST_ENV = os.environ.get("TEST_ENV")
 
 
 @pytest.mark.asyncio_cooperative
-@pytest.mark.skipif(TEST_ENV != "stage")
+@pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
 async def test_generative(request: pytest.FixtureRequest, regional_api_config: ZoneConfig):
     kb_id = regional_api_config.permanent_kb_id
     zone = regional_api_config.zone_slug
