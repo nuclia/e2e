@@ -103,7 +103,7 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     # "azure-mistral",
     "chatgpt4o",
     "chatgpt4o-mini",
-    # "chatgpt-o1-preview",                                WHY EXCLUDED ?
+    # "chatgpt-o1-preview",                                DISCONTINUED
     # "chatgpt-o1-mini",                                   WHY EXCLUDED ?
     # "chatgpt-o1",
     "chatgpt-o3-mini",
