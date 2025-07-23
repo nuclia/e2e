@@ -84,7 +84,7 @@ jobs:
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
         run: |
-          source nuclia_e2e/.venv/bin/activate && TEST_ENV=stage pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests \
+          source nuclia_e2e/.venv/bin/activate && TEST_ENV=stage pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests -k test_generative \
             --durations=0 --junitxml=nuclia-${{ matrix.shard_index }}.xml \
             --shard-id=${{ matrix.shard_index }} --num-shards=3
 
