@@ -17,7 +17,7 @@ ALL_LLMS = [
     # "chatgpt-azure-o1",                    EXCLUDED because it almost always fails with timeouts
     "chatgpt-azure-o3-mini",
     "claude-3",
-    "claude-3-fast",
+    # "claude-3-fast",                       DISCONTINUED
     "claude-3-5-fast",
     "claude-3-5-small",
     # "gemini-2.0-flash-lite",               EXCLUDED because they are not currently available in production
@@ -32,7 +32,7 @@ ALL_LLMS = [
     # "azure-mistral",                       DISCONTINUED
     "chatgpt4o",
     "chatgpt4o-mini",
-    "chatgpt-o1-preview",
+    # "chatgpt-o1-preview",                 DISCONTINUED
     "chatgpt-o1-mini",
     "chatgpt-o1",
     "chatgpt-o3-mini",
@@ -88,7 +88,7 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     # "chatgpt-azure-o1",                    EXCLUDED because it almost always fails with timeouts
     "chatgpt-azure-o3-mini",
     "claude-3",
-    "claude-3-fast",
+    # "claude-3-fast",                       DISCONTINUED
     "claude-3-5-fast",
     "claude-3-5-small",
     # "gemini-2.0-flash-lite",
