@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator
 from nuclia import get_regional_url
 from nuclia import sdk
 from nuclia.data import get_async_auth
@@ -11,9 +12,8 @@ import pytest
 TEST_ENV = os.environ.get("TEST_ENV")
 
 
-@pytest.mark.asyncio_cooperative
-@pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
-async def test_generative(request: pytest.FixtureRequest, regional_api_config: ZoneConfig):
+@pytest.fixture
+async def custom_model(request: pytest.FixtureRequest, regional_api_config: ZoneConfig) -> AsyncIterator[str]:
     kb_id = regional_api_config.permanent_kb_id
     zone = regional_api_config.zone_slug
     assert regional_api_config.global_config is not None
@@ -28,15 +28,17 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
     await remove_all_models(auth, zone, account_id)
     assert len(await list_models(auth, zone, account_id)) == 0
 
+    # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
+    model = "openai_compat:qwen3-8b"
+
     # Configure a new custom generative model
     await add_model(
         auth,
         zone,
         account_id,
         model_data={
-            # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
             "description": "test_model",
-            "location": "openai_compat:qwen3-8b",
+            "location": model,
             "model_type": "GENERATIVE",
             "openai_compat": {
                 "url": "http://vllm-stack-router-service.vllm-stack.svc.cluster.local/v1",
@@ -56,19 +58,34 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
         kbs=[kb_id],
     )
 
+    yield model
+
+    # Remove the custom model
+    await remove_all_models(auth, zone, account_id)
+    assert len(await list_models(auth, zone, account_id)) == 0
+
+
+@pytest.mark.asyncio_cooperative
+@pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
+async def test_generative(request: pytest.FixtureRequest, regional_api_config: ZoneConfig, custom_model: str):
+    kb_id = regional_api_config.permanent_kb_id
+    zone = regional_api_config.zone_slug
+    assert regional_api_config.global_config is not None
+    account_slug = regional_api_config.global_config.permanent_account_slug
+
+    sdk.NucliaAccounts().default(account_slug)
+
+    auth = get_async_auth()
+
     # Ask a question using the new model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     answer = await sdk.AsyncNucliaSearch().ask(
         ndb=ndb,
         query="how to cook an omelette?",
-        generative_model="openai_compat:qwen3-8b",
+        generative_model=custom_model,
     )
     assert answer.answer is not None
     print(f"Answer: {answer.answer}")
-
-    # Remove the custom model
-    await remove_all_models(auth, zone, account_id)
-    assert len(await list_models(auth, zone, account_id)) == 0
 
 
 async def add_model(
