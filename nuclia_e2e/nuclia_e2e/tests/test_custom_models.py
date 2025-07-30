@@ -85,7 +85,8 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
         generative_model=custom_model,
     )
     assert answer.answer is not None
-    assert answer.status and answer.status == "success"
+    assert answer.status is not None
+    assert answer.status == "success"
     print(f"Answer: {answer.answer}")
 
 
