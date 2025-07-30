@@ -66,8 +66,6 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
     assert answer.answer is not None
     print(f"Answer: {answer.answer}")
 
-    # TODO: Check that running an agent using the new model works as expected
-
     # Remove the custom model
     await remove_all_models(auth, zone, account_id)
     assert len(await list_models(auth, zone, account_id)) == 0
