@@ -24,9 +24,6 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
     auth = get_async_auth()
     account_id = auth.get_account_id(account_slug)
 
-    # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
-    qwen3_8b = "openai_compat:qwen3-8b"
-
     # Make sure there are no custom models configured
     await remove_all_models(auth, zone, account_id)
     assert len(await list_models(auth, zone, account_id)) == 0
@@ -37,9 +34,24 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
         zone,
         account_id,
         model_data={
+            # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
             "description": "test_model",
-            "location": qwen3_8b,
+            "location": "openai_compat:qwen3-8b",
             "model_type": "GENERATIVE",
+            "openai_compat": {
+                "url": "http://vllm-stack-router-service.vllm-stack.svc.cluster.local/v1",
+                "model_id": "Qwen3-8B",
+                "tokenizer": 0,  # Unspecified tokenizer
+                "key": "",  # No key needed for this model
+                "model_features": {
+                    "vision": False,
+                    "tool_use": True,
+                },
+                "generation_config": {
+                    "default_max_completion_tokens": 800,
+                    "max_input_tokens": 32_768 - 800,
+                },
+            },
         },
         kbs=[kb_id],
     )
@@ -49,10 +61,12 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
     answer = await sdk.AsyncNucliaSearch().ask(
         ndb=ndb,
         query="how to cook an omelette?",
-        generative_model=qwen3_8b,
+        generative_model="openai_compat:qwen3-8b",
     )
     assert answer.answer is not None
     print(f"Answer: {answer.answer}")
+
+    # TODO: Check that running an agent using the new model works as expected
 
     # Remove the custom model
     await remove_all_models(auth, zone, account_id)
