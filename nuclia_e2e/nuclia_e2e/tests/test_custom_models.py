@@ -1,11 +1,26 @@
 from collections.abc import AsyncIterator
+from functools import wraps
 from nuclia import get_regional_url
 from nuclia import sdk
 from nuclia.data import get_async_auth
+from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.auth import AsyncNucliaAuth
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
+from nuclia_e2e.utils import wait_for
+from nuclia_models.worker.proto import ApplyTo
+from nuclia_models.worker.proto import AskOperation
+from nuclia_models.worker.proto import Filter
+from nuclia_models.worker.proto import LLMConfig
+from nuclia_models.worker.proto import Operation
+from nuclia_models.worker.tasks import ApplyOptions
+from nuclia_models.worker.tasks import DataAugmentation
+from nuclia_models.worker.tasks import TaskName
+from nuclia_models.worker.tasks import TaskResponse
+from nucliadb_sdk.v2.exceptions import NotFoundError
+from typing import Any
 
+import asyncio
 import os
 import pytest
 
@@ -89,6 +104,107 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
     assert answer.status is not None
     assert answer.status == "success"
     print(f"Answer: {answer.answer}")
+
+
+@pytest.mark.asyncio_cooperative
+@pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
+async def test_ingestion_agents(
+    request: pytest.FixtureRequest, regional_api_config: ZoneConfig, custom_model: str
+):
+    kb_id = regional_api_config.permanent_kb_id
+    zone = regional_api_config.zone_slug
+    assert regional_api_config.global_config is not None
+    account_slug = regional_api_config.global_config.permanent_account_slug
+
+    sdk.NucliaAccounts().default(account_slug)
+
+    auth = get_async_auth()
+
+    # Create a task that summarizes the documents using the custom model
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    kb = sdk.AsyncNucliaKB()
+    tr: TaskResponse = await kb.task.start(
+        ndb=ndb,
+        task_name=TaskName.ASK,
+        apply=ApplyOptions.ALL,
+        parameters=DataAugmentation(
+            name="test-ask-custom-model",
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[
+                Operation(
+                    ask=AskOperation(
+                        question="What is the document about? Summarize it in a single sentence.",
+                        destination="customsummary",
+                    )
+                )
+            ],
+            llm=LLMConfig(model=custom_model),
+        ),
+    )
+    task_id = tr.id
+
+    resource_slugs = [
+        "disney",
+        "hp",
+        "chocolatier",
+        "vaccines",
+    ]
+
+    # The expected field id for the generated field. This should match the
+    # `destination` field in the AskOperation above: `da-{destination}`
+    expected_field_id_prefix = "da-customsummary"
+
+    def resources_have_generated_fields(resource_slugs):
+        @wraps(resources_have_generated_fields)
+        async def condition() -> tuple[bool, Any]:
+            resources_have_field = await asyncio.gather(
+                *[
+                    has_generated_field(ndb, kb, resource_slug, expected_field_id_prefix)
+                    for resource_slug in resource_slugs
+                ]
+            )
+            result = all(resources_have_field)
+            return (result, None)
+
+        return condition
+
+    def logger(msg):
+        print(f"{request.node.name} ::: {msg}")
+
+    success, _ = await wait_for(
+        condition=resources_have_generated_fields(resource_slugs),
+        max_wait=5 * 60,  # 5 minutes
+        interval=20,
+        logger=logger,
+    )
+    assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
+
+
+async def has_generated_field(
+    ndb: AsyncNucliaDBClient,
+    kb: sdk.AsyncNucliaKB,
+    resource_slug: str,
+    expected_field_id_prefix: str,
+) -> bool:
+    """
+    Check if the resource has the extracted text for the generated field.
+    """
+    try:
+        res = await kb.resource.get(slug=resource_slug, show=["values", "extracted"], ndb=ndb)
+    except NotFoundError:
+        # some resource may still be missing from nucliadb, let's wait more
+        return False
+    try:
+        for fid, data in res.data.texts.items():
+            if fid.startswith(expected_field_id_prefix) and data.extracted.text.text is not None:
+                return True
+    except (TypeError, AttributeError):
+        # If the resource does not have the expected structure, let's wait more
+        return False
+    else:
+        # If we reach here, it means the field was not found
+        return False
 
 
 async def add_model(
