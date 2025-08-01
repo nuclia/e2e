@@ -139,7 +139,7 @@ async def test_ingestion_agents(
                     )
                 )
             ],
-            llm=LLMConfig(model=custom_model),
+            llm=LLMConfig(model=custom_model, provider="openai_compat"),
         ),
     )
     task_id = tr.id
