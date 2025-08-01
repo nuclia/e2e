@@ -122,6 +122,7 @@ async def test_ingestion_agents(
     # Create a task that summarizes the documents using the custom model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     kb = sdk.AsyncNucliaKB()
+    destination = "customsummary2"
     tr: TaskResponse = await kb.task.start(
         ndb=ndb,
         task_name=TaskName.ASK,
@@ -134,7 +135,7 @@ async def test_ingestion_agents(
                 Operation(
                     ask=AskOperation(
                         question="What is the document about? Summarize it in a single sentence.",
-                        destination="customsummary",
+                        destination=destination,
                     )
                 )
             ],
@@ -152,7 +153,7 @@ async def test_ingestion_agents(
 
     # The expected field id for the generated field. This should match the
     # `destination` field in the AskOperation above: `da-{destination}`
-    expected_field_id_prefix = "da-customsummary"
+    expected_field_id_prefix = f"da-{destination}"
 
     def resources_have_generated_fields(resource_slugs):
         @wraps(resources_have_generated_fields)
@@ -171,14 +172,20 @@ async def test_ingestion_agents(
     def logger(msg):
         print(f"{request.node.name} ::: {msg}")
 
-    success, _ = await wait_for(
-        condition=resources_have_generated_fields(resource_slugs),
-        max_wait=5 * 60,  # 5 minutes
-        interval=20,
-        logger=logger,
-    )
-    assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
-
+    try:
+        success, _ = await wait_for(
+            condition=resources_have_generated_fields(resource_slugs),
+            max_wait=5 * 60,  # 5 minutes
+            interval=20,
+            logger=logger,
+        )
+        assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
+    finally:
+        await kb.task.delete(
+            ndb=ndb,
+            task_id=task_id,
+            cleanup=True,
+        )
 
 async def has_generated_field(
     ndb: AsyncNucliaDBClient,
