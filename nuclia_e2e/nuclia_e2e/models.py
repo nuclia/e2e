@@ -13,27 +13,30 @@ ALL_LLMS = [
     "chatgpt-azure-4o",
     "chatgpt-azure-4o-mini",
     "chatgpt-azure-o1-preview",
-    "chatgpt-azure-o1-mini",
+    # "chatgpt-azure-o1-mini",               DISCONTINUED
     # "chatgpt-azure-o1",                    EXCLUDED because it almost always fails with timeouts
     "chatgpt-azure-o3-mini",
     "claude-3",
     # "claude-3-fast",                       DISCONTINUED
     "claude-3-5-fast",
     "claude-3-5-small",
-    # "gemini-2.0-flash-lite",               EXCLUDED because they are not currently available in production
+    "claude-4-opus",
+    "claude-4-sonnet",
+    "gemini-2.0-flash-lite",
     "gemini-2.0-flash",
     "gemini-1-5-pro",
     # "gemini-1-5-pro-vision",               EXCLUDED because it shares same implementation as non-vision
     "gemini-1-5-flash",
     # "gemini-1-5-flash-vision",             EXCLUDED because it shares same implementation as non-vision
-    # "gemini-2-5-pro",                      EXCLUDED because only available in US
-    # "gemini-2.5-flash",                    EXCLUDED because only available in US
+    "gemini-2-5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
     "mistral",
     # "azure-mistral",                       DISCONTINUED
     "chatgpt4o",
     "chatgpt4o-mini",
-    # "chatgpt-o1-preview",                 DISCONTINUED
-    "chatgpt-o1-mini",
+    # "chatgpt-o1-preview",                  DISCONTINUED
+    # "chatgpt-o1-mini",                     DISCONTINUED
     "chatgpt-o1",
     "chatgpt-o3-mini",
     "chatgpt-4.1",
@@ -91,20 +94,23 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     # "claude-3-fast",                       DISCONTINUED
     "claude-3-5-fast",
     "claude-3-5-small",
-    # "gemini-2.0-flash-lite",
+    "claude-4-opus",
+    "claude-4-sonnet",
+    "gemini-2.0-flash-lite",
     "gemini-2.0-flash",
     "gemini-1-5-pro",
     # "gemini-1-5-pro-vision",
     "gemini-1-5-flash",
     # "gemini-1-5-flash-vision",
-    # "gemini-2-5-pro",
-    # "gemini-2.5-flash",
+    "gemini-2-5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
     # "mistral",
     # "azure-mistral",
     "chatgpt4o",
     "chatgpt4o-mini",
     # "chatgpt-o1-preview",                                DISCONTINUED
-    # "chatgpt-o1-mini",                                   WHY EXCLUDED ?
+    # "chatgpt-o1-mini",                                   DISCONTINUED
     # "chatgpt-o1",
     "chatgpt-o3-mini",
     "chatgpt-4.1",
