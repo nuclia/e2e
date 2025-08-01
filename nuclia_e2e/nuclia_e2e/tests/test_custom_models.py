@@ -188,6 +188,7 @@ async def test_ingestion_agents(
             cleanup=True,
         )
 
+
 async def has_generated_field(
     ndb: AsyncNucliaDBClient,
     kb: sdk.AsyncNucliaKB,
