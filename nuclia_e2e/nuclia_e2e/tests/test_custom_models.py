@@ -70,9 +70,8 @@ async def custom_model(request: pytest.FixtureRequest, regional_api_config: Zone
                     "max_input_tokens": 32_768 - 800,
                 },
             },
-        },
-        kbs=[kb_id],
-    )
+            kbs=[kb_id],
+        )
 
     yield model
 
