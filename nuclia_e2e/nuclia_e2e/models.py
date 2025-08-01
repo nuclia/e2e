@@ -28,7 +28,7 @@ ALL_LLMS = [
     # "gemini-1-5-pro-vision",               EXCLUDED because it shares same implementation as non-vision
     "gemini-1-5-flash",
     # "gemini-1-5-flash-vision",             EXCLUDED because it shares same implementation as non-vision
-    "gemini-2-5-pro",
+    "gemini-2.5-pro",
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
     "mistral",
@@ -102,7 +102,7 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     # "gemini-1-5-pro-vision",
     "gemini-1-5-flash",
     # "gemini-1-5-flash-vision",
-    "gemini-2-5-pro",
+    "gemini-2.5-pro",
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
     # "mistral",
