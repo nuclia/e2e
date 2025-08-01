@@ -46,32 +46,33 @@ async def custom_model(request: pytest.FixtureRequest, regional_api_config: Zone
     # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
     model = "openai_compat:qwen3-8b"
 
-    # Configure a new custom generative model
-    await add_model(
-        auth,
-        zone,
-        account_id,
-        model_data={
-            "description": "test_model",
-            "location": model,
-            "model_type": "GENERATIVE",
-            "openai_compat": {
-                "url": "http://vllm-stack-router-service.vllm-stack.svc.cluster.local/v1",
-                "model_id": "Qwen3-8B",
-                "tokenizer": 0,  # Unspecified tokenizer
-                "key": "",  # No key needed for this model
-                "model_features": {
-                    "vision": False,
-                    "tool_use": True,
-                },
-                "generation_config": {
-                    "default_max_completion_tokens": 800,
-                    "max_input_tokens": 32_768 - 800,
+    # Configure a new custom generative and summary model
+    for model_type in ["GENERATIVE", "SUMMARY"]:
+        await add_model(
+            auth,
+            zone,
+            account_id,
+            model_data={
+                "description": "test_model",
+                "location": model,
+                "model_type": model_type,
+                "openai_compat": {
+                    "url": "http://vllm-stack-router-service.vllm-stack.svc.cluster.local/v1",
+                    "model_id": "Qwen3-8B",
+                    "tokenizer": 0,  # Unspecified tokenizer
+                    "key": "",  # No key needed for this model
+                    "model_features": {
+                        "vision": False,
+                        "tool_use": True,
+                    },
+                    "generation_config": {
+                        "default_max_completion_tokens": 800,
+                        "max_input_tokens": 32_768 - 800,
+                    },
                 },
             },
-        },
-        kbs=[kb_id],
-    )
+            kbs=[kb_id],
+        )
 
     yield model
 
