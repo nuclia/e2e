@@ -19,10 +19,14 @@ from nuclia_models.worker.tasks import TaskName
 from nuclia_models.worker.tasks import TaskResponse
 from nucliadb_sdk.v2.exceptions import NotFoundError
 from typing import Any
+from typing import TYPE_CHECKING
 
 import asyncio
 import os
 import pytest
+
+if TYPE_CHECKING:
+    from nucliadb_models.resource import ResourceList
 
 TEST_ENV = os.environ.get("TEST_ENV")
 
@@ -145,12 +149,8 @@ async def test_ingestion_agents(
     )
     task_id = tr.id
 
-    resource_slugs = [
-        "disney",
-        "hp",
-        "chocolatier",
-        "vaccines",
-    ]
+    rlist: ResourceList = await kb.list(ndb=ndb)
+    resource_slugs = [resource.slug for resource in rlist.resources]
 
     # The expected field id for the generated field. This should match the
     # `destination` field in the AskOperation above: `da-{destination}`
