@@ -151,6 +151,7 @@ async def test_ingestion_agents(
 
     rlist: ResourceList = await kb.list(ndb=ndb)
     resource_slugs = [resource.slug for resource in rlist.resources]
+    assert len(resource_slugs) > 0, "No resources found in the knowledge base."
 
     # The expected field id for the generated field. This should match the
     # `destination` field in the AskOperation above: `da-{destination}`
