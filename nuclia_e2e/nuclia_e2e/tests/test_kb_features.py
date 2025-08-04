@@ -508,9 +508,9 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         new_embedding_model_available(), max_wait=200, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
-    assert (
-        search_returned_results is True
-    ), "expected to be able to search with the new embedding model but nucliadb didn't return resources"
+    assert search_returned_results is True, (
+        "expected to be able to search with the new embedding model but nucliadb didn't return resources"
+    )
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
@@ -868,7 +868,10 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         run_test_check_da_labeller_with_label_filter_output(regional_api_config, async_ndb, logger),
         run_test_check_da_ask_output(regional_api_config, ask_task_id, async_ndb, logger),
     )
-    await run_test_ask(async_ndb)
+    await asyncio.gather(
+        run_test_ask(async_ndb),
+        run_test_ask_query_image(async_ndb),
+    )
 
     # Validate that all the data about the usage we generated is correctly stored on the activity log
     # and can be queried, and that the remi quality metrics. Even if the remi metrics won't be computed until
