@@ -39,6 +39,7 @@ async def custom_model(request: pytest.FixtureRequest, regional_api_config: Zone
         model_data={
             "description": "test_model",
             "location": model,
+            "model_types": ["GENERATIVE"],
             "model_type": "GENERATIVE",
             "openai_compat": {
                 "url": "http://vllm-stack-router-service.vllm-stack.svc.cluster.local/v1",
