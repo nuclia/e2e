@@ -628,9 +628,10 @@ async def run_test_ask_query_image(ndb: AsyncNucliaDBClient):
         generative_model="chatgpt-azure-4o-mini",
         prompt=dedent(
             """
-            Answer the following question based **only** on the provided context and image. Do **not** use any outside
-            knowledge. If the context does not provide enough information to fully answer the question, reply
-            with: “Not enough data to answer this.”
+            Answer the following question based **only** on the provided context and image.
+             Do **not** use any outside knowledge.
+             If the context does not provide enough information to fully answer the question,
+            reply with: “Not enough data to answer this.”
             Don't be too picky. please try to answer if possible, even if it requires to make a bit of a
             deduction.
             [START OF CONTEXT]
