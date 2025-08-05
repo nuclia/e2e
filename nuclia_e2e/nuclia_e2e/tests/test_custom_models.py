@@ -32,17 +32,43 @@ TEST_ENV = os.environ.get("TEST_ENV")
 
 
 @pytest.fixture
-async def custom_model(request: pytest.FixtureRequest, regional_api_config: ZoneConfig) -> AsyncIterator[str]:
-    kb_id = regional_api_config.permanent_kb_id
-    zone = regional_api_config.zone_slug
+def kb_id(regional_api_config: ZoneConfig) -> str:
+    """
+    Fixture to provide the knowledge base ID for the tests.
+    """
+    assert regional_api_config.global_config is not None
+    return regional_api_config.permanent_kb_id
+
+
+@pytest.fixture
+def zone(regional_api_config: ZoneConfig) -> str:
+    """
+    Fixture to provide the zone slug for the tests.
+    """
+    return regional_api_config.zone_slug
+
+
+@pytest.fixture
+def auth() -> AsyncNucliaAuth:
+    """
+    Fixture to provide the async Nuclia authentication object.
+    """
+    return get_async_auth()
+
+
+@pytest.fixture(autouse=True)
+def account_id(regional_api_config: ZoneConfig, auth: AsyncNucliaAuth) -> str:
+    """
+    Fixture to provide the account slug for the tests.
+    """
     assert regional_api_config.global_config is not None
     account_slug = regional_api_config.global_config.permanent_account_slug
-
     sdk.NucliaAccounts().default(account_slug)
+    return auth.get_account_id(account_slug)
 
-    auth = get_async_auth()
-    account_id = auth.get_account_id(account_slug)
 
+@pytest.fixture
+async def custom_model(kb_id: str, zone: str, account_id: str, auth: AsyncNucliaAuth) -> AsyncIterator[str]:
     # Make sure there are no custom models configured
     await remove_all_models(auth, zone, account_id)
     assert len(await list_models(auth, zone, account_id)) == 0
@@ -87,16 +113,7 @@ async def custom_model(request: pytest.FixtureRequest, regional_api_config: Zone
 
 @pytest.mark.asyncio_cooperative
 @pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
-async def test_generative(request: pytest.FixtureRequest, regional_api_config: ZoneConfig, custom_model: str):
-    kb_id = regional_api_config.permanent_kb_id
-    zone = regional_api_config.zone_slug
-    assert regional_api_config.global_config is not None
-    account_slug = regional_api_config.global_config.permanent_account_slug
-
-    sdk.NucliaAccounts().default(account_slug)
-
-    auth = get_async_auth()
-
+async def test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str):
     # Ask a question using the new model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     answer = await sdk.AsyncNucliaSearch().ask(
@@ -110,20 +127,37 @@ async def test_generative(request: pytest.FixtureRequest, regional_api_config: Z
     print(f"Answer: {answer.answer}")
 
 
+@pytest.fixture
+async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIterator[None]:
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    kb = sdk.AsyncNucliaKB()
+
+    async def clean_ask_test_tasks():
+        tasks = await kb.task.list(ndb=ndb)
+        for task in tasks.running + tasks.done + tasks.configs:
+            if task.task.name == "ask" and task.parameters.get("name", "").startswith(
+                "test-ask-custom-model"
+            ):
+                await kb.task.stop(ndb=ndb, task_id=task.id)
+                await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
+
+    await clean_ask_test_tasks()
+
+    yield
+
+    await clean_ask_test_tasks()
+
+
 @pytest.mark.asyncio_cooperative
 @pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
 async def test_ingestion_agents(
-    request: pytest.FixtureRequest, regional_api_config: ZoneConfig, custom_model: str
+    request: pytest.FixtureRequest,
+    kb_id: str,
+    zone: str,
+    auth: AsyncNucliaAuth,
+    custom_model: str,
+    clean_tasks: None,
 ):
-    kb_id = regional_api_config.permanent_kb_id
-    zone = regional_api_config.zone_slug
-    assert regional_api_config.global_config is not None
-    account_slug = regional_api_config.global_config.permanent_account_slug
-
-    sdk.NucliaAccounts().default(account_slug)
-
-    auth = get_async_auth()
-
     # Create a task that summarizes the documents using the custom model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     kb = sdk.AsyncNucliaKB()
@@ -174,20 +208,13 @@ async def test_ingestion_agents(
     def logger(msg):
         print(f"{request.node.name} ::: {msg}")
 
-    try:
-        success, _ = await wait_for(
-            condition=resources_have_generated_fields(resource_slugs),
-            max_wait=5 * 60,  # 5 minutes
-            interval=20,
-            logger=logger,
-        )
-        assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
-    finally:
-        await kb.task.delete(
-            ndb=ndb,
-            task_id=task_id,
-            cleanup=True,
-        )
+    success, _ = await wait_for(
+        condition=resources_have_generated_fields(resource_slugs),
+        max_wait=5 * 60,  # 5 minutes
+        interval=20,
+        logger=logger,
+    )
+    assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
 
 
 async def has_generated_field(
