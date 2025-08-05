@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 import asyncio
 import os
 import pytest
+import random
 
 if TYPE_CHECKING:
     from nucliadb_models.resource import ResourceList
@@ -161,7 +162,7 @@ async def test_ingestion_agents(
     # Create a task that summarizes the documents using the custom model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     kb = sdk.AsyncNucliaKB()
-    destination = "customsummary2"
+    destination = f"customsummary-{random.randint(0, 9999)}"
     tr: TaskResponse = await kb.task.start(
         ndb=ndb,
         task_name=TaskName.ASK,
