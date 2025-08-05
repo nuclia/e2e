@@ -79,10 +79,6 @@ async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIter
         for task in tasks.running + tasks.done + tasks.configs:
             if task.task.name == "ask" and task.parameters.name.startswith("test-ask-custom-model"):
                 try:
-                    await kb.task.stop(ndb=ndb, task_id=task.id)
-                except Exception:
-                    print(f"Error stopping task {task.id}: {traceback.print_exc()}")
-                try:
                     await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
                 except Exception:
                     print(f"Error deleting task {task.id}: {traceback.print_exc()}")
