@@ -25,6 +25,7 @@ import asyncio
 import os
 import pytest
 import random
+import traceback
 
 if TYPE_CHECKING:
     from nucliadb_models.resource import ResourceList
@@ -77,8 +78,14 @@ async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIter
         tasks = await kb.task.list(ndb=ndb)
         for task in tasks.running + tasks.done + tasks.configs:
             if task.task.name == "ask" and task.parameters.name.startswith("test-ask-custom-model"):
-                await kb.task.stop(ndb=ndb, task_id=task.id)
-                await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
+                try:
+                    await kb.task.stop(ndb=ndb, task_id=task.id)
+                except Exception:
+                    print(f"Error stopping task {task.id}: {traceback.print_exc()}")
+                try:
+                    await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
+                except Exception:
+                    print(f"Error deleting task {task.id}: {traceback.print_exc()}")
 
     await clean_ask_test_tasks()
 
