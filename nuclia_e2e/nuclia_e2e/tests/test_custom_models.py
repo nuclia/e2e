@@ -69,6 +69,25 @@ async def account_id(regional_api_config: ZoneConfig, auth: AsyncNucliaAuth) -> 
 
 
 @pytest.fixture
+async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIterator[None]:
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    kb = sdk.AsyncNucliaKB()
+
+    async def clean_ask_test_tasks():
+        tasks = await kb.task.list(ndb=ndb)
+        for task in tasks.running + tasks.done + tasks.configs:
+            if task.task.name == "ask" and task.parameters.name.startswith("test-ask-custom-model"):
+                await kb.task.stop(ndb=ndb, task_id=task.id)
+                await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
+
+    await clean_ask_test_tasks()
+
+    yield
+
+    await clean_ask_test_tasks()
+
+
+@pytest.fixture
 async def custom_model(kb_id: str, zone: str, account_id: str, auth: AsyncNucliaAuth) -> AsyncIterator[str]:
     # Make sure there are no custom models configured
     await remove_all_models(auth, zone, account_id)
@@ -85,8 +104,7 @@ async def custom_model(kb_id: str, zone: str, account_id: str, auth: AsyncNuclia
         model_data={
             "description": "test_model",
             "location": model,
-            "model_types": ["GENERATIVE"],
-            "model_type": "GENERATIVE",
+            "model_types": ["GENERATIVE", "SUMMARY"],
             "openai_compat": {
                 "url": "http://vllm-stack-router-service.vllm-stack.svc.cluster.local/v1",
                 "model_id": "Qwen3-8B",
@@ -114,7 +132,19 @@ async def custom_model(kb_id: str, zone: str, account_id: str, auth: AsyncNuclia
 
 @pytest.mark.asyncio_cooperative
 @pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
-async def test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str):
+async def test_custom_models_work_for_generative_and_agents(
+    request: pytest.FixtureRequest,
+    kb_id: str,
+    zone: str,
+    auth: AsyncNucliaAuth,
+    custom_model: str,
+    clean_tasks: None,
+):
+    await _test_generative(kb_id, zone, auth, custom_model)
+    await _test_ingestion_agents(request, kb_id, zone, auth, custom_model)
+
+
+async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str):
     # Ask a question using the new model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     answer = await sdk.AsyncNucliaSearch().ask(
@@ -128,34 +158,12 @@ async def test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_m
     print(f"Answer: {answer.answer}")
 
 
-@pytest.fixture
-async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIterator[None]:
-    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
-    kb = sdk.AsyncNucliaKB()
-
-    async def clean_ask_test_tasks():
-        tasks = await kb.task.list(ndb=ndb)
-        for task in tasks.running + tasks.done + tasks.configs:
-            if task.task.name == "ask" and task.parameters.name.startswith("test-ask-custom-model"):
-                await kb.task.stop(ndb=ndb, task_id=task.id)
-                await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
-
-    await clean_ask_test_tasks()
-
-    yield
-
-    await clean_ask_test_tasks()
-
-
-@pytest.mark.asyncio_cooperative
-@pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
-async def test_ingestion_agents(
+async def _test_ingestion_agents(
     request: pytest.FixtureRequest,
     kb_id: str,
     zone: str,
     auth: AsyncNucliaAuth,
     custom_model: str,
-    clean_tasks: None,
 ):
     # Create a task that summarizes the documents using the custom model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
