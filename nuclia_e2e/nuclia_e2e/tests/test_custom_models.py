@@ -33,7 +33,7 @@ TEST_ENV = os.environ.get("TEST_ENV")
 
 
 @pytest.fixture
-def kb_id(regional_api_config: ZoneConfig) -> str:
+async def kb_id(regional_api_config: ZoneConfig) -> str:
     """
     Fixture to provide the knowledge base ID for the tests.
     """
@@ -42,7 +42,7 @@ def kb_id(regional_api_config: ZoneConfig) -> str:
 
 
 @pytest.fixture
-def zone(regional_api_config: ZoneConfig) -> str:
+async def zone(regional_api_config: ZoneConfig) -> str:
     """
     Fixture to provide the zone slug for the tests.
     """
@@ -58,7 +58,7 @@ def auth() -> AsyncNucliaAuth:
 
 
 @pytest.fixture(autouse=True)
-def account_id(regional_api_config: ZoneConfig, auth: AsyncNucliaAuth) -> str:
+async def account_id(regional_api_config: ZoneConfig, auth: AsyncNucliaAuth) -> str:
     """
     Fixture to provide the account slug for the tests.
     """
@@ -136,9 +136,7 @@ async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIter
     async def clean_ask_test_tasks():
         tasks = await kb.task.list(ndb=ndb)
         for task in tasks.running + tasks.done + tasks.configs:
-            if task.task.name == "ask" and task.parameters.get("name", "").startswith(
-                "test-ask-custom-model"
-            ):
+            if task.task.name == "ask" and task.parameters.name.startswith("test-ask-custom-model"):
                 await kb.task.stop(ndb=ndb, task_id=task.id)
                 await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
 
