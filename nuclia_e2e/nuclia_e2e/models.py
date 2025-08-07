@@ -44,8 +44,8 @@ ALL_LLMS = [
     "llama-3.2-90b-vision-instruct-maas",
     "llama-4-maverick-17b-128e-instruct-maas",
     "llama-4-scout-17b-16e-instruct-maas",
-    # "deepseek-reasoner",                   EXCLUDED as it is too slow and messing all the e2e runs
-    "deepseek-chat",
+    # "deepseek-reasoner",                   DISCONTINUED
+    # "deepseek-chat",                       DISCONTINUED
     # "azure-deepseek-r1",                   EXCLUDED as it is too slow
     "azure-mistral-large-2",
     "gcp-claude-3-5-sonnet-v2",
@@ -118,8 +118,8 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     # "llama-3.2-90b-vision-instruct-maas",               EXCLUDED because they are pretty lame at JSON
     # "llama-4-maverick-17b-128e-instruct-maas",          EXCLUDED because they are pretty lame at JSON
     # "llama-4-scout-17b-16e-instruct-maas",              EXCLUDED because they are pretty lame at JSON
-    # "deepseek-reasoner",
-    "deepseek-chat",
+    # "deepseek-reasoner",                                DISCONTINUED
+    # "deepseek-chat",                                    DISCONTINUED
     # "azure-deepseek-r1",
     "azure-mistral-large-2",
     "gcp-claude-3-5-sonnet-v2",
