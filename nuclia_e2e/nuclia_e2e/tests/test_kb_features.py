@@ -866,7 +866,7 @@ async def test_kb_usage(
 
     zone = regional_api_config.zone_slug
     assert regional_api_config.global_config is not None
-    account = regional_api_config.global_config.permanent_account_id
+    account = regional_api_config.global_config.permanent_account_id # noqa: F841
     auth = get_auth()
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_usage"
 
@@ -901,7 +901,7 @@ async def test_kb_usage(
     # Disabled test as this subtest used root access to be able to query any account usage stats
     # Enable again when we have some alternate way of doing this
     # ⚠️⚠️⚠️
-    # accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)  # noqa: F841
+    # accounting_tokens = await run_test_tokens_on_accounting(global_api, account, kbid, logger)
     # Disable check nuclia tokens on activity log for now, as under heavy loads it takes several hours
     # to be up to date, and so the logs won't be available on most of the tests runs.
     # await run_test_tokens_on_activity_log(async_ndb, accounting_tokens, logger)
