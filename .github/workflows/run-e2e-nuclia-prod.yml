@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        zone: [gke-prod-1, aws-us-east-2-1, aws-il-central-1-1]
+        zone: [gke-prod-1, aws-us-east-2-1, aws-il-central-1-1, aws-eu-central-1-1]
         shard_index: [0, 1, 2]  # Running tests in 3 parallel shards
     needs:
       - build-virtual-env
