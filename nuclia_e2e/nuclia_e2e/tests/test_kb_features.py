@@ -866,7 +866,7 @@ async def test_kb_usage(
 
     zone = regional_api_config.zone_slug
     assert regional_api_config.global_config is not None
-    account = regional_api_config.global_config.permanent_account_id # noqa: F841
+    account = regional_api_config.global_config.permanent_account_id  # noqa: F841
     auth = get_auth()
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_usage"
 
