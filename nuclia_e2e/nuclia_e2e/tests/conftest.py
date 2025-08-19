@@ -142,6 +142,13 @@ CLUSTERS_CONFIG = {
                 permanent_kb_slug="pre-existing-kb",
                 permanent_nua_key=safe_get_prod_env("TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA"),
             ),
+            ZoneConfig(
+                name="aws-eu-central-1-1",
+                zone_slug="aws-eu-central-1-1",
+                test_kb_slug="nuclia-e2e-live-aws-eu-central-1-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=safe_get_prod_env("TEST_AWS_EU_CENTRAL_1_1_NUCLIA_NUA"),
+            ),            
         ],
     ),
     "stage": ClusterConfig(
