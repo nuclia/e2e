@@ -38,6 +38,7 @@ from nucliadb_models.graph.requests import GraphNodesSearchRequest
 from nucliadb_models.graph.requests import GraphRelationsSearchRequest
 from nucliadb_models.graph.requests import GraphSearchRequest
 from nucliadb_models.metadata import ResourceProcessingStatus
+from nucliadb_models.search import Image
 from nucliadb_sdk.v2.exceptions import ClientError
 from nucliadb_sdk.v2.exceptions import NotFoundError
 from textwrap import dedent
@@ -45,6 +46,7 @@ from typing import Any
 
 import asyncio
 import backoff
+import base64
 import pytest
 
 Logger = Callable[[str], None]
@@ -610,6 +612,44 @@ async def run_test_ask(ndb: AsyncNucliaDBClient):
     assert "14" in ask_more_result.answer.decode().lower()
 
 
+@backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
+async def run_test_ask_query_image(ndb: AsyncNucliaDBClient):
+    kb = AsyncNucliaKB()
+    image_path = f"{ASSETS_FILE_PATH}/cocoabeans.png"
+    with open(image_path, "rb") as image_file:
+        image_data = base64.b64encode(image_file.read()).decode("utf-8")
+    ask_result = await kb.search.ask(
+        ndb=ndb,
+        autofilter=True,
+        rephrase=True,
+        reranker="predict",
+        features=["keyword", "semantic", "relations"],
+        query="Why are prices for this item high?",
+        generative_model="chatgpt-azure-4o-mini",
+        prompt=dedent(
+            """
+            Answer the following question based **only** on the provided context and image.
+             Do **not** use any outside knowledge.
+             If the context does not provide enough information to fully answer the question,
+            reply with: “Not enough data to answer this.”
+            Don't be too picky. please try to answer if possible, even if it requires to make a bit of a
+            deduction.
+            [START OF CONTEXT]
+            {context}
+            [END OF CONTEXT]
+            Question: {question}
+            # Notes
+            - **Do not** mention the source of the context in any case
+            """
+        ),
+        query_image=Image(
+            content_type="image/png",
+            b64encoded=image_data,
+        ),
+    )
+    assert "climate change" in ask_result.answer.decode().lower()
+
+
 async def run_test_activity_log(regional_api_config, ndb, logger):
     kb = AsyncNucliaKB()
     now = datetime.now(tz=timezone.utc)
@@ -828,7 +868,10 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         run_test_check_da_labeller_with_label_filter_output(regional_api_config, async_ndb, logger),
         run_test_check_da_ask_output(regional_api_config, ask_task_id, async_ndb, logger),
     )
-    await run_test_ask(async_ndb)
+    await asyncio.gather(
+        run_test_ask(async_ndb),
+        run_test_ask_query_image(async_ndb),
+    )
 
     # Validate that all the data about the usage we generated is correctly stored on the activity log
     # and can be queried, and that the remi quality metrics. Even if the remi metrics won't be computed until
