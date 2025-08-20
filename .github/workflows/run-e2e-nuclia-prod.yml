@@ -1,5 +1,5 @@
 name: run-nuclia-e2e-prod
-run-name: Running e2e PROD NUCLIA tests
+run-name: Running e2e PROD NUCLIA tests.
 on:
   push:
     branches:
@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        zone: [gke-prod-1, aws-us-east-2-1, aws-il-central-1-1]
+        zone: [gke-prod-1, aws-us-east-2-1, aws-il-central-1-1, aws-eu-central-1-1]
         shard_index: [0, 1, 2]  # Running tests in 3 parallel shards
     needs:
       - build-virtual-env
@@ -80,9 +80,10 @@ jobs:
           PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           PROD_ROOT_PAT_TOKEN: ${{ secrets.PROD_ROOT_PAT_TOKEN }}
           PROD_GLOBAL_RECAPTCHA: ${{ secrets.PROD_GLOBAL_RECAPTCHA }}
-          TEST_EUROPE1_NUCLIA_NUA: ${{ secrets.TEST_EUROPE1_NUCLIA_NUA }}
-          TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
-          TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA }}
+          PROD_GCP_EUROPE1_NUA: ${{ secrets.PROD_GCP_EUROPE1_NUA }}
+          PROD_AWS_US_EAST_2_1_NUA: ${{ secrets.PROD_AWS_US_EAST_2_1_NUA }}
+          PROD_AWS_IL_CENTRAL_1_1_NUA: ${{ secrets.PROD_AWS_IL_CENTRAL_1_1_NUA }}
+          PROD_AWS_EU_CENTRAL_1_1_NUA: ${{ secrets.PROD_AWS_EU_CENTRAL_1_1_NUA }}
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
           TEST_ZONES: ${{ matrix.zone }}
