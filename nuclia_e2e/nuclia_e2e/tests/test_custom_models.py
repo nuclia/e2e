@@ -18,7 +18,7 @@ from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import TaskName
 from nuclia_models.worker.tasks import TaskResponse
 from nucliadb_sdk.v2.exceptions import NotFoundError
-from typing import Any
+from typing import Any, Optional
 from typing import TYPE_CHECKING
 
 import asyncio
@@ -147,14 +147,13 @@ async def test_custom_models_work_for_generative_and_agents(
     await _test_ingestion_agents(request, kb_id, zone, auth, custom_model)
 
 
-async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str):
+async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: Optional[str] = None):
     # Ask a question using the new model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
-    answer = await sdk.AsyncNucliaSearch().ask(
-        ndb=ndb,
-        query="how to cook an omelette?",
-        generative_model=custom_model,
-    )
+    extra_params = {}
+    if custom_model:
+        extra_params["generative_model"] = custom_model
+    answer = await sdk.AsyncNucliaSearch().ask(ndb=ndb, query="how to cook an omelette?", **extra_params)
     assert answer.answer is not None
     assert answer.status is not None
     assert answer.status == "success"
@@ -225,6 +224,34 @@ async def _test_ingestion_agents(
         logger=logger,
     )
     assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
+
+
+@pytest.mark.asyncio_cooperative
+@pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
+async def test_custom_models_as_default_work_for_generative(
+    request: pytest.FixtureRequest,
+    kb_id: str,
+    zone: str,
+    auth: AsyncNucliaAuth,
+    custom_model: str,
+    default_custom_model: str,
+    clean_tasks: None,
+):
+    # Do not specify the custom model -- it should use the default one
+    await _test_generative(kb_id, zone, auth, custom_model=None)
+
+
+@pytest.fixture
+async def default_custom_model(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str) -> str:
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    kb = sdk.AsyncNucliaKB()
+    previous = await kb.get_configuration(ndb=ndb)
+    previous_generative_model = previous["generative_model"]
+    await kb.set_configuration(ndb=ndb, generative_model=custom_model)
+    try:
+        yield
+    finally:
+        await kb.set_configuration(ndb=ndb, generative_model=previous_generative_model)
 
 
 async def has_generated_field(
