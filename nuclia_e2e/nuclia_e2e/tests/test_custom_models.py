@@ -18,7 +18,7 @@ from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import TaskName
 from nuclia_models.worker.tasks import TaskResponse
 from nucliadb_sdk.v2.exceptions import NotFoundError
-from typing import Any, Optional
+from typing import Any
 from typing import TYPE_CHECKING
 
 import asyncio
@@ -147,7 +147,7 @@ async def test_custom_models_work_for_generative_and_agents(
     await _test_ingestion_agents(request, kb_id, zone, auth, custom_model)
 
 
-async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: Optional[str] = None):
+async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str | None = None):
     # Ask a question using the new model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     extra_params = {}
