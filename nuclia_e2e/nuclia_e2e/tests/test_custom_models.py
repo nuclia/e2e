@@ -244,7 +244,7 @@ async def test_custom_models_as_default_work_for_generative(
 @pytest.fixture
 async def default_custom_model(
     kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str
-) -> AsyncIterator[str]:
+) -> AsyncIterator[None]:
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     kb = sdk.AsyncNucliaKB()
     previous = await kb.get_configuration(ndb=ndb)
