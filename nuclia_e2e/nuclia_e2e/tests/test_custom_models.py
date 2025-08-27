@@ -97,7 +97,7 @@ async def custom_model(kb_id: str, zone: str, account_id: str, auth: AsyncNuclia
     assert len(await list_models(auth, zone, account_id)) == 0
 
     # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
-    model = "openai_compat:qwen3-8b"
+    model = "custom:qwen3-8b"
 
     # Configure a new custom generative model
     await add_model(
@@ -187,7 +187,7 @@ async def _test_ingestion_agents(
                     )
                 )
             ],
-            llm=LLMConfig(model=custom_model, provider="openai_compat"),
+            llm=LLMConfig(model=custom_model, provider="custom"),
         ),
     )
     task_id = tr.id
