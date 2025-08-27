@@ -22,6 +22,7 @@ from typing import Any
 from typing import TYPE_CHECKING
 
 import asyncio
+import contextlib
 import os
 import pytest
 import random
@@ -146,6 +147,10 @@ async def test_custom_models_work_for_generative_and_agents(
     await _test_generative(kb_id, zone, auth, custom_model)
     await _test_ingestion_agents(request, kb_id, zone, auth, custom_model)
 
+    async with default_custom_model(kb_id, zone, auth, custom_model):
+        # Do not specify the custom model -- it should use the default one
+        await _test_generative(kb_id, zone, auth, custom_model=None)
+
 
 async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str | None = None):
     # Ask a question using the new model
@@ -226,22 +231,7 @@ async def _test_ingestion_agents(
     assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
 
 
-@pytest.mark.asyncio_cooperative
-@pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
-async def test_custom_models_as_default_work_for_generative(
-    request: pytest.FixtureRequest,
-    kb_id: str,
-    zone: str,
-    auth: AsyncNucliaAuth,
-    custom_model: str,
-    default_custom_model: str,
-    clean_tasks: None,
-):
-    # Do not specify the custom model -- it should use the default one
-    await _test_generative(kb_id, zone, auth, custom_model=None)
-
-
-@pytest.fixture
+@contextlib.asynccontextmanager
 async def default_custom_model(
     kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str
 ) -> AsyncIterator[None]:
