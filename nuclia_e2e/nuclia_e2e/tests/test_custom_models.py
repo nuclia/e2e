@@ -249,11 +249,11 @@ async def default_custom_model(
     kb = sdk.AsyncNucliaKB()
     previous = await kb.get_configuration(ndb=ndb)
     previous_generative_model = previous["generative_model"]
-    await kb.set_configuration(ndb=ndb, generative_model=custom_model)
+    await kb.update_configuration(ndb=ndb, generative_model=custom_model)
     try:
         yield
     finally:
-        await kb.set_configuration(ndb=ndb, generative_model=previous_generative_model)
+        await kb.update_configuration(ndb=ndb, generative_model=previous_generative_model)
 
 
 async def has_generated_field(
@@ -340,10 +340,7 @@ async def root_request(
         json=data,
         headers=headers,
     )
+    resp.raise_for_status()
     if resp.status_code == 204:
         return None
-    if resp.status_code >= 200 and resp.status_code < 300:
-        return resp.json()
-    if resp.status_code >= 300 and resp.status_code < 400:
-        return None
-    raise Exception({"status": resp.status_code, "message": resp.text})  # noqa: TRY002
+    return resp.json()
