@@ -83,7 +83,7 @@ ALL_ENCODERS = {
 # copy of ALL_LLMS excluding some more
 LLM_WITH_JSON_OUTPUT_SUPPORT = [
     # "generative-multilingual-2023",
-    # "chatgpt-azure-4-turbo",               DISCONTINUED
+    # "chatgpt-azure-4-turbo",               DISCONTINUED
     "chatgpt-azure-4o",
     "chatgpt-azure-4o-mini",
     # "chatgpt-azure-o1-preview",
