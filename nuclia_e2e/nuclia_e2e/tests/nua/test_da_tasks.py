@@ -377,7 +377,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                     )
                 )
             ],
-            llm=LLMConfig(model="gemini-1-5-flash"),
+            llm=LLMConfig(model="gemini-2.5-flash-lite"),
         ),
         validate_output=validate_llm_graph_output,
     ),

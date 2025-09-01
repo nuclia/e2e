@@ -24,9 +24,9 @@ ALL_LLMS = [
     "claude-4-sonnet",
     "gemini-2.0-flash-lite",
     "gemini-2.0-flash",
-    "gemini-1-5-pro",
+    # "gemini-1-5-pro",                      DISCONTINUED
     # "gemini-1-5-pro-vision",               EXCLUDED because it shares same implementation as non-vision
-    "gemini-1-5-flash",
+    # "gemini-1-5-flash",                    DISCONTINUED
     # "gemini-1-5-flash-vision",             EXCLUDED because it shares same implementation as non-vision
     "gemini-2.5-pro",
     "gemini-2.5-flash",
@@ -98,9 +98,9 @@ LLM_WITH_JSON_OUTPUT_SUPPORT = [
     "claude-4-sonnet",
     "gemini-2.0-flash-lite",
     "gemini-2.0-flash",
-    "gemini-1-5-pro",
+    # "gemini-1-5-pro",                      DISCONTINUED
     # "gemini-1-5-pro-vision",
-    "gemini-1-5-flash",
+    # "gemini-1-5-flash",
     # "gemini-1-5-flash-vision",
     "gemini-2.5-pro",
     "gemini-2.5-flash",
