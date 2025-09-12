@@ -94,8 +94,8 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "aws-claude-3-7-sonnet": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
     "aws-claude-4-sonnet": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
     # The opus models are not available in europe
-    "aws-claude-4-opus": ModelInfo(zones_re="(aws-(?!il|europe)|progress-).*"),
-    "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|europe)|progress-).*"),
+    "aws-claude-4-opus": ModelInfo(zones_re="(aws-(?!il|eu)|progress-).*"),
+    "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu)|progress-).*"),
     # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
     # "deepseek-chat-openai-compat"           EXCLUDED as not a model,just a driver, that needs a key to work
 }
