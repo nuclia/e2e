@@ -97,6 +97,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "aws-claude-4-opus": ModelInfo(zones_re="(aws-(?!il|eu)|progress-).*"),
     "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu)|progress-).*"),
     # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
+    "azure-gpt-oss-120b": ModelInfo(test_rephrase=False),
     # "deepseek-chat-openai-compat"           EXCLUDED as not a model,just a driver, that needs a key to work
 }
 
