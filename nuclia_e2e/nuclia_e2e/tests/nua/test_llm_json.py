@@ -4,7 +4,7 @@ from nuclia.lib.nua_responses import UserPrompt
 from nuclia.sdk.predict import AsyncNucliaPredict
 from nuclia_e2e.models import JSON_OUTPUT_TEST_LLMS
 from nuclia_e2e.models import model_zone_check
-from nuclia_e2e.nuclia_e2e.tests.conftest import ZoneConfig
+from nuclia_e2e.tests.conftest import ZoneConfig
 
 import pytest
 
