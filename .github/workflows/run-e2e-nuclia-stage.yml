@@ -77,7 +77,7 @@ jobs:
 
       - name: Run tests (Shard ${{ matrix.shard_index }})
         env:
-          TEST_EUROPE1_STASHIFY_NUA: ${{ secrets.TEST_EUROPE1_STASHIFY_NUA }}
+          STAGE_GCP_EUROPE1_NUA: ${{ secrets.STAGE_GCP_EUROPE1_NUA }}
           STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           STAGE_ROOT_PAT_TOKEN: ${{ secrets.STAGE_ROOT_PAT_TOKEN }}
           STAGE_GLOBAL_RECAPTCHA: ${{ secrets.STAGE_GLOBAL_RECAPTCHA }}
