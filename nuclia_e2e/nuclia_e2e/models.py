@@ -52,7 +52,9 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "gemini-2.5-pro": ModelInfo(),
     "gemini-2.5-flash": ModelInfo(),
     "gemini-2.5-flash-lite": ModelInfo(),
-    "mistral": ModelInfo(),
+    "mistral": ModelInfo(
+        test_json=False,  # Json output not supported
+    ),
     # "azure-mistral",                       DISCONTINUED
     "chatgpt4o": ModelInfo(),
     "chatgpt4o-mini": ModelInfo(),
