@@ -22,6 +22,7 @@ from typing import Any
 from typing import TYPE_CHECKING
 
 import asyncio
+import contextlib
 import os
 import pytest
 import random
@@ -97,7 +98,7 @@ async def custom_model(kb_id: str, zone: str, account_id: str, auth: AsyncNuclia
     assert len(await list_models(auth, zone, account_id)) == 0
 
     # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
-    model = "openai_compat:qwen3-8b"
+    model = "custom:qwen3-8b"
 
     # Configure a new custom generative model
     await add_model(
@@ -146,15 +147,18 @@ async def test_custom_models_work_for_generative_and_agents(
     await _test_generative(kb_id, zone, auth, custom_model)
     await _test_ingestion_agents(request, kb_id, zone, auth, custom_model)
 
+    async with default_custom_model(kb_id, zone, auth, custom_model):
+        # Do not specify the custom model -- it should use the default one
+        await _test_generative(kb_id, zone, auth, custom_model=None)
 
-async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str):
+
+async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str | None = None):
     # Ask a question using the new model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
-    answer = await sdk.AsyncNucliaSearch().ask(
-        ndb=ndb,
-        query="how to cook an omelette?",
-        generative_model=custom_model,
-    )
+    extra_params = {}
+    if custom_model:
+        extra_params["generative_model"] = custom_model
+    answer = await sdk.AsyncNucliaSearch().ask(ndb=ndb, query="how to cook an omelette?", **extra_params)
     assert answer.answer is not None
     assert answer.status is not None
     assert answer.status == "success"
@@ -188,7 +192,7 @@ async def _test_ingestion_agents(
                     )
                 )
             ],
-            llm=LLMConfig(model=custom_model, provider="openai_compat"),
+            llm=LLMConfig(model=custom_model, provider="custom"),
         ),
     )
     task_id = tr.id
@@ -225,6 +229,21 @@ async def _test_ingestion_agents(
         logger=logger,
     )
     assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
+
+
+@contextlib.asynccontextmanager
+async def default_custom_model(
+    kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str
+) -> AsyncIterator[None]:
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    kb = sdk.AsyncNucliaKB()
+    previous = await kb.get_configuration(ndb=ndb)
+    previous_generative_model = previous["generative_model"]
+    await kb.update_configuration(ndb=ndb, generative_model=custom_model)
+    try:
+        yield
+    finally:
+        await kb.update_configuration(ndb=ndb, generative_model=previous_generative_model)
 
 
 async def has_generated_field(
@@ -311,10 +330,7 @@ async def root_request(
         json=data,
         headers=headers,
     )
+    resp.raise_for_status()
     if resp.status_code == 204:
         return None
-    if resp.status_code >= 200 and resp.status_code < 300:
-        return resp.json()
-    if resp.status_code >= 300 and resp.status_code < 400:
-        return None
-    raise Exception({"status": resp.status_code, "message": resp.text})  # noqa: TRY002
+    return resp.json()
