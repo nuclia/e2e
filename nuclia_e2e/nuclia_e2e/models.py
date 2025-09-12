@@ -15,13 +15,13 @@ import re
 class ModelInfo(BaseModel):
     test_rephrase: bool = True
     test_json: bool = True
-    # Matches zone slug
+    # Matches zone name
     zones_re: str | None = Field(
-        description="Regex pattern to match zones with. If none, matches all", default=None
+        description="Regex pattern to match zones name with. If none, matches all", default=None
     )
 
-    def match_zone(self, zone_slug: str) -> bool:
-        return self.zones_re is None or re.match(self.zones_re, zone_slug) is not None
+    def match_zone(self, zone_name: str) -> bool:
+        return self.zones_re is None or re.match(self.zones_re, zone_name) is not None
 
 
 ALL_LLMS: dict[str, ModelInfo] = {

@@ -16,7 +16,7 @@ import pytest
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("model", ALL_LLMS)
 async def test_llm_rag(nua_client: AsyncNuaClient, model: str, regional_api_config: ZoneConfig):
-    model_zone_check(model, regional_api_config.zone_slug)
+    model_zone_check(model, regional_api_config.name)
     np = AsyncNucliaPredict()
 
     @make_retry_async(attempts=3, delay=10, exceptions=(AssertionError,))

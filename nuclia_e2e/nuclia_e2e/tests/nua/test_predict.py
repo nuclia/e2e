@@ -60,7 +60,7 @@ async def test_predict_tokens(nua_client: AsyncNuaClient):
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("model", REPHRASE_TEST_LLMS)
 async def test_predict_rephrase(nua_client: AsyncNuaClient, model, regional_api_config: ZoneConfig):
-    model_zone_check(model, regional_api_config.zone_slug)
+    model_zone_check(model, regional_api_config.name)
     # Check that rephrase is working for all models
     np = AsyncNucliaPredict()
 

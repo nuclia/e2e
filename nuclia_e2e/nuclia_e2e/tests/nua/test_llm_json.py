@@ -44,7 +44,7 @@ TEXT = (
 @pytest.mark.asyncio_cooperative
 @pytest.mark.parametrize("model_name", JSON_OUTPUT_TEST_LLMS)
 async def test_llm_json(nua_client: AsyncNuaClient, model_name: str, regional_api_config: ZoneConfig):
-    model_zone_check(model_name, regional_api_config.zone_slug)
+    model_zone_check(model_name, regional_api_config.name)
     np = AsyncNucliaPredict()
     results = await np.generate(
         text=ChatModel(
