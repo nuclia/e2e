@@ -78,7 +78,7 @@ async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIter
     async def clean_ask_test_tasks():
         tasks = await kb.task.list(ndb=ndb)
         for task in tasks.running + tasks.done + tasks.configs:
-            if task.task.name == "ask" and task.parameters.name.startswith("test-ask-custom-model"):
+            if task.task.name == "ask" and task.parameters.name.startswith("test-ask-default-model-config"):
                 try:
                     await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
                 except Exception:
@@ -92,72 +92,59 @@ async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIter
 
 
 @pytest.fixture
-async def custom_model(kb_id: str, zone: str, account_id: str, auth: AsyncNucliaAuth) -> AsyncIterator[str]:
-    # Make sure there are no custom models configured
-    await remove_all_models(auth, zone, account_id)
-    assert len(await list_models(auth, zone, account_id)) == 0
+async def default_model_config(
+    kb_id: str, zone: str, account_id: str, auth: AsyncNucliaAuth
+) -> AsyncIterator[str]:
+    # Make sure there are no default model configs
+    await remove_all_default_model_configs(auth, zone, account_id)
+    assert len(await list_default_model_configs(auth, zone, account_id)) == 0
 
     # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
-    model = "custom:qwen3-8b"
+    generative_model = "chatgpt4o"
 
-    # Configure a new custom generative model
-    await add_model(
+    # Configure a new default generative model config
+    default_model_config_id = await add_default_model_config(
         auth,
         zone,
         account_id,
+        generative_model=generative_model,
         model_data={
-            "description": "test_model",
-            "location": model,
-            "model_types": ["GENERATIVE", "SUMMARY"],
-            "openai_compat": {
-                "url": "http://vllm-stack-router-service.vllm-stack.svc.cluster.local/v1",
-                "model_id": "Qwen3-8B",
-                "tokenizer": 0,  # Unspecified tokenizer
-                "key": "",  # No key needed for this model
-                "model_features": {
-                    "vision": False,
-                    "tool_use": True,
-                },
-                "generation_config": {
-                    "default_max_completion_tokens": 800,
-                    "max_input_tokens": 32_768 - 800,
-                },
-            },
+            "default_model_id": generative_model,
+            "description": "Chatgpt4o with custom keys to be reused across all KBs of the account",
         },
-        kbs=[kb_id],
     )
 
-    yield model
+    yield f"{generative_model}/{default_model_config_id}"
 
-    # Remove the custom model
-    await remove_all_models(auth, zone, account_id)
-    assert len(await list_models(auth, zone, account_id)) == 0
+    # Remove the default model config
+    await remove_all_default_model_configs(auth, zone, account_id)
+    assert len(await list_default_model_configs(auth, zone, account_id)) == 0
 
 
 @pytest.mark.asyncio_cooperative
 @pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
-async def test_custom_models_work_for_generative_and_agents(
+async def test_default_model_config_works_for_generative_and_agents(
     request: pytest.FixtureRequest,
     kb_id: str,
     zone: str,
     auth: AsyncNucliaAuth,
-    custom_model: str,
+    default_model_config: str,
     clean_tasks: None,
 ):
-    await _test_generative(kb_id, zone, auth, custom_model)
-    await _test_ingestion_agents(request, kb_id, zone, auth, custom_model)
+    await _test_generative(kb_id, zone, auth, generative_model=default_model_config)
+    await _test_ingestion_agents(request, kb_id, zone, auth, generative_model=default_model_config)
 
-    async with as_kb_default_generative_model(kb_id, zone, auth, custom_model):
-        # Do not specify the custom model -- it should use the default one
-        await _test_generative(kb_id, zone, auth, custom_model=None)
+    async with as_kb_default_generative_model(kb_id, zone, auth, generative_model=default_model_config):
+        # Do not specify the generative model -- it should use the default one
+        await _test_generative(kb_id, zone, auth, generative_model=None)
 
 
-async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str | None = None):
+async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, generative_model: str | None = None):
     # Ask a question using the new model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     extra_params = {}
-    if custom_model:
-        extra_params["generative_model"] = custom_model
+    if generative_model:
+        extra_params["generative_model"] = generative_model
     answer = await sdk.AsyncNucliaSearch().ask(ndb=ndb, query="how to cook an omelette?", **extra_params)
     assert answer.answer is not None
     assert answer.status is not None
@@ -170,18 +157,18 @@ async def _test_ingestion_agents(
     kb_id: str,
     zone: str,
     auth: AsyncNucliaAuth,
-    custom_model: str,
+    generative_model: str,
 ):
-    # Create a task that summarizes the documents using the custom model
+    # Create a task that summarizes the documents using the generative model config
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     kb = sdk.AsyncNucliaKB()
-    destination = f"customsummary_{random.randint(0, 9999)}"
+    destination = f"default_test_summary_{random.randint(0, 9999)}"
     tr: TaskResponse = await kb.task.start(
         ndb=ndb,
         task_name=TaskName.ASK,
         apply=ApplyOptions.ALL,
         parameters=DataAugmentation(
-            name="test-ask-custom-model",
+            name="test-ask-default-model-config",
             on=ApplyTo.FIELD,
             filter=Filter(),
             operations=[
@@ -192,7 +179,7 @@ async def _test_ingestion_agents(
                     )
                 )
             ],
-            llm=LLMConfig(model=custom_model, provider="custom"),
+            llm=LLMConfig(model=generative_model, provider="openai"),
         ),
     )
     task_id = tr.id
@@ -231,39 +218,37 @@ async def _test_ingestion_agents(
     assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
 
 
-async def add_model(
+async def add_default_model_config(
     auth: AsyncNucliaAuth,
     zone: str,
     account_id: str,
+    generative_model: str,
     model_data: dict,
-    kbs: list[str],
-):
+) -> str:
+    if "default_model_id" not in model_data:
+        model_data["default_model_id"] = generative_model
     # Add model to the account
-    path = get_regional_url(zone, f"/api/v1/account/{account_id}/models")
+    path = get_regional_url(zone, f"/api/v1/account/{account_id}/default_models")
     response = await root_request(auth, "POST", path, data=model_data)
     assert response is not None
     model_id = response["id"]
-
-    # Add model to the kbs
-    for kb in kbs:
-        path = get_regional_url(zone, f"/api/v1/account/{account_id}/models/{kb}")
-        await root_request(auth, "POST", path, data={"id": model_id})
+    return model_id
 
 
-async def list_models(auth: AsyncNucliaAuth, zone: str, account_id: str) -> list:
-    path = get_regional_url(zone, f"/api/v1/account/{account_id}/models")
+async def list_default_model_configs(auth: AsyncNucliaAuth, zone: str, account_id: str) -> list:
+    path = get_regional_url(zone, f"/api/v1/account/{account_id}/default_models")
     models = await root_request(auth, "GET", path)
     assert models is not None
     assert isinstance(models, list)
     return models
 
 
-async def delete_model(auth: AsyncNucliaAuth, zone: str, account_id: str, model_id: str):
-    path = get_regional_url(zone, f"/api/v1/account/{account_id}/model/{model_id}")
+async def delete_default_model_config(auth: AsyncNucliaAuth, zone: str, account_id: str, model_id: str):
+    path = get_regional_url(zone, f"/api/v1/account/{account_id}/default_model/{model_id}")
     await root_request(auth, "DELETE", path)
 
 
-async def remove_all_models(auth: AsyncNucliaAuth, zone: str, account_id: str):
-    models = await list_models(auth, zone, account_id)
+async def remove_all_default_model_configs(auth: AsyncNucliaAuth, zone: str, account_id: str):
+    models = await list_default_model_configs(auth, zone, account_id)
     for model in models:
-        await delete_model(auth, zone, account_id, model["model_id"])
+        await delete_default_model_config(auth, zone, account_id, model["id"])
