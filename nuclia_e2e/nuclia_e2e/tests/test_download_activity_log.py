@@ -42,7 +42,7 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
     query = DownloadActivityLogsAskQuery(
         year_month=f"{date.year}-{str(date.month).zfill(2)}",
         show={"id"},
-        filters=QueryFiltersAsk(),
+        filters=QueryFiltersAsk(),  # type: ignore[call-arg]
         email_address=test_email,
         notify_via_email=True,
     )

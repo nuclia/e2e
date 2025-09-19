@@ -662,7 +662,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                 type=EventType.ASK,
                 query=ActivityLogsAskQuery(
                     year_month=f"{now.year}-{now.month:02}",
-                    filters=QueryFiltersAsk(),
+                    filters=QueryFiltersAsk(),  # type: ignore[call-arg]
                     pagination=Pagination(limit=100),
                 ),
             )
@@ -734,7 +734,7 @@ async def run_test_tokens_on_activity_log(
                 type=EventType.ASK,
                 query=ActivityLogsAskQuery(
                     year_month=f"{now.year}-{now.month:02}",
-                    filters=QueryFiltersAsk(),
+                    filters=QueryFiltersAsk(),  # type: ignore[call-arg]
                     pagination=Pagination(limit=100),
                     show={"nuclia_tokens"},
                 ),
