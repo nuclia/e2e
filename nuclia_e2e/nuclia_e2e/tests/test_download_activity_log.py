@@ -48,7 +48,7 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
     )
     kb = AsyncNucliaKB()
     request = await kb.logs.download(
-        ndb=async_ndb, type=EventType.CHAT, query=query, download_format=DownloadFormat.NDJSON, wait=True
+        ndb=async_ndb, type=EventType.ASK, query=query, download_format=DownloadFormat.NDJSON, wait=True
     )
     data = await fetch_ndjson_async(request.download_url)
     assert len(data) > 1
