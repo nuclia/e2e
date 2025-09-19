@@ -736,7 +736,7 @@ async def run_test_tokens_on_activity_log(
                     year_month=f"{now.year}-{now.month:02}",
                     filters=QueryFiltersAsk(),
                     pagination=Pagination(limit=100),
-                    show=["nuclia_tokens"],
+                    show={"nuclia_tokens"},
                 ),
             )
             if len(logs.data) > 0:

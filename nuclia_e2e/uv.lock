@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10"
 
 [[package]]
@@ -611,7 +611,7 @@ wheels = [
 
 [[package]]
 name = "nuclia"
-version = "4.9.7"
+version = "4.9.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -630,9 +630,9 @@ dependencies = [
     { name = "tabulate" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d7/b0/44ae77520858888e63a2c6d8d0af3408afdd2c930a8461a8d5ecd60cb810/nuclia-4.9.7.tar.gz", hash = "sha256:c305dd40076a115fa2602b4e1b661e4f713b22475cff2c9a97b152adbee1787d", size = 272739, upload-time = "2025-08-27T08:44:08.305Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2a/c5/8c194d795bc40961542f6d1bd2b3bf127e5d29abd25bbefe765f8857ac24/nuclia-4.9.11.tar.gz", hash = "sha256:b53c628ee992f82898cfcc39e0f77203fa18a25016df12700028bc8dee93fdc7", size = 277838, upload-time = "2025-09-18T09:00:38.952Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b7/89/9929708b45a97704e746fe000979aed8e41c00ba1bcad669ffc1d08c68d3/nuclia-4.9.7-py3-none-any.whl", hash = "sha256:57c7d26176986adbd53f7dcb806111da469e0c429a40924e883605e7fa0735d1", size = 75796, upload-time = "2025-08-27T08:44:06.693Z" },
+    { url = "https://files.pythonhosted.org/packages/52/5e/0c9038c1657ac317621076f556875911016a65fef8f5f78443344fbeb786/nuclia-4.9.11-py3-none-any.whl", hash = "sha256:b0e4973170ba0c88d92af1fd6fb06d4167b25bff2f84ebda0323f6dbabdb1562", size = 80942, upload-time = "2025-09-18T09:00:37.431Z" },
 ]
 
 [[package]]
@@ -679,7 +679,7 @@ requires-dist = [
     { name = "backoff" },
     { name = "mypy", specifier = "==1.15.0" },
     { name = "mypy-extensions", specifier = "==1.0.0" },
-    { name = "nuclia", specifier = ">=4.9.7" },
+    { name = "nuclia", specifier = ">=4.9.11" },
     { name = "nucliadb-protos" },
     { name = "prometheus-client" },
     { name = "pytest", specifier = "==8.3.4" },
@@ -707,25 +707,25 @@ provides-extras = ["benchmark"]
 
 [[package]]
 name = "nuclia-models"
-version = "0.46.0"
+version = "0.49.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic", extra = ["email"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/95/cd/3aeef7b2a96ee7def1d1abe3e7a080c60f5df75e9ffc265b7bb73632c088/nuclia_models-0.46.0.tar.gz", hash = "sha256:cebeebd992738a13e36c6c5e0fd23f5a69cb0e511f5a5b62eba0f7ca8d7c7ccc", size = 21993, upload-time = "2025-07-21T10:39:51.831Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/70/46/08b6e8815461835899cfedb3a3015ec2e811fc975a8b80084d9d9daa75a3/nuclia_models-0.49.0.tar.gz", hash = "sha256:f68947f6e1553e3cd91b083553ac04cbb1017886279821b49fd3523cd1be68b2", size = 22162, upload-time = "2025-09-15T15:18:29.096Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/53/da/c2d70e88086faa2187ffac6d2e313792e99425ca1042af655eda630a49e8/nuclia_models-0.46.0-py3-none-any.whl", hash = "sha256:8c77ea4104e219827b6ac962ae38d5b75ff6e1ac64b35452365db3d783a57d74", size = 26273, upload-time = "2025-07-21T10:39:50.644Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/6a/6d9205586e0373162bb5fd7091fb3be59ec5ec17fe0a1387651ed5a1d05d/nuclia_models-0.49.0-py3-none-any.whl", hash = "sha256:9cb4278b28d499da49f761c14d77544c54f60f338fd976598f9e4bf413dfd887", size = 26141, upload-time = "2025-09-15T15:18:27.962Z" },
 ]
 
 [[package]]
 name = "nucliadb-models"
-version = "6.7.2.post4862"
+version = "6.8.1.post4961"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/96/ae/c508d22450be7488a5b895459ea9dd7788dcee6552e7f0aa676c6a2cbecc/nucliadb_models-6.7.2.post4862-py3-none-any.whl", hash = "sha256:3c91054c985806782298d99c9ddd22ee501fb5756b955cd6a10ced540e1964d8", size = 64769, upload-time = "2025-08-26T10:40:20.24Z" },
+    { url = "https://files.pythonhosted.org/packages/90/60/58c06711b9e677c5b43c458ea5576ffc4769517e36de01d614d306a94ec3/nucliadb_models-6.8.1.post4961-py3-none-any.whl", hash = "sha256:1325c28caa9d286fdf1b6450fd25c6f92b777e691dfea5f1059ed0f6c21de5fc", size = 65143, upload-time = "2025-09-19T12:08:56.777Z" },
 ]
 
 [[package]]
