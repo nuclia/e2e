@@ -4,10 +4,10 @@ from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia_e2e.tests.conftest import EmailUtil
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
-from nuclia_models.events.activity_logs import DownloadActivityLogsChatQuery
+from nuclia_models.events.activity_logs import DownloadActivityLogsAskQuery
 from nuclia_models.events.activity_logs import DownloadFormat
 from nuclia_models.events.activity_logs import EventType
-from nuclia_models.events.activity_logs import QueryFiltersChat
+from nuclia_models.events.activity_logs import QueryFiltersAsk
 
 import aiohttp
 import asyncio
@@ -39,16 +39,16 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
     await kb.search.ask(ndb=async_ndb, query="omelette")
 
     test_email = email_util.generate_email_address()
-    query = DownloadActivityLogsChatQuery(
+    query = DownloadActivityLogsAskQuery(
         year_month=f"{date.year}-{str(date.month).zfill(2)}",
         show={"id"},
-        filters=QueryFiltersChat(),
+        filters=QueryFiltersAsk(),  # type: ignore[call-arg]
         email_address=test_email,
         notify_via_email=True,
     )
     kb = AsyncNucliaKB()
     request = await kb.logs.download(
-        ndb=async_ndb, type=EventType.CHAT, query=query, download_format=DownloadFormat.NDJSON, wait=True
+        ndb=async_ndb, type=EventType.ASK, query=query, download_format=DownloadFormat.NDJSON, wait=True
     )
     data = await fetch_ndjson_async(request.download_url)
     assert len(data) > 1
