@@ -13,14 +13,8 @@ SCHEMA = {
     "description": "Correctly extracted with all the required parameters with correct types",
     "parameters": {
         "properties": {
-            "title": {"default": "label", "title": "Title", "type": "string"},
-            "description": {
-                "default": "Define labels to classify the subject of the document",
-                "title": "Description",
-                "type": "string",
-            },
             "document_type": {
-                "description": "Type of document, SPORT example: elections, Illa, POLITICAL example: football",  # noqa: E501
+                "description": "Main theme of the text",
                 "title": "Document Type",
                 "type": "array",
                 "items": {
