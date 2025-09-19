@@ -15,10 +15,10 @@ from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
 from nuclia_e2e.utils import wait_for
 from nuclia_models.common.pagination import Pagination
-from nuclia_models.events.activity_logs import ActivityLogsChatQuery
+from nuclia_models.events.activity_logs import ActivityLogsAskQuery
 from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
 from nuclia_models.events.activity_logs import EventType
-from nuclia_models.events.activity_logs import QueryFiltersChat
+from nuclia_models.events.activity_logs import QueryFiltersAsk
 from nuclia_models.worker.proto import ApplyTo
 from nuclia_models.worker.proto import AskOperation
 from nuclia_models.worker.proto import Filter
@@ -659,10 +659,10 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
         async def condition() -> tuple[bool, Any]:
             logs = await kb.logs.query(
                 ndb=ndb,
-                type=EventType.CHAT,
-                query=ActivityLogsChatQuery(
+                type=EventType.ASK,
+                query=ActivityLogsAskQuery(
                     year_month=f"{now.year}-{now.month:02}",
-                    filters=QueryFiltersChat(),
+                    filters=QueryFiltersAsk(),
                     pagination=Pagination(limit=100),
                 ),
             )
@@ -731,10 +731,10 @@ async def run_test_tokens_on_activity_log(
             now = datetime.now(tz=timezone.utc)
             logs = await kb.logs.query(
                 ndb=ndb,
-                type=EventType.CHAT,
-                query=ActivityLogsChatQuery(
+                type=EventType.ASK,
+                query=ActivityLogsAskQuery(
                     year_month=f"{now.year}-{now.month:02}",
-                    filters=QueryFiltersChat(),
+                    filters=QueryFiltersAsk(),
                     pagination=Pagination(limit=100),
                     show=["nuclia_tokens"],
                 ),
