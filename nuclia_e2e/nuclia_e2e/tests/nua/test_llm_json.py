@@ -9,26 +9,21 @@ from nuclia_e2e.tests.conftest import ZoneConfig
 import pytest
 
 SCHEMA = {
-    "name": "ClassificationReverse",
-    "description": "Correctly extracted with all the required parameters with correct types",
+    "name": "classification",
+    "description": "Classify the main theme of the text",
     "parameters": {
+        "type": "object",
         "properties": {
             "document_type": {
+                "type": "string",
                 "description": "Main theme of the text",
-                "title": "Document Type",
-                "type": "array",
-                "items": {
-                    "enum": ["SPORTS", "POLITICAL"],
-                    "title": "Options",
-                    "type": "string",
-                },
+                "enum": ["SPORTS", "POLITICAL"],
             },
         },
         "required": ["document_type"],
-        "type": "object",
+        "additionalProperties": False,
     },
 }
-
 TEXT = (
     "Many football players have existed. Messi is by far the greatest. "
     "Messi was born in Rosario, 24th of June 1987"
