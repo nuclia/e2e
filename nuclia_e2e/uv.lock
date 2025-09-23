@@ -611,7 +611,7 @@ wheels = [
 
 [[package]]
 name = "nuclia"
-version = "4.9.10"
+version = "4.9.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -630,9 +630,9 @@ dependencies = [
     { name = "tabulate" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/d2/91d934445991afd4a269c3027e69de13d685862f9a6509787061174687ff/nuclia-4.9.10.tar.gz", hash = "sha256:1bad4e3b3a7ad272152a7b6a911b1dad6fa42d5eba78dacf88e27ac57b47cc5b", size = 277746, upload-time = "2025-09-15T07:42:40.033Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2a/c5/8c194d795bc40961542f6d1bd2b3bf127e5d29abd25bbefe765f8857ac24/nuclia-4.9.11.tar.gz", hash = "sha256:b53c628ee992f82898cfcc39e0f77203fa18a25016df12700028bc8dee93fdc7", size = 277838, upload-time = "2025-09-18T09:00:38.952Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/52/e3e4046fad3dc8b4b0b00018b1a657eda8e48af15ad081d88eeee3cbd946/nuclia-4.9.10-py3-none-any.whl", hash = "sha256:24cfeddea7220d2b0cfcdc57f31015938dfc6063a23d7f91707571468867549a", size = 80940, upload-time = "2025-09-15T07:42:37.606Z" },
+    { url = "https://files.pythonhosted.org/packages/52/5e/0c9038c1657ac317621076f556875911016a65fef8f5f78443344fbeb786/nuclia-4.9.11-py3-none-any.whl", hash = "sha256:b0e4973170ba0c88d92af1fd6fb06d4167b25bff2f84ebda0323f6dbabdb1562", size = 80942, upload-time = "2025-09-18T09:00:37.431Z" },
 ]
 
 [[package]]
@@ -679,7 +679,7 @@ requires-dist = [
     { name = "backoff" },
     { name = "mypy", specifier = "==1.15.0" },
     { name = "mypy-extensions", specifier = "==1.0.0" },
-    { name = "nuclia", specifier = ">=4.9.7" },
+    { name = "nuclia", specifier = ">=4.9.11" },
     { name = "nucliadb-protos" },
     { name = "prometheus-client" },
     { name = "pytest", specifier = "==8.3.4" },
@@ -707,25 +707,25 @@ provides-extras = ["benchmark"]
 
 [[package]]
 name = "nuclia-models"
-version = "0.47.0"
+version = "0.49.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic", extra = ["email"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/07/74/f8d209d3855dce53c5b1aec81c0c09333203fe8d144e37187bec342f2271/nuclia_models-0.47.0.tar.gz", hash = "sha256:4b0154a1fed0bea89fc49607896ffcf1ca71fce1ae03de91657ec839954d9ce8", size = 22010, upload-time = "2025-09-01T18:48:02.315Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/70/46/08b6e8815461835899cfedb3a3015ec2e811fc975a8b80084d9d9daa75a3/nuclia_models-0.49.0.tar.gz", hash = "sha256:f68947f6e1553e3cd91b083553ac04cbb1017886279821b49fd3523cd1be68b2", size = 22162, upload-time = "2025-09-15T15:18:29.096Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/fc/973fa74eafdc20b157445c55b99a64e02ea356a56d9a3b5e96e81e1f1834/nuclia_models-0.47.0-py3-none-any.whl", hash = "sha256:51cdb65b722d9d08348085725f6eb345692fc6b979750f25092d8e5e324ee26c", size = 26296, upload-time = "2025-09-01T18:48:01.446Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/6a/6d9205586e0373162bb5fd7091fb3be59ec5ec17fe0a1387651ed5a1d05d/nuclia_models-0.49.0-py3-none-any.whl", hash = "sha256:9cb4278b28d499da49f761c14d77544c54f60f338fd976598f9e4bf413dfd887", size = 26141, upload-time = "2025-09-15T15:18:27.962Z" },
 ]
 
 [[package]]
 name = "nucliadb-models"
-version = "6.8.1.post4926"
+version = "6.8.1.post4961"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/b0/9d9581b15b412b113827b756b629b45ffa13247cc24bd021a3765d911792/nucliadb_models-6.8.1.post4926-py3-none-any.whl", hash = "sha256:5b0c42c50944a034197908daba8d62ff633277b8dec1a8e8ffc98d5008ce5803", size = 65126, upload-time = "2025-09-12T08:39:11.05Z" },
+    { url = "https://files.pythonhosted.org/packages/90/60/58c06711b9e677c5b43c458ea5576ffc4769517e36de01d614d306a94ec3/nucliadb_models-6.8.1.post4961-py3-none-any.whl", hash = "sha256:1325c28caa9d286fdf1b6450fd25c6f92b777e691dfea5f1059ed0f6c21de5fc", size = 65143, upload-time = "2025-09-19T12:08:56.777Z" },
 ]
 
 [[package]]
