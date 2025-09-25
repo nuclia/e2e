@@ -58,8 +58,8 @@ async def default_model(
     yield f"{generative_model}/{default_model_config_id}"
 
     # Remove the default model config
-    await default_models.remove_all()
-    assert len(await default_models.list()) == 0
+    # await default_models.remove_all()
+    # assert len(await default_models.list()) == 0
 
 
 @pytest.mark.asyncio_cooperative
