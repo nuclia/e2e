@@ -97,7 +97,7 @@ async def _test_run_resource_agents(
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
 
     # Configure an ingestion agent (aka task)
-    unique_id = str(uuid.uuid4())
+    unique_id = uuid.uuid4().hex
     agent_id = await create_ask_agent(
         kb_id,
         zone,
