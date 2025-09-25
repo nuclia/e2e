@@ -121,7 +121,7 @@ async def _test_run_resource_agents(
         question="Summarize the contents of the document in a single sentence.",
         generative_model=generative_model,
         generative_model_provider=generative_model_provider,
-        destination_field_prefix=f"summary-{unique_id}",
+        destination_field_prefix=f"summary_{unique_id}",
     )
 
     # Add to the list
