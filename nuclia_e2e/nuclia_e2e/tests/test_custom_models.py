@@ -1,37 +1,23 @@
 from collections.abc import AsyncIterator
-from functools import wraps
-from nuclia import get_regional_url
 from nuclia import sdk
 from nuclia.data import get_async_auth
 from nuclia.sdk.auth import AsyncNucliaAuth
 from nuclia_e2e.tests.conftest import ZoneConfig
-from nuclia_e2e.tests.utils import as_kb_default_generative_model
-from nuclia_e2e.tests.utils import has_generated_field
-from nuclia_e2e.tests.utils import root_request
+from nuclia_e2e.tests.utils import as_default_generative_model_for_kb
+from nuclia_e2e.tests.utils import clean_ask_test_tasks
+from nuclia_e2e.tests.utils import create_ask_agent
+from nuclia_e2e.tests.utils import CustomModels
 from nuclia_e2e.utils import get_async_kb_ndb_client
-from nuclia_e2e.utils import wait_for
-from nuclia_models.worker.proto import ApplyTo
-from nuclia_models.worker.proto import AskOperation
-from nuclia_models.worker.proto import Filter
-from nuclia_models.worker.proto import LLMConfig
-from nuclia_models.worker.proto import Operation
-from nuclia_models.worker.tasks import ApplyOptions
-from nuclia_models.worker.tasks import DataAugmentation
-from nuclia_models.worker.tasks import TaskName
-from nuclia_models.worker.tasks import TaskResponse
-from typing import Any
-from typing import TYPE_CHECKING
 
-import asyncio
 import os
 import pytest
-import random
-import traceback
-
-if TYPE_CHECKING:
-    from nucliadb_models.resource import ResourceList
+import uuid
 
 TEST_ENV = os.environ.get("TEST_ENV")
+
+# Global variable to know which tasks were created in this test
+# suite so we can clean them up properly on fixture teardown
+_tasks_to_delete: list[str] = []
 
 
 @pytest.fixture
@@ -75,36 +61,27 @@ async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIter
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     kb = sdk.AsyncNucliaKB()
 
-    async def clean_ask_test_tasks():
-        tasks = await kb.task.list(ndb=ndb)
-        for task in tasks.running + tasks.done + tasks.configs:
-            if task.task.name == "ask" and task.parameters.name.startswith("test-ask-custom-model"):
-                try:
-                    await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
-                except Exception:
-                    print(f"Error deleting task {task.id}: {traceback.print_exc()}")
-
-    await clean_ask_test_tasks()
-
     yield
 
-    await clean_ask_test_tasks()
+    await clean_ask_test_tasks(kb, ndb, to_delete=_tasks_to_delete)
 
 
 @pytest.fixture
-async def custom_model(kb_id: str, zone: str, account_id: str, auth: AsyncNucliaAuth) -> AsyncIterator[str]:
+async def custom_models(auth: AsyncNucliaAuth, zone: str, account_id: str) -> CustomModels:
+    return CustomModels(auth, zone, account_id)
+
+
+@pytest.fixture
+async def custom_model(kb_id: str, custom_models: CustomModels) -> AsyncIterator[str]:
     # Make sure there are no custom models configured
-    await remove_all_models(auth, zone, account_id)
-    assert len(await list_models(auth, zone, account_id)) == 0
+    await custom_models.remove_all()
+    assert len(await custom_models.list()) == 0
 
     # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
     model = "custom:qwen3-8b"
 
     # Configure a new custom generative model
-    await add_model(
-        auth,
-        zone,
-        account_id,
+    await custom_models.add(
         model_data={
             "description": "test_model",
             "location": model,
@@ -130,8 +107,8 @@ async def custom_model(kb_id: str, zone: str, account_id: str, auth: AsyncNuclia
     yield model
 
     # Remove the custom model
-    await remove_all_models(auth, zone, account_id)
-    assert len(await list_models(auth, zone, account_id)) == 0
+    await custom_models.remove_all()
+    assert len(await custom_models.list()) == 0
 
 
 @pytest.mark.asyncio_cooperative
@@ -144,20 +121,22 @@ async def test_custom_models_work_for_generative_and_agents(
     custom_model: str,
     clean_tasks: None,
 ):
-    await _test_generative(kb_id, zone, auth, custom_model)
-    await _test_ingestion_agents(request, kb_id, zone, auth, custom_model)
+    await _test_generative(kb_id, zone, auth, generative_model=custom_model)
+    await _test_run_resource_agents(
+        kb_id, zone, auth, generative_model=custom_model, generative_model_provider="custom"
+    )
 
-    async with as_kb_default_generative_model(kb_id, zone, auth, custom_model):
+    async with as_default_generative_model_for_kb(kb_id, zone, auth, custom_model):
         # Do not specify the custom model -- it should use the default one
-        await _test_generative(kb_id, zone, auth, custom_model=None)
+        await _test_generative(kb_id, zone, auth, generative_model=None)
 
 
-async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_model: str | None = None):
-    # Ask a question using the new model
+async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, generative_model: str | None = None):
+    # Send an ask request with the model (if specified) or with the default configured model in the kb.
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     extra_params = {}
-    if custom_model:
-        extra_params["generative_model"] = custom_model
+    if generative_model:
+        extra_params["generative_model"] = generative_model
     answer = await sdk.AsyncNucliaSearch().ask(ndb=ndb, query="how to cook an omelette?", **extra_params)
     assert answer.answer is not None
     assert answer.status is not None
@@ -165,105 +144,34 @@ async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, custom_
     print(f"Answer: {answer.answer}")
 
 
-async def _test_ingestion_agents(
-    request: pytest.FixtureRequest,
-    kb_id: str,
-    zone: str,
-    auth: AsyncNucliaAuth,
-    custom_model: str,
+async def _test_run_resource_agents(
+    kb_id: str, zone: str, auth: AsyncNucliaAuth, generative_model: str, generative_model_provider: str
 ):
-    # Create a task that summarizes the documents using the custom model
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
-    kb = sdk.AsyncNucliaKB()
-    destination = f"customsummary_{random.randint(0, 9999)}"
-    tr: TaskResponse = await kb.task.start(
-        ndb=ndb,
-        task_name=TaskName.ASK,
-        apply=ApplyOptions.ALL,
-        parameters=DataAugmentation(
-            name="test-ask-custom-model",
-            on=ApplyTo.FIELD,
-            filter=Filter(),
-            operations=[
-                Operation(
-                    ask=AskOperation(
-                        question="What is the document about? Summarize it in a single sentence.",
-                        destination=destination,
-                    )
-                )
-            ],
-            llm=LLMConfig(model=custom_model, provider="custom"),
-        ),
+
+    # Configure an ingestion agent (aka task)
+    unique_id = str(uuid.uuid4())
+    agent_id = await create_ask_agent(
+        kb_id,
+        zone,
+        auth,
+        da_name=f"test-e2e-custom-models-{unique_id}",
+        question="Summarize the contents of the document in a single sentence.",
+        generative_model=generative_model,
+        generative_model_provider=generative_model_provider,
+        destination_field_prefix=f"summary-{unique_id}",
     )
-    task_id = tr.id
 
-    rlist: ResourceList = await kb.list(ndb=ndb)
-    resource_slugs = [resource.slug for resource in rlist.resources]
-    assert len(resource_slugs) > 0, "No resources found in the knowledge base."
+    # Add to the list
+    _tasks_to_delete.append(agent_id)
 
-    # The expected field id for the generated field. This should match the
-    # `destination` field in the AskOperation above: `da-{destination}`
-    expected_field_id_prefix = f"da-{destination}"
+    # Get a resource
+    resources = await ndb.ndb.list_resources(kbid=kb_id)
+    rid = resources.resources[0].id
 
-    def resources_have_generated_fields(resource_slugs):
-        @wraps(resources_have_generated_fields)
-        async def condition() -> tuple[bool, Any]:
-            resources_have_field = await asyncio.gather(
-                *[
-                    has_generated_field(ndb, kb, resource_slug, expected_field_id_prefix)
-                    for resource_slug in resource_slugs
-                ]
-            )
-            result = all(resources_have_field)
-            return (result, None)
-
-        return condition
-
-    def logger(msg):
-        print(f"{request.node.name} ::: {msg}")
-
-    success, _ = await wait_for(
-        condition=resources_have_generated_fields(resource_slugs),
-        max_wait=5 * 60,  # 5 minutes
-        interval=20,
-        logger=logger,
+    # Run the agent on the resource, simply make sure it doesn't fail and it returns some results
+    resp = await ndb.ndb.session.post(
+        f"/v1/kb/{kb_id}/resource/{rid}/run-agents", json={"agent_ids": [agent_id]}
     )
-    assert success, f"Expected generated text fields not found in resources. task_id: {task_id}"
-
-
-async def add_model(
-    auth: AsyncNucliaAuth,
-    zone: str,
-    account_id: str,
-    model_data: dict,
-    kbs: list[str],
-):
-    # Add model to the account
-    path = get_regional_url(zone, f"/api/v1/account/{account_id}/models")
-    response = await root_request(auth, "POST", path, data=model_data)
-    assert response is not None
-    model_id = response["id"]
-
-    # Add model to the kbs
-    for kb in kbs:
-        path = get_regional_url(zone, f"/api/v1/account/{account_id}/models/{kb}")
-        await root_request(auth, "POST", path, data={"id": model_id})
-
-
-async def list_models(auth: AsyncNucliaAuth, zone: str, account_id: str) -> list:
-    path = get_regional_url(zone, f"/api/v1/account/{account_id}/models")
-    models = await root_request(auth, "GET", path)
-    assert models is not None
-    assert isinstance(models, list)
-    return models
-
-
-async def delete_model(auth: AsyncNucliaAuth, zone: str, account_id: str, model_id: str):
-    path = get_regional_url(zone, f"/api/v1/account/{account_id}/model/{model_id}")
-    await root_request(auth, "DELETE", path)
-
-
-async def remove_all_models(auth: AsyncNucliaAuth, zone: str, account_id: str):
-    models = await list_models(auth, zone, account_id)
-    for model in models:
-        await delete_model(auth, zone, account_id, model["model_id"])
+    assert str(resp.status_code).startswith("2"), resp.text
+    assert len(resp.json()["results"]) > 0
