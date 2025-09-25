@@ -68,14 +68,12 @@ async def test_default_model_works_for_generative_and_agents(
     default_model: str,
     clean_tasks: None,
 ):
-    await _test_generative(kb_id, zone, auth, generative_model=default_model)
-    await _test_run_resource_agents(
-        kb_id, zone, auth, generative_model=default_model, generative_model_provider="openai"
-    )
-
     async with as_default_generative_model_for_kb(kb_id, zone, auth, generative_model=default_model):
-        # Do not specify the generative model -- it should use the default one
         await _test_generative(kb_id, zone, auth, generative_model=None)
+        await _test_generative(kb_id, zone, auth, generative_model=default_model)
+        await _test_run_resource_agents(
+            kb_id, zone, auth, generative_model=default_model, generative_model_provider="openai"
+        )
 
 
 async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, generative_model: str | None = None):
