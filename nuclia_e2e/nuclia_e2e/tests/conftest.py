@@ -12,11 +12,13 @@ from datetime import datetime  # noqa: E402
 from datetime import timedelta  # noqa: E402
 from email.header import decode_header  # noqa: E402
 from functools import partial  # noqa: E402
+from nuclia import sdk  # noqa: E402
 from nuclia.config import reset_config_file  # noqa: E402
 from nuclia.config import set_config_file  # noqa: E402
 from nuclia.data import get_async_auth  # noqa: E402
 from nuclia.data import get_config  # noqa: E402
 from nuclia.lib.nua import AsyncNuaClient  # noqa: E402
+from nuclia.sdk.auth import AsyncNucliaAuth  # noqa: E402
 from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
 from nuclia_e2e.utils import Retriable  # noqa: E402
 
@@ -553,3 +555,39 @@ async def nua_client(regional_api_config) -> AsyncNuaClient:
         token=regional_api_config.permanent_nua_key,
     )
     return Retriable.wrap_async(nc)
+
+
+@pytest.fixture
+async def kb_id(regional_api_config: ZoneConfig) -> str:
+    """
+    Fixture to provide the knowledge base ID for the tests.
+    """
+    assert regional_api_config.global_config is not None
+    return regional_api_config.permanent_kb_id
+
+
+@pytest.fixture
+async def zone(regional_api_config: ZoneConfig) -> str:
+    """
+    Fixture to provide the zone slug for the tests.
+    """
+    return regional_api_config.zone_slug
+
+
+@pytest.fixture
+def auth() -> AsyncNucliaAuth:
+    """
+    Fixture to provide the async Nuclia authentication object.
+    """
+    return get_async_auth()
+
+
+@pytest.fixture(autouse=True)
+async def account_id(regional_api_config: ZoneConfig, auth: AsyncNucliaAuth) -> str:
+    """
+    Fixture to provide the account slug for the tests.
+    """
+    assert regional_api_config.global_config is not None
+    account_slug = regional_api_config.global_config.permanent_account_slug
+    sdk.NucliaAccounts().default(account_slug)
+    return auth.get_account_id(account_slug)
