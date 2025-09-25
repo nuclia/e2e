@@ -53,7 +53,7 @@ async def create_test_kb(regional_api_config, kb_slug, logger: Logger = print) -
     return kbid
 
 
-async def delete_test_kb(regional_api_config, kbid, kb_slug, logger):
+async def delete_test_kb(regional_api_config, kbid, kb_slug, logger: Logger = print):
     kbs = AsyncNucliaKBS()
     logger("Deleting kb {kbid}")
     await kbs.delete(zone=regional_api_config.zone_slug, id=kbid)
