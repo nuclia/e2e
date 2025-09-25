@@ -79,14 +79,12 @@ async def test_custom_models_work_for_generative_and_agents(
     custom_model: str,
     clean_tasks: None,
 ):
-    await _test_generative(kb_id, zone, auth, generative_model=custom_model)
-    await _test_run_resource_agents(
-        kb_id, zone, auth, generative_model=custom_model, generative_model_provider="custom"
-    )
-
     async with as_default_generative_model_for_kb(kb_id, zone, auth, custom_model):
-        # Do not specify the custom model -- it should use the default one
         await _test_generative(kb_id, zone, auth, generative_model=None)
+        await _test_generative(kb_id, zone, auth, generative_model=custom_model)
+        await _test_run_resource_agents(
+            kb_id, zone, auth, generative_model=custom_model, generative_model_provider="custom"
+        )
 
 
 async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, generative_model: str | None = None):
