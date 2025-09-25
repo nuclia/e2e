@@ -34,7 +34,7 @@ async def custom_models(auth: AsyncNucliaAuth, zone: str, account_id: str) -> Cu
 
 
 @pytest.fixture
-async def custom_model(kb_id: str, custom_models: CustomModels) -> AsyncIterator[str]:
+async def custom_model(kb_id: str, custom_models: CustomModels) -> str:
     # Make sure there are no custom models configured
     await custom_models.remove_all()
     assert len(await custom_models.list()) == 0
@@ -66,11 +66,7 @@ async def custom_model(kb_id: str, custom_models: CustomModels) -> AsyncIterator
         kbs=[kb_id],
     )
 
-    yield model
-
-    # Remove the custom model
-    await custom_models.remove_all()
-    assert len(await custom_models.list()) == 0
+    return model
 
 
 @pytest.mark.asyncio_cooperative
@@ -112,7 +108,7 @@ async def _test_run_resource_agents(
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
 
     # Configure an ingestion agent (aka task)
-    unique_id = str(uuid.uuid4())
+    unique_id = uuid.uuid4().hex
     agent_id = await create_ask_agent(
         kb_id,
         zone,
