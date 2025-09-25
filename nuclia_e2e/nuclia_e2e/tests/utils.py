@@ -1,12 +1,23 @@
 from collections.abc import AsyncIterator
+from nuclia import get_regional_url
 from nuclia import sdk
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.auth import AsyncNucliaAuth
 from nuclia_e2e.utils import get_async_kb_ndb_client
+from nuclia_models.worker.proto import ApplyTo
+from nuclia_models.worker.proto import AskOperation
+from nuclia_models.worker.proto import Filter
+from nuclia_models.worker.proto import LLMConfig
+from nuclia_models.worker.proto import Operation
+from nuclia_models.worker.tasks import ApplyOptions
+from nuclia_models.worker.tasks import DataAugmentation
+from nuclia_models.worker.tasks import TaskName
+from nuclia_models.worker.tasks import TaskResponse
 from nucliadb_sdk.v2.exceptions import NotFoundError
 
 import contextlib
 import os
+import traceback
 
 
 async def root_request(
@@ -36,7 +47,7 @@ async def root_request(
 
 
 @contextlib.asynccontextmanager
-async def as_kb_default_generative_model(
+async def as_default_generative_model_for_kb(
     kb_id: str, zone: str, auth: AsyncNucliaAuth, generative_model: str
 ) -> AsyncIterator[None]:
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
@@ -74,3 +85,135 @@ async def has_generated_field(
     else:
         # If we reach here, it means the field was not found
         return False
+
+
+async def create_ask_agent(
+    kb_id: str,
+    zone: str,
+    auth: AsyncNucliaAuth,
+    da_name: str,
+    question: str,
+    generative_model: str,
+    generative_model_provider: str,
+    destination_field_prefix: str,
+) -> str:
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    kb = sdk.AsyncNucliaKB()
+    tr: TaskResponse = await kb.task.start(
+        ndb=ndb,
+        task_name=TaskName.ASK,
+        apply=ApplyOptions.NEW,
+        parameters=DataAugmentation(
+            name=da_name,
+            on=ApplyTo.FIELD,
+            filter=Filter(),
+            operations=[
+                Operation(
+                    ask=AskOperation(
+                        question=question,
+                        destination=destination_field_prefix,
+                    )
+                )
+            ],
+            llm=LLMConfig(model=generative_model, provider=generative_model_provider),
+        ),
+    )
+    task_id = tr.id
+    return task_id
+
+
+async def clean_ask_test_tasks(kb: sdk.AsyncNucliaKB, ndb: AsyncNucliaDBClient, to_delete: list[str]):
+    tasks = await kb.task.list(ndb=ndb)
+    for task in tasks.running + tasks.done + tasks.configs:
+        if task.id in to_delete:
+            try:
+                await kb.task.delete(ndb=ndb, task_id=task.id, cleanup=True)
+            except Exception as ex:
+                print(f"Error deleting task {task.id}: {ex}")
+                traceback.print_exc()
+
+
+class CustomModels:
+    def __init__(
+        self,
+        auth: AsyncNucliaAuth,
+        zone: str,
+        account_id: str,
+    ):
+        self.auth = auth
+        self.zone = zone
+        self.account_id = account_id
+
+    async def add(
+        self,
+        model_data: dict,
+        kbs: list[str],
+    ):
+        # Add model to the account
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/models")
+        response = await root_request(self.auth, "POST", path, data=model_data)
+        assert response is not None
+        model_id = response["id"]
+
+        # Add model to the kbs
+        for kb in kbs:
+            path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/models/{kb}")
+            await root_request(self.auth, "POST", path, data={"id": model_id})
+
+    async def list(self) -> list:
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/models")
+        models = await root_request(self.auth, "GET", path)
+        assert models is not None
+        assert isinstance(models, list)
+        return models
+
+    async def delete(self, model_id: str) -> None:
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/model/{model_id}")
+        await root_request(self.auth, "DELETE", path)
+
+    async def remove_all(self) -> None:
+        models = await self.list()
+        for model in models:
+            await self.delete(model["model_id"])
+
+
+class DefaultModels:
+    def __init__(
+        self,
+        auth: AsyncNucliaAuth,
+        zone: str,
+        account_id: str,
+    ):
+        self.auth = auth
+        self.zone = zone
+        self.account_id = account_id
+
+    async def add(
+        self,
+        generative_model: str,
+        model_data: dict,
+    ) -> str:
+        if "default_model_id" not in model_data:
+            model_data["default_model_id"] = generative_model
+        # Add model to the account
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_models")
+        response = await root_request(self.auth, "POST", path, data=model_data)
+        assert response is not None
+        model_id = response["id"]
+        return model_id
+
+    async def list(self) -> list:
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_models")
+        models = await root_request(self.auth, "GET", path)
+        assert models is not None
+        assert isinstance(models, list)
+        return models
+
+    async def delete(self, model_id: str) -> None:
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_model/{model_id}")
+        await root_request(self.auth, "DELETE", path)
+
+    async def remove_all(self) -> None:
+        models = await self.list()
+        for model in models:
+            await self.delete(model["id"])
