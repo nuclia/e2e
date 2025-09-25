@@ -38,7 +38,7 @@ async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIter
 async def default_model(
     kb_id: str,
     default_models: DefaultModels,
-) -> AsyncIterator[str]:
+) -> str:
     # Make sure there are no default model configs
     await default_models.remove_all()
     assert len(await default_models.list()) == 0
@@ -55,11 +55,7 @@ async def default_model(
         },
     )
 
-    yield f"{generative_model}/{default_model_config_id}"
-
-    # Remove the default model config
-    # await default_models.remove_all()
-    # assert len(await default_models.list()) == 0
+    return f"{generative_model}/{default_model_config_id}"
 
 
 @pytest.mark.asyncio_cooperative
