@@ -64,7 +64,7 @@ async def default_model(
 
 @pytest.mark.asyncio_cooperative
 @pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
-async def test_default_model_config_works_for_generative_and_agents(
+async def test_default_model_works_for_generative_and_agents(
     request: pytest.FixtureRequest,
     kb_id: str,
     zone: str,
@@ -110,7 +110,7 @@ async def _test_run_resource_agents(
         question="Summarize the contents of the document in a single sentence.",
         generative_model=generative_model,
         generative_model_provider=generative_model_provider,
-        destination_field_prefix=f"summary-{unique_id}",
+        destination_field_prefix=f"summary_{unique_id}",
     )
 
     # Add to the list
