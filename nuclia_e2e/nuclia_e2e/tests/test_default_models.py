@@ -25,7 +25,7 @@ _tasks_to_delete: list[str] = []
 @pytest.fixture
 async def kb_id(regional_api_config: ZoneConfig) -> AsyncIterator[str]:
     unique_id = uuid.uuid4().hex
-    kb_slug = f"default-models-test-can-delete-{unique_id}"
+    kb_slug = f"custom-models-test-can-delete-{unique_id}"
     kbid = await create_test_kb(regional_api_config, kb_slug)
     yield kbid
     await delete_test_kb(regional_api_config, kbid, kb_slug)
