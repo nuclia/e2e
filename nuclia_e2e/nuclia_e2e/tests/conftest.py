@@ -110,7 +110,7 @@ CLUSTERS_CONFIG = {
     "prod": ClusterConfig(
         global_config=GlobalConfig(
             name="prod",
-            base_domain="nuclia.cloud",
+            base_domain="rag.progress.cloud",
             recaptcha=safe_get_prod_env("PROD_GLOBAL_RECAPTCHA"),
             root_pat_token=safe_get_prod_env("PROD_ROOT_PAT_TOKEN"),
             permanent_account_owner_pat_token=safe_get_prod_env("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
