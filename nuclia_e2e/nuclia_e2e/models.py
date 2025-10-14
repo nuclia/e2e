@@ -40,10 +40,10 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "chatgpt-azure-5-chat": ModelInfo(
         test_json=False,  # Structured output not working
     ),
-    "chatgpt-azure-5-nano": ModelInfo(),
+    # "chatgpt-azure-5-nano": ModelInfo(),   EXCLUDED as it is too inconsistent
     "claude-3": ModelInfo(),
     # "claude-3-fast",                       DISCONTINUED
-    "claude-3-5-fast": ModelInfo(),
+    # "claude-3-5-fast": ModelInfo(),        DISCONTINUED
     "claude-3-5-small": ModelInfo(),
     "claude-4-opus": ModelInfo(),
     "claude-4-sonnet": ModelInfo(),
@@ -69,7 +69,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "chatgpt-4.1": ModelInfo(),
     "chatgpt-5": ModelInfo(),
     "chatgpt-5-mini": ModelInfo(),
-    "chatgpt-5-nano": ModelInfo(),
+    # "chatgpt-5-nano": ModelInfo(),         EXCLUDED as it is too inconsistent
     "chatgpt-5-chat": ModelInfo(
         test_json=False,  # Structured output not working
     ),
@@ -87,7 +87,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "deepseek-chat",                       DISCONTINUED
     # "azure-deepseek-r1",                   EXCLUDED as it is too slow
     "azure-mistral-large-2": ModelInfo(),
-    "gcp-claude-3-5-sonnet-v2": ModelInfo(),
+    # "gcp-claude-3-5-sonnet-v2": ModelInfo(), DISCONTINUED
     "gcp-claude-3-7-sonnet": ModelInfo(),
     "gcp-claude-4-5-sonnet": ModelInfo(),
     # AWS claude models are available in all AWS-based regions except aws-il
