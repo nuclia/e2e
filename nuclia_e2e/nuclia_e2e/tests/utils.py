@@ -13,10 +13,13 @@ from nuclia_models.worker.tasks import ApplyOptions
 from nuclia_models.worker.tasks import DataAugmentation
 from nuclia_models.worker.tasks import TaskName
 from nuclia_models.worker.tasks import TaskResponse
+from nucliadb_models import TextField
 from nucliadb_sdk.v2.exceptions import NotFoundError
 
+import asyncio
 import contextlib
 import os
+import time
 import traceback
 
 
@@ -50,6 +53,9 @@ async def root_request(
 async def as_default_generative_model_for_kb(
     kb_id: str, zone: str, auth: AsyncNucliaAuth, generative_model: str
 ) -> AsyncIterator[None]:
+    """
+    Context manager that sets the KB's default generative model and restores the previous one upon exit.
+    """
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     kb = sdk.AsyncNucliaKB()
     previous = await kb.get_configuration(ndb=ndb)
@@ -85,6 +91,25 @@ async def has_generated_field(
     else:
         # If we reach here, it means the field was not found
         return False
+
+
+async def create_omelette_resource(ndb: AsyncNucliaDBClient):
+    kb = sdk.AsyncNucliaKB()
+    slug = "omelette"
+    await kb.resource.create(
+        ndb=ndb,
+        slug=slug,
+        texts={"omelette": TextField(body="To cook an omelette, you need to crack the egg.")},
+    )
+    max_wait_seconds: int = 300
+    start = time.time()
+    while (time.time() - start) < max_wait_seconds:
+        resource = await kb.resource.get(slug=slug)
+        status = resource.data.texts["omelette"].status
+        if status == "PROCESSED":
+            break
+        print(status)
+        await asyncio.sleep(5)
 
 
 async def create_ask_agent(
