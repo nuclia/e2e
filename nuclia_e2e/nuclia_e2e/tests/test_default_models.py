@@ -32,6 +32,7 @@ async def kb_id(regional_api_config: ZoneConfig, auth: AsyncNucliaAuth) -> Async
     ndb = get_async_kb_ndb_client(
         zone=regional_api_config.zone_slug, kbid=kbid, user_token=auth._config.token
     )
+    auth.default_kb(kbid)
     await create_omelette_resource(ndb)
 
     yield kbid
