@@ -104,7 +104,7 @@ async def create_omelette_resource(ndb: AsyncNucliaDBClient):
     max_wait_seconds: int = 300
     start = time.time()
     while (time.time() - start) < max_wait_seconds:
-        resource = await kb.resource.get(slug=slug)
+        resource = await kb.resource.get(slug=slug, show=["values"])
         status = resource.data.texts["omelette"].status
         if status == "PROCESSED":
             break
