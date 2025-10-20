@@ -15,12 +15,21 @@ from nuclia_models.worker.tasks import TaskName
 from nuclia_models.worker.tasks import TaskResponse
 from nucliadb_models import TextField
 from nucliadb_sdk.v2.exceptions import NotFoundError
+from pytest_asyncio_cooperative import Lock  # type: ignore[import-untyped]
 
 import asyncio
 import contextlib
 import os
 import time
 import traceback
+
+locks: dict[str, Lock] = {}
+
+
+@contextlib.asynccontextmanager
+async def lock(key: str) -> AsyncIterator[Lock]:
+    async with locks.setdefault(key, Lock()):
+        yield
 
 
 async def root_request(
@@ -56,15 +65,16 @@ async def as_default_generative_model_for_kb(
     """
     Context manager that sets the KB's default generative model and restores the previous one upon exit.
     """
-    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
-    kb = sdk.AsyncNucliaKB()
-    previous = await kb.get_configuration(ndb=ndb)
-    previous_generative_model = previous["generative_model"]
-    await kb.update_configuration(ndb=ndb, generative_model=generative_model)
-    try:
-        yield
-    finally:
-        await kb.update_configuration(ndb=ndb, generative_model=previous_generative_model)
+    async with lock(f"learning-config-{kb_id}"):
+        ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+        kb = sdk.AsyncNucliaKB()
+        previous = await kb.get_configuration(ndb=ndb)
+        previous_generative_model = previous["generative_model"]
+        await kb.update_configuration(ndb=ndb, generative_model=generative_model)
+        try:
+            yield
+        finally:
+            await kb.update_configuration(ndb=ndb, generative_model=previous_generative_model)
 
 
 async def has_generated_field(
