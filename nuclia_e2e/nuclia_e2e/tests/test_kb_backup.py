@@ -3,6 +3,7 @@ from nuclia import sdk
 from nuclia.data import get_auth
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia.sdk.search import AsyncNucliaSearch
+from nuclia_e2e.nuclia_e2e.tests.utils import as_default_generative_model_for_kb
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
@@ -35,9 +36,10 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     await sdk.AsyncNucliaKB().extract_strategies.add(ndb=ndb, config={"name": "strategy1", "vllm_config": {}})
 
     # Create Backup
-    backup_create = await sdk.AsyncNucliaBackup().create(
-        backup=BackupCreate(kb_id=uuid.UUID(kb_id)), zone=zone
-    )
+    async with as_default_generative_model_for_kb(kb_id, zone, auth, generative_model="chatgpt4o"):
+        backup_create = await sdk.AsyncNucliaBackup().create(
+            backup=BackupCreate(kb_id=uuid.UUID(kb_id)), zone=zone
+        )
 
     # Wait till backup is finished
     async def check_backup_finished() -> tuple[bool, BackupResponse]:
