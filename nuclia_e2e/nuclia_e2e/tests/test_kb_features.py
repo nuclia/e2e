@@ -10,6 +10,7 @@ from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia_e2e.tests.conftest import GlobalAPI
 from nuclia_e2e.tests.conftest import ZoneConfig
+from nuclia_e2e.tests.utils import has_generated_field
 from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
@@ -161,7 +162,7 @@ async def run_test_da_ask_worker(regional_api_config, ndb: AsyncNucliaDBClient, 
     return tr.id
 
 
-async def run_test_check_da_ask_output(  # noqa: C901
+async def run_test_check_da_ask_output(
     regional_api_config, ask_task_id: str, ndb: AsyncNucliaDBClient, logger: Logger
 ):
     kb = AsyncNucliaKB()
@@ -177,31 +178,14 @@ async def run_test_check_da_ask_output(  # noqa: C901
     # `destination` field in the AskOperation above: `da-{destination}`
     expected_field_id_prefix = "da-customsummary"
 
-    async def has_generated_field(resource_slug: str) -> bool:
-        """
-        Check if the resource has the extracted text for the generated field.
-        """
-        try:
-            res = await kb.resource.get(slug=resource_slug, show=["values", "extracted"], ndb=ndb)
-        except NotFoundError:
-            # some resource may still be missing from nucliadb, let's wait more
-            return False
-        try:
-            for fid, data in res.data.texts.items():
-                if fid.startswith(expected_field_id_prefix) and data.extracted.text.text is not None:
-                    return True
-        except (TypeError, AttributeError):
-            # If the resource does not have the expected structure, let's wait more
-            return False
-        else:
-            # If we reach here, it means the field was not found
-            return False
-
     def resources_have_generated_fields(resource_slugs):
         @wraps(resources_have_generated_fields)
         async def condition() -> tuple[bool, Any]:
             resources_have_field = await asyncio.gather(
-                *[has_generated_field(resource_slug) for resource_slug in resource_slugs]
+                *[
+                    has_generated_field(ndb, kb, resource_slug, expected_field_id_prefix)
+                    for resource_slug in resource_slugs
+                ]
             )
             result = all(resources_have_field)
             return (result, None)
@@ -227,7 +211,10 @@ async def run_test_check_da_ask_output(  # noqa: C901
         @wraps(generated_fields_deleted_from_resources)
         async def condition() -> tuple[bool, Any]:
             resources_have_field = await asyncio.gather(
-                *[has_generated_field(resource_slug) for resource_slug in resource_slugs]
+                *[
+                    has_generated_field(ndb, kb, resource_slug, expected_field_id_prefix)
+                    for resource_slug in resource_slugs
+                ]
             )
             result = not any(resources_have_field)
             return (result, None)
