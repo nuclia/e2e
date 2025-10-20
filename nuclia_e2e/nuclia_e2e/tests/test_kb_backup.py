@@ -41,15 +41,15 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
             backup=BackupCreate(kb_id=uuid.UUID(kb_id)), zone=zone
         )
 
-    # Wait till backup is finished
-    async def check_backup_finished() -> tuple[bool, BackupResponse]:
-        backups = await sdk.AsyncNucliaBackup().list(zone=zone)
-        backup_list = [b for b in backups if b.id == backup_create.id]
-        assert len(backup_list) == 1
-        backup_object = backup_list[0]
-        return backup_object.finished_at is not None, backup_object
+        # Wait till backup is finished
+        async def check_backup_finished() -> tuple[bool, BackupResponse]:
+            backups = await sdk.AsyncNucliaBackup().list(zone=zone)
+            backup_list = [b for b in backups if b.id == backup_create.id]
+            assert len(backup_list) == 1
+            backup_object = backup_list[0]
+            return backup_object.finished_at is not None, backup_object
 
-    await wait_for(condition=check_backup_finished, max_wait=180, interval=10)
+        await wait_for(condition=check_backup_finished, max_wait=180, interval=10)
 
     new_kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_backup"
 
