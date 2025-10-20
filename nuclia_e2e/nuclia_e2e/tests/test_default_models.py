@@ -46,17 +46,17 @@ async def default_model(
         found = next(
             mo for mo in default_list if (mo.get("default_model_id", "")).startswith(generative_model)
         )
-        return f"{generative_model}/{found['id']}"
+        config_id = found["id"]
     except StopIteration:
         # Otherwise, configure a new default generative model config
-        default_model_config_id = await default_models.add(
+        config_id = await default_models.add(
             generative_model=generative_model,
             model_data={
                 "default_model_id": generative_model,
                 "description": "Chatgpt4o with custom keys to be reused across all KBs of the account",
             },
         )
-        return f"{generative_model}/{default_model_config_id}"
+    return f"{generative_model}/{config_id}"
 
 
 @pytest.mark.asyncio_cooperative
