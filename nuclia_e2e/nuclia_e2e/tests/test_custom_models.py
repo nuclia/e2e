@@ -36,16 +36,16 @@ async def custom_models(auth: AsyncNucliaAuth, zone: str, account_id: str) -> Cu
 @pytest.fixture
 async def custom_model(kb_id: str, custom_models: CustomModels) -> str:
     # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
-    model_id = "custom:qwen3-8b"
+    model_location = "custom:qwen3-8b"
     custom_list = await custom_models.list()
     try:
-        next(m for m in custom_list if m["location"] == model_id)
+        next(m for m in custom_list if m["location"] == model_location)
     except StopIteration:
         # Configure a new custom generative model
         await custom_models.add(
             model_data={
                 "description": "test_model",
-                "location": model_id,
+                "location": model_location,
                 "model_types": ["GENERATIVE", "SUMMARY"],
                 "openai_compat": {
                     "url": "http://vllm-stack-router-service.vllm-stack.svc.cluster.local/v1",
@@ -64,7 +64,7 @@ async def custom_model(kb_id: str, custom_models: CustomModels) -> str:
             },
             kbs=[kb_id],
         )
-    return model_id
+    return model_location
 
 
 @pytest.mark.asyncio_cooperative

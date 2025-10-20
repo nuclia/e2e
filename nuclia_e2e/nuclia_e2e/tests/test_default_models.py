@@ -46,7 +46,7 @@ async def default_model(
         found = next(
             mo for mo in default_list if (mo.get("default_model_id", "")).startswith(generative_model)
         )
-        return found["id"]
+        return f"{generative_model}/{found['id']}"
     except StopIteration:
         # Otherwise, configure a new default generative model config
         default_model_config_id = await default_models.add(
