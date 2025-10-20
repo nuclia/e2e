@@ -73,7 +73,7 @@ async def as_default_generative_model_for_kb(
     async with lock(f"learning-config-{kb_id}"):
         previous = await kb.get_configuration(ndb=ndb)
         previous_generative_model = previous["generative_model"]
-        if previous_generative_model == generative_model:
+        if previous_generative_model != generative_model:
             print(f"Setting default model for kbid={kb_id} model={generative_model}")
             await kb.update_configuration(ndb=ndb, generative_model=generative_model)
             try:
