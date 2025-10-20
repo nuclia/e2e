@@ -93,7 +93,9 @@ async def _test_generative(kb_id: str, zone: str, auth: AsyncNucliaAuth, generat
     extra_params = {}
     if generative_model:
         extra_params["generative_model"] = generative_model
-    answer = await sdk.AsyncNucliaSearch().ask(ndb=ndb, query="how to cook an omelette?", **extra_params)
+    answer = await sdk.AsyncNucliaSearch().ask(
+        ndb=ndb, query="how to cook an omelette? Answer in less than 200 words please.", **extra_params
+    )
     assert answer.answer is not None
     assert answer.status is not None
     assert answer.status == "success"
