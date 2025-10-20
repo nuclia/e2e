@@ -39,7 +39,7 @@ async def custom_model(kb_id: str, custom_models: CustomModels) -> str:
     model_id = "custom:qwen3-8b"
     custom_list = await custom_models.list()
     try:
-        next(m for m in custom_list if m["model_id"] == model_id)
+        next(m for m in custom_list if m["location"] == model_id)
     except StopIteration:
         # Configure a new custom generative model
         await custom_models.add(
