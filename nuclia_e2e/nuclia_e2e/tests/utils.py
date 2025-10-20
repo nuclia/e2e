@@ -66,6 +66,8 @@ async def as_default_generative_model_for_kb(
     """
     Context manager that sets the KB's default generative model and restores the previous one upon exit.
     """
+    # A lock is needed because some tests are reusing the same kb and changing the learning config.
+    # As we are running the tests concurrently, otherwise they mess up each other.
     async with lock(f"learning-config-{kb_id}"):
         ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
         kb = sdk.AsyncNucliaKB()
