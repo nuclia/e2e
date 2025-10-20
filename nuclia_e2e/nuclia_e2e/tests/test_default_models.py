@@ -1,14 +1,10 @@
 from collections.abc import AsyncIterator
 from nuclia import sdk
 from nuclia.sdk.auth import AsyncNucliaAuth
-from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.tests.utils import as_default_generative_model_for_kb
 from nuclia_e2e.tests.utils import clean_ask_test_tasks
 from nuclia_e2e.tests.utils import create_ask_agent
-from nuclia_e2e.tests.utils import create_omelette_resource
 from nuclia_e2e.tests.utils import DefaultModels
-from nuclia_e2e.utils import create_test_kb
-from nuclia_e2e.utils import delete_test_kb
 from nuclia_e2e.utils import get_async_kb_ndb_client
 
 import os
@@ -21,23 +17,6 @@ TEST_ENV = os.environ.get("TEST_ENV")
 # Global variable to know which tasks were created in this test
 # suite so we can clean them up properly on fixture teardown
 _tasks_to_delete: list[str] = []
-
-
-@pytest.fixture
-async def kb_id(regional_api_config: ZoneConfig, auth: AsyncNucliaAuth) -> AsyncIterator[str]:
-    unique_id = uuid.uuid4().hex
-    kb_slug = f"default-models-test-can-delete-{unique_id}"
-    kbid = await create_test_kb(regional_api_config, kb_slug)
-
-    ndb = get_async_kb_ndb_client(
-        zone=regional_api_config.zone_slug, kbid=kbid, user_token=auth._config.token
-    )
-    auth.default_kb(kbid)
-    await create_omelette_resource(ndb)
-
-    yield kbid
-
-    await delete_test_kb(regional_api_config, kbid, kb_slug)
 
 
 @pytest.fixture
