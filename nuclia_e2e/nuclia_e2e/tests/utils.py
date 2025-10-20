@@ -66,18 +66,20 @@ async def as_default_generative_model_for_kb(
     """
     Context manager that sets the KB's default generative model and restores the previous one upon exit.
     """
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    kb = sdk.AsyncNucliaKB()
     # A lock is needed because some tests are reusing the same kb and changing the learning config.
     # As we are running the tests concurrently, otherwise they mess up each other.
     async with lock(f"learning-config-{kb_id}"):
-        ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
-        kb = sdk.AsyncNucliaKB()
         previous = await kb.get_configuration(ndb=ndb)
         previous_generative_model = previous["generative_model"]
-        await kb.update_configuration(ndb=ndb, generative_model=generative_model)
-        try:
-            yield
-        finally:
-            await kb.update_configuration(ndb=ndb, generative_model=previous_generative_model)
+        if previous_generative_model == generative_model:
+            print(f"Setting default model for kbid={kb_id} model={generative_model}")
+            await kb.update_configuration(ndb=ndb, generative_model=generative_model)
+            try:
+                yield
+            finally:
+                await kb.update_configuration(ndb=ndb, generative_model=previous_generative_model)
 
 
 async def has_generated_field(
