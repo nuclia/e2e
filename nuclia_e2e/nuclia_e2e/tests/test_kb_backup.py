@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from nuclia import sdk
-from nuclia.data import get_auth
+from nuclia.data import get_async_auth
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia.sdk.search import AsyncNucliaSearch
 from nuclia_e2e.tests.conftest import ZoneConfig
@@ -31,7 +31,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     sdk.NucliaAccounts().default(account_slug)
 
     # Create an extract configuration for the source KB
-    auth = get_auth()
+    auth = get_async_auth()
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     await sdk.AsyncNucliaKB().extract_strategies.add(ndb=ndb, config={"name": "strategy1", "vllm_config": {}})
 
@@ -70,7 +70,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     assert kb_get is not None
 
     # Wait restore is completed
-    auth = get_auth()
+    auth = get_async_auth()
     ndb = get_async_kb_ndb_client(zone=zone, kbid=new_kb.id, user_token=auth._config.token)
     search = AsyncNucliaSearch()
 
