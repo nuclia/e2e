@@ -28,7 +28,8 @@ locks: dict[str, Lock] = {}
 
 @contextlib.asynccontextmanager
 async def lock(key: str) -> AsyncIterator[Lock]:
-    async with locks.setdefault(key, Lock()):
+    _lock = locks.setdefault(key, Lock())
+    async with _lock():
         yield
 
 
