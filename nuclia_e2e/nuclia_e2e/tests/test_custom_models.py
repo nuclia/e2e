@@ -25,7 +25,9 @@ async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIter
 
     yield
 
-    await clean_ask_test_tasks(kb, ndb, to_delete=_tasks_to_delete)
+    if _tasks_to_delete:
+        await clean_ask_test_tasks(kb, ndb, to_delete=_tasks_to_delete)
+        _tasks_to_delete.clear()
 
 
 @pytest.fixture
