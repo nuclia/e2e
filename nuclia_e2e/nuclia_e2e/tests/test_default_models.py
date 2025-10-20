@@ -39,23 +39,24 @@ async def default_model(
     kb_id: str,
     default_models: DefaultModels,
 ) -> str:
-    # Make sure there are no default model configs
-    await default_models.remove_all()
-    assert len(await default_models.list()) == 0
-
-    # This model has been added to the vLLM server of the gke-stage-1 cluster for testing purposes
     generative_model = "chatgpt4o"
-
-    # Configure a new default generative model config
-    default_model_config_id = await default_models.add(
-        generative_model=generative_model,
-        model_data={
-            "default_model_id": generative_model,
-            "description": "Chatgpt4o with custom keys to be reused across all KBs of the account",
-        },
-    )
-
-    return f"{generative_model}/{default_model_config_id}"
+    default_list = await default_models.list()
+    try:
+        # If there is already one, return it
+        found = next(
+            mo for mo in default_list if (mo.get("default_model_id", "")).startswith(generative_model)
+        )
+        return found["id"]
+    except StopIteration:
+        # Otherwise, configure a new default generative model config
+        default_model_config_id = await default_models.add(
+            generative_model=generative_model,
+            model_data={
+                "default_model_id": generative_model,
+                "description": "Chatgpt4o with custom keys to be reused across all KBs of the account",
+            },
+        )
+        return f"{generative_model}/{default_model_config_id}"
 
 
 @pytest.mark.asyncio_cooperative

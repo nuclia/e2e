@@ -243,7 +243,7 @@ class DefaultModels:
         model_id = response["id"]
         return model_id
 
-    async def list(self) -> list:
+    async def list(self) -> list[dict[str, str]]:
         path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_models")
         models = await root_request(self.auth, "GET", path)
         assert models is not None
