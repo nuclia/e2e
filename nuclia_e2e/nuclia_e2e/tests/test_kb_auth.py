@@ -48,6 +48,22 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
                 security=RequestSecurity(groups=security_groups) if security_groups is not None else None,
             ),
         )
+    
+    async def security_groups_test_resource_ask(
+        client: AsyncNucliaDBClient, question: str, security_groups: list[str] | None
+    ) -> AskAnswer:
+        kb = AsyncNucliaKB()
+        return await kb.search.ask(
+            ndb=client,
+            query=AskRequest(
+                query=question,
+                reranker=RerankerName.PREDICT_RERANKER,
+                rephrase=False,
+                generative_model="chatgpt-azure-4o-mini",
+                features=[ChatOptions.SEMANTIC],
+                security=RequestSecurity(groups=security_groups) if security_groups is not None else None,
+            ),
+        )
 
     # There are two resources describing to recipes
     #  - omelette          groups = apprentices, chefs
@@ -59,6 +75,9 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
     secured_question = "What do you need to make a roasted chicken?"
     answer = await security_groups_test_ask(async_ndb, secured_question, security_groups=None)
     assert answer.status == "success"
+    from pprint import pprint
+    pprint(answer)
+    pprint(answer.object)
 
     # Temporal SA key with no explicit security, should allow the question
     # Recreating the key and client each time, as it has a 10 seconds ttl
@@ -79,3 +98,13 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
     async_ndb_sa_temp = get_async_kb_ndb_client(zone, kbid, service_account_token=new_sa_temp_key)
     answer = await security_groups_test_ask(async_ndb_sa_temp, secured_question, security_groups=None)
     assert answer.status == "no_context"
+
+    # # Temporal SA key with key security (injected via authorizer), should allow the question
+    # # Recreating the key and client each time, as it has a 10 seconds ttl
+    # new_sa_temp_key = await regional_api.create_service_account_temp_key(
+    #     new_sa_key, security_groups=["apprentices"]
+    # )
+    # async_ndb_sa_temp = get_async_kb_ndb_client(zone, kbid, service_account_token=new_sa_temp_key)
+    # answer = await security_groups_test_resource_ask(async_ndb_sa_temp, secured_question, security_groups=None)
+    # assert answer.status == "no_context"
+
