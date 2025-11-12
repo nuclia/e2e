@@ -23,7 +23,7 @@ export const ACCOUNT_STAGE = {
       permanentKb: {
         name: 'permanent',
         slug: 'permanent',
-        id: '096d9070-f7be-40c8-a24c-19c89072e3ff',
+        id: 'baa24d32-9240-4d90-bd00-2e6f25b13668',
         zone: ZONES['europe'],
       },
       emptyKb: {
