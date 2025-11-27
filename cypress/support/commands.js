@@ -16,7 +16,7 @@ function login(kbName) {
       win.localStorage.setItem('NUCLIA_GETTING_STARTED_DONE', 'true');
     },
   });
-  cy.get('*[aria-label="Cookie banner"] button#onetrust-accept-btn-handler').click();
+  cy.get('*[aria-label="Cookie banner"] button#onetrust-reject-all-handler').click();
   cy.contains(kbName).click();
   cy.get(`.kb-details .title-xxs`).should('contain', 'NucliaDB API endpoint');
 }
