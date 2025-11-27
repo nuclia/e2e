@@ -54,6 +54,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "gemini-2.5-pro": ModelInfo(),
     "gemini-2.5-flash": ModelInfo(),
     "gemini-2.5-flash-lite": ModelInfo(),
+    "gemini-3-pro": ModelInfo(),
     # "mistral": ModelInfo(est_json=False,),  DISCONTINUED
     # "azure-mistral",                       DISCONTINUED
     "chatgpt4o": ModelInfo(),
@@ -102,6 +103,8 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu)|progress-).*"),
     # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
     "azure-gpt-oss-120b": ModelInfo(test_rephrase=False),
+    "nova-premier": ModelInfo(zones_re="(aws-(?!il|eu)|progress-).*"),
+    "nova-pro": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
     # "deepseek-chat-openai-compat"           EXCLUDED as not a model,just a driver, that needs a key to work
 }
 
