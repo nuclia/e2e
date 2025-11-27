@@ -8,28 +8,23 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
+
 function login(kbName) {
   cy.visit(`/`, {
     onBeforeLoad(win) {
       // Store auth tokens
-      win.localStorage.setItem('JWT_KEY', Cypress.env('BEARER_TOKEN'));
+      win.localStorage.setItem('JWT_KEY', Cypress.env('BEARER_TOKEN'))
       win.localStorage.setItem('NUCLIA_GETTING_STARTED_DONE', 'true');
-    },
+    }
   });
-  cy.get('*[aria-label="Cookie banner"] button#onetrust-reject-all-handler').click();
   cy.contains(kbName).click();
-  cy.get(`.kb-details .title-xxs`).should('contain', 'NucliaDB API endpoint');
+  cy.get(`.kb-details .title-xxs`).should('contain', 'NucliaDB API endpoint')
 }
 
 // -- This is a parent command --
 Cypress.Commands.add('login', (zone) => login(zone.permanentKb.name));
 Cypress.Commands.add('loginToEmptyKb', (zone) => login(zone.emptyKb.name));
 
-function nonLoggedVisit(path) {
-  cy.visit(path);
-  cy.get('*[aria-label="Cookie banner"] button#onetrust-reject-all-handler').click();
-}
-Cypress.Commands.add('nonLoggedVisit', (path) => nonLoggedVisit(path));
 
 // -- This is a child command --
 // Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
@@ -37,6 +32,7 @@ Cypress.Commands.add('nonLoggedVisit', (path) => nonLoggedVisit(path));
 //
 // -- This is a dual command --
 // Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
+
 
 // -- This will overwrite an existing command --
 Cypress.Commands.overwrite('visit', (originalFn, url, options) => {
@@ -47,9 +43,9 @@ Cypress.Commands.overwrite('visit', (originalFn, url, options) => {
         options.onBeforeLoad(win);
       }
       Object.defineProperty(win.navigator, 'languages', {
-        value: ['en'],
+        value: ['en']
       });
-    },
+    }
   });
 });
 
