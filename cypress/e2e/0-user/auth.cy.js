@@ -4,12 +4,12 @@ import { ACCOUNT, user } from '../../support/common';
 
 describe('User Login', () => {
   it('should redirect unauthenticated user to login page', function () {
-    cy.visit('/at/testing');
+    cy.nonLoggedVisit('/at/testing');
     cy.location('pathname').should('equal', '/user/login');
   });
 
   it('should redirect to kb selection page after login', () => {
-    cy.visit('/');
+    cy.nonLoggedVisit('/');
     cy.get(`[type="email"] input`).type(user.email, { log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type(user.password, { log: false });
     cy.get(`button[type='submit']`).click();
@@ -18,7 +18,7 @@ describe('User Login', () => {
 
   it('should allow a visitor to login and logout', () => {
     const permanentKb = ACCOUNT.availableZones[0].permanentKb;
-    cy.visit('/');
+    cy.nonLoggedVisit('/');
     cy.get(`[type="email"] input`).type(user.email, { log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type(`${user.password}{enter}`, { log: false });
     cy.get('.select-kb-list a').contains(permanentKb.name).click();
@@ -32,7 +32,7 @@ describe('User Login', () => {
   });
 
   it('should display login errors', () => {
-    cy.visit('/');
+    cy.nonLoggedVisit('/');
     cy.get(`[type="email"] input`).type('user').blur().focus().clear().blur();
     cy.get('[type="email"] .pa-field-help-error').should('be.visible').and('contain', 'Required field');
 
@@ -43,7 +43,7 @@ describe('User Login', () => {
   });
 
   it('should error for an invalid user', () => {
-    cy.visit('/');
+    cy.nonLoggedVisit('/');
     cy.get(`[type="email"] input`).type('wrong-email@gmail.com', { log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}', { log: false });
     cy.get(`[data-cy="login-error"]`)
@@ -52,7 +52,7 @@ describe('User Login', () => {
   });
 
   it('should error for an invalid password for existing user', () => {
-    cy.visit('/');
+    cy.nonLoggedVisit('/');
     cy.get(`[type="email"] input`).type(user.email, { log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}', { log: false });
     cy.get(`[data-cy="login-error"]`)
