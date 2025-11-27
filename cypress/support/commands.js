@@ -27,7 +27,7 @@ Cypress.Commands.add('loginToEmptyKb', (zone) => login(zone.emptyKb.name));
 
 function nonLoggedVisit(path) {
   cy.visit(path);
-  cy.get('*[aria-label="Cookie banner"] button#onetrust-accept-btn-handler').click();
+  cy.get('*[aria-label="Cookie banner"] button#onetrust-reject-all-handler').click();
 }
 Cypress.Commands.add('nonLoggedVisit', (path) => nonLoggedVisit(path));
 
