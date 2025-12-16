@@ -82,8 +82,8 @@ async def default_model(
 
 @pytest.fixture
 async def default_model_with_bedrock_assume_role():
-    # This has been manually setup in the testing account.
-    return "/"
+    # This has been manually setup in the testing account
+    return "aws-claude-3-7-sonnet/6cbb8b45-2e0b-4f25-bb42-d87a9c209f4e"
 
 
 @pytest.mark.asyncio_cooperative
