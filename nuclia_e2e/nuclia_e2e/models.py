@@ -94,16 +94,16 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "gcp-claude-4-5-sonnet": ModelInfo(),
     "gcp-claude-4-5-haiku": ModelInfo(),
     # AWS claude models are available in all AWS-based regions except aws-il
-    "aws-claude-3-7-sonnet": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
+    "aws-claude-3-7-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     "aws-claude-4-sonnet": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
-    "aws-claude-4-5-sonnet": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
-    "aws-claude-4-5-haiku": ModelInfo(zones_re="(aws-(?!il)).*"),
+    "aws-claude-4-5-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
+    "aws-claude-4-5-haiku": ModelInfo(zones_re="(aws-(?!il|me)).*"),
     # The opus models are not available in europe
-    "aws-claude-4-opus": ModelInfo(zones_re="(aws-(?!il|eu)|progress-).*"),
-    "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu)|progress-).*"),
+    "aws-claude-4-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
+    "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
     "azure-gpt-oss-120b": ModelInfo(test_rephrase=False),
-    "nova-premier": ModelInfo(zones_re="(aws-(?!il|eu)|progress-).*"),
+    "nova-premier": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     "nova-pro": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
     # "deepseek-chat-openai-compat"           EXCLUDED as not a model,just a driver, that needs a key to work
 }
