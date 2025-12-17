@@ -149,7 +149,7 @@ async def test_account_models(
                 zone,
                 auth,
                 generative_model=default_model_with_bedrock_assume_role,
-                generative_model_provider="anthropic",
+                generative_model_provider="claude3",
                 da_name_prefix="test-e2e-bedrock-assume-role-",
                 destination_field_prefix="summary_",
             )
