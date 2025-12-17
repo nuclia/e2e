@@ -105,6 +105,7 @@ async def create_rao_with_agents(
     return agent_id
 
 
+@pytest.mark.asyncio_cooperative
 async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneConfig):
     """Basic test to check RAO works
     1. Create a no-memory RAO
