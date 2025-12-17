@@ -105,7 +105,7 @@ async def create_rao_with_agents(
     return agent_id
 
 
-async def test_rao_basic(regional_api: RegionalAPI, zone_config: ZoneConfig):
+async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneConfig):
     """Basic test to check RAO works
     1. Create a no-memory RAO
     2. Create a NucliaDB driver against persistent KB
@@ -115,15 +115,15 @@ async def test_rao_basic(regional_api: RegionalAPI, zone_config: ZoneConfig):
     6. Delete the session
     """
     slug_uuid = uuid.uuid4().hex[:8]
-    assert zone_config.global_config is not None
+    assert regional_api_config.global_config is not None
 
-    account = zone_config.global_config.permanent_account_id
-    agent_id = await create_rao_with_agents(regional_api, zone_config, slug_uuid, account)
+    account = regional_api_config.global_config.permanent_account_id
+    agent_id = await create_rao_with_agents(regional_api, regional_api_config, slug_uuid, account)
     agent_client = AsyncAgentClient(
-        region=zone_config.zone_slug,
+        region=regional_api_config.zone_slug,
         agent_id=agent_id,
         account_id=account,
-        user_token=zone_config.global_config.permanent_account_owner_pat_token,
+        user_token=regional_api_config.global_config.permanent_account_owner_pat_token,
     )
     # Sessions
     sess_id = await agent_client.new_session("nuclia-e2e-test-session")
