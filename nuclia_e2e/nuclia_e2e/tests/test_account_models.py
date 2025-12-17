@@ -1,4 +1,5 @@
 from nuclia.sdk.auth import AsyncNucliaAuth
+from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.tests.utils import as_default_generative_model_for_kb
 from nuclia_e2e.tests.utils import CustomModels
 from nuclia_e2e.tests.utils import DefaultModels
@@ -87,7 +88,6 @@ async def default_model_with_bedrock_assume_role():
 
 
 @pytest.mark.asyncio_cooperative
-@pytest.mark.skipif(TEST_ENV != "stage", reason="This test is only for stage environment")
 async def test_account_models(
     request: pytest.FixtureRequest,
     kb_id: str,
@@ -97,52 +97,59 @@ async def test_account_models(
     default_model: str,
     default_model_with_bedrock_assume_role: str,
     clean_tasks: None,
+    regional_api_config: ZoneConfig,
 ):
     """
     All tests related to account models should go here. We can't really run then in parallel because
     they change the default model of the KB.
     """
+    if TEST_ENV == "stage":
+        print("Running default and custom model tests in stage environment")
+        # Default model tests
+        async with as_default_generative_model_for_kb(kb_id, zone, auth, generative_model=default_model):
+            await run_generative_test(kb_id, zone, auth, generative_model=None)
+            await run_generative_test(kb_id, zone, auth, generative_model=default_model)
+            await run_resource_agents_test(
+                kb_id,
+                zone,
+                auth,
+                generative_model=default_model,
+                generative_model_provider="openai",
+                da_name_prefix="test-e2e-default-models-",
+                destination_field_prefix="summary_",
+            )
 
-    # Default model tests
-    async with as_default_generative_model_for_kb(kb_id, zone, auth, generative_model=default_model):
-        await run_generative_test(kb_id, zone, auth, generative_model=None)
-        await run_generative_test(kb_id, zone, auth, generative_model=default_model)
-        await run_resource_agents_test(
-            kb_id,
-            zone,
-            auth,
-            generative_model=default_model,
-            generative_model_provider="openai",
-            da_name_prefix="test-e2e-default-models-",
-            destination_field_prefix="summary_",
-        )
+        # Custom model tests
+        async with as_default_generative_model_for_kb(kb_id, zone, auth, custom_model):
+            await run_generative_test(kb_id, zone, auth, generative_model=None)
+            await run_generative_test(kb_id, zone, auth, generative_model=custom_model)
+            await run_resource_agents_test(
+                kb_id,
+                zone,
+                auth,
+                generative_model=custom_model,
+                generative_model_provider="custom",
+                da_name_prefix="test-e2e-custom-models-",
+                destination_field_prefix="summary_",
+            )
 
-    # Default model with bedrock assume role tests
-    async with as_default_generative_model_for_kb(
-        kb_id, zone, auth, generative_model=default_model_with_bedrock_assume_role
-    ):
-        await run_generative_test(kb_id, zone, auth, generative_model=None)
-        await run_generative_test(kb_id, zone, auth, generative_model=default_model_with_bedrock_assume_role)
-        await run_resource_agents_test(
-            kb_id,
-            zone,
-            auth,
-            generative_model=default_model_with_bedrock_assume_role,
-            generative_model_provider="anthropic",
-            da_name_prefix="test-e2e-bedrock-assume-role-",
-            destination_field_prefix="summary_",
-        )
-
-    # Custom model tests
-    async with as_default_generative_model_for_kb(kb_id, zone, auth, custom_model):
-        await run_generative_test(kb_id, zone, auth, generative_model=None)
-        await run_generative_test(kb_id, zone, auth, generative_model=custom_model)
-        await run_resource_agents_test(
-            kb_id,
-            zone,
-            auth,
-            generative_model=custom_model,
-            generative_model_provider="custom",
-            da_name_prefix="test-e2e-custom-models-",
-            destination_field_prefix="summary_",
-        )
+    elif TEST_ENV == "prod" and regional_api_config.name == "aws-us-east-2-1":
+        print("Running Bedrock assume role tests in aws-us-east-2-1 region")
+        # Bedrock assume role is setup only in this region for testing purposes
+        # Default model with bedrock assume role tests
+        async with as_default_generative_model_for_kb(
+            kb_id, zone, auth, generative_model=default_model_with_bedrock_assume_role
+        ):
+            await run_generative_test(kb_id, zone, auth, generative_model=None)
+            await run_generative_test(
+                kb_id, zone, auth, generative_model=default_model_with_bedrock_assume_role
+            )
+            await run_resource_agents_test(
+                kb_id,
+                zone,
+                auth,
+                generative_model=default_model_with_bedrock_assume_role,
+                generative_model_provider="anthropic",
+                da_name_prefix="test-e2e-bedrock-assume-role-",
+                destination_field_prefix="summary_",
+            )
