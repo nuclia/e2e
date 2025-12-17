@@ -18,7 +18,7 @@ async def create_rao_with_agents(
             account_id=account, slug=f"nuclia-e2e-test-{slug_uuid}", mode="no-memory"
         )
     )["id"]
-
+    assert zone_config.global_config is not None
     api_url = f"https://{zone_config.zone_slug}.{zone_config.global_config.base_domain}/api"
     # TODO: Find where we can get a KB API Key for the persistent KB
     key = ""
@@ -71,36 +71,36 @@ async def create_rao_with_agents(
             payload=driver,
         )
     # Preprocess Agents
-    for agent in preprocess:
+    for pre in preprocess:
         await regional_api.rao(
             method="POST",
             agent_id=agent_id,
             endpoint="/preprocess",
-            payload=agent,
+            payload=pre,
         )
     # Context Agents
-    for agent in context:
+    for ctx in context:
         await regional_api.rao(
             method="POST",
             agent_id=agent_id,
             endpoint="/context",
-            payload=agent,
+            payload=ctx,
         )
     # Generation Agents
-    for agent in generation:
+    for gen in generation:
         await regional_api.rao(
             method="POST",
             agent_id=agent_id,
             endpoint="/generation",
-            payload=agent,
+            payload=gen,
         )
     # Postprocess Agents
-    for agent in postprocess:
+    for post in postprocess:
         await regional_api.rao(
             method="POST",
             agent_id=agent_id,
             endpoint="/postprocess",
-            payload=agent,
+            payload=post,
         )
     return agent_id
 
