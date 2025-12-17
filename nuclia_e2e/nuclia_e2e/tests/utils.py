@@ -22,8 +22,13 @@ import contextlib
 import os
 import time
 import traceback
+import uuid
 
 locks: dict[str, Lock] = {}
+
+# Global variable to know which tasks were created in this test
+# suite so we can clean them up properly on fixture teardown
+_tasks_to_delete: list[str] = []
 
 
 @contextlib.asynccontextmanager
@@ -262,3 +267,59 @@ class DefaultModels:
         models = await self.list()
         for model in models:
             await self.delete(model["id"])
+
+
+async def run_resource_agents_test(
+    kb_id: str,
+    zone: str,
+    auth: AsyncNucliaAuth,
+    generative_model: str,
+    generative_model_provider: str,
+    da_name_prefix: str,
+    destination_field_prefix: str,
+):
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+
+    # Configure an ingestion agent (aka task)
+    unique_id = uuid.uuid4().hex
+    agent_id = await create_ask_agent(
+        kb_id,
+        zone,
+        auth,
+        da_name=f"{da_name_prefix}{unique_id}",
+        question="Summarize the contents of the document in a single sentence.",
+        generative_model=generative_model,
+        generative_model_provider=generative_model_provider,
+        destination_field_prefix=f"{destination_field_prefix}{unique_id}",
+    )
+
+    # Add to the list
+    _tasks_to_delete.append(agent_id)
+
+    # Get a resource
+    resources = await ndb.ndb.list_resources(kbid=kb_id)
+    rid = resources.resources[0].id
+
+    # Run the agent on the resource, simply make sure it doesn't fail and it returns some results
+    resp = await ndb.ndb.session.post(
+        f"/v1/kb/{kb_id}/resource/{rid}/run-agents", json={"agent_ids": [agent_id]}
+    )
+    assert str(resp.status_code).startswith("2"), resp.text
+    assert len(resp.json()["results"]) > 0
+
+
+async def run_generative_test(
+    kb_id: str, zone: str, auth: AsyncNucliaAuth, generative_model: str | None = None
+):
+    # Send an ask request with the model (if specified) or with the default configured model in the kb.
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    extra_params = {}
+    if generative_model:
+        extra_params["generative_model"] = generative_model
+    answer = await sdk.AsyncNucliaSearch().ask(
+        ndb=ndb, query="how to cook an omelette? Answer in less than 200 words please.", **extra_params
+    )
+    assert answer.answer is not None
+    assert answer.status is not None
+    assert answer.status == "success"
+    print(f"Answer: {answer.answer}")
