@@ -167,11 +167,11 @@ class Retriable(Generic[T]):
 
     @classmethod
     def wrap_sync(cls, client: T) -> T:
-        return cast(T, cls(client, is_async=False))
+        return cast("T", cls(client, is_async=False))
 
     @classmethod
     def wrap_async(cls, client: T) -> T:
-        return cast(T, cls(client, is_async=True))
+        return cast("T", cls(client, is_async=True))
 
 
 def get_async_kb_ndb_client(

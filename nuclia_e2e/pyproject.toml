@@ -5,7 +5,7 @@ description = "Your project description"
 readme = "README.md"  # Relative to nuclia_e2e
 requires-python = ">=3.10"
 dependencies = [
-    "nuclia>=4.9.11",
+    "nuclia>=4.9.12",
     "nucliadb-protos",
     "pytest-timeout",
     "pytest==8.3.4",
@@ -39,6 +39,9 @@ dependencies = [
 benchmark = [
   "tabulate",
 ]
+
+[tool.uv.sources]
+nuclia = { git = "https://github.com/nuclia/nuclia.py" }
 
 [tool.ruff]
 # Support Python 3.9+.
