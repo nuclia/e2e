@@ -41,7 +41,7 @@ benchmark = [
 ]
 
 [tool.uv.sources]
-nuclia = { git = "https://github.com/nuclia/nuclia.py" }
+nuclia = { git = "https://github.com/nuclia/nuclia.py", branch = "rao-interaction" }
 
 [tool.ruff]
 # Support Python 3.9+.
