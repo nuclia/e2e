@@ -11,15 +11,15 @@ import uuid
 
 
 async def create_rao_with_agents(
-    regional_api: RegionalAPI, zone_config: ZoneConfig, slug_uuid: str, account: str
+    regional_api: RegionalAPI, regional_api_config: ZoneConfig, slug_uuid: str, account: str
 ) -> str:
     agent_id = (
         await regional_api.create_rao(
             account_id=account, slug=f"nuclia-e2e-test-{slug_uuid}", mode="no-memory"
         )
     )["id"]
-    assert zone_config.global_config is not None
-    api_url = f"https://{zone_config.zone_slug}.{zone_config.global_config.base_domain}/api"
+    assert regional_api_config.global_config is not None
+    api_url = f"https://{regional_api_config.zone_slug}.{regional_api_config.global_config.base_domain}/api"
     # TODO: Find where we can get a KB API Key for the persistent KB
     key = ""
     drivers = [
@@ -27,7 +27,7 @@ async def create_rao_with_agents(
             "name": "my-nucliadb-driver",
             "provider": "nucliadb",
             "config": {
-                "kbid": zone_config.permanent_kb_id,
+                "kbid": regional_api_config.permanent_kb_id,
                 "description": "General Knowledge KB",
                 "key": key,
                 "url": api_url,
