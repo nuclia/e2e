@@ -275,8 +275,8 @@ async def run_resource_agents_test(
     auth: AsyncNucliaAuth,
     generative_model: str,
     generative_model_provider: str,
-    da_name_prefix: str = "test-e2e-custom-models-",
-    destination_field_prefix: str = "summary_",
+    da_name_prefix: str,
+    destination_field_prefix: str,
 ):
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
 
