@@ -13,9 +13,8 @@ TEST_ENV = os.environ.get("TEST_ENV")
 
 
 @pytest.fixture
-async def custom_models(auth: AsyncNucliaAuth, zone: str, account_id: str) -> CustomModels:
-    return CustomModels(auth, zone, account_id)
-
+async def custom_models(auth: AsyncNucliaAuth, zone: str, account_id: str, global_api_config) -> CustomModels:
+    return CustomModels(auth, zone, account_id, global_api_config.root_pat_token)
 
 @pytest.fixture
 async def custom_model(kb_id: str, custom_models: CustomModels) -> str:

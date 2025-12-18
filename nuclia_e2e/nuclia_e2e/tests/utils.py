@@ -42,6 +42,7 @@ async def root_request(
     auth: AsyncNucliaAuth,
     method: str,
     path: str,
+    root_pat_token: str,
     data: dict | None = None,
     headers: dict | None = None,
 ) -> dict | None:
@@ -50,8 +51,7 @@ async def root_request(
     so we need to do it manually.
     """
     headers = headers or {}
-    stage_root_pat_token = os.environ.get("STAGE_ROOT_PAT_TOKEN", "skip-auth")
-    headers["Authorization"] = f"Bearer {stage_root_pat_token}"
+    headers["Authorization"] = f"Bearer {root_pat_token}"
     resp = await auth.client.request(
         method,
         path,
