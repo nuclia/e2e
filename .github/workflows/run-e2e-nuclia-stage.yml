@@ -86,7 +86,7 @@ jobs:
         run: |
           source nuclia_e2e/.venv/bin/activate && TEST_ENV=stage pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests \
             --durations=0 --junitxml=nuclia-${{ matrix.shard_index }}.xml \
-            --shard-id=${{ matrix.shard_index }} --num-shards=3 -k rao
+            --shard-id=${{ matrix.shard_index }} --num-shards=3
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
