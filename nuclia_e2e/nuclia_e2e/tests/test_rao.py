@@ -14,14 +14,15 @@ async def create_rao_with_agents(
     regional_api: RegionalAPI, regional_api_config: ZoneConfig, slug_uuid: str, account: str
 ) -> str:
     agent_id = (
-        await regional_api.create_rao(
-            account_id=account, slug=f"nuclia-e2e-test-{slug_uuid}", mode="no-memory"
-        )
+        await regional_api.create_rao(account_id=account, slug=f"nuclia-e2e-test-{slug_uuid}", mode="agent")
     )["id"]
     assert regional_api_config.global_config is not None
     api_url = f"https://{regional_api_config.zone_slug}.{regional_api_config.global_config.base_domain}/api"
     # TODO: Find where we can get a KB API Key for the persistent KB
-    key = ""
+    account = regional_api_config.global_config.permanent_account_id
+    kbid = regional_api_config.permanent_kb_id
+    new_sa = await regional_api.create_service_account(account, kbid, "rao-e2e-nucliadb-driver")
+    key = await regional_api.create_service_account_key(account, kbid, new_sa["id"])
     drivers = [
         {
             "name": "my-nucliadb-driver",
@@ -106,7 +107,7 @@ async def create_rao_with_agents(
 
 
 @pytest.mark.asyncio_cooperative
-async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneConfig):
+async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneConfig, global_api_config):
     """Basic test to check RAO works
     1. Create a no-memory RAO
     2. Create a NucliaDB driver against persistent KB
@@ -120,6 +121,7 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
 
     account = regional_api_config.global_config.permanent_account_id
     agent_id = await create_rao_with_agents(regional_api, regional_api_config, slug_uuid, account)
+
     agent_client = AsyncAgentClient(
         region=regional_api_config.zone_slug,
         agent_id=agent_id,
@@ -138,7 +140,7 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
         sessions = await agent_client.get_sessions(page_size=100, page=p)
         last = sessions.pagination.last
         p += 1
-        found = any(s.id == uuid for s in sessions.resources)
+        found = any(s.id == sess_id for s in sessions.resources)
         if found:
             break
     assert found, "Created session not found in list"
@@ -170,7 +172,7 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
 
     assert responses[-2].operation == AnswerOperation.ANSWER
     assert responses[-2].answer
-    assert "rag" in responses[-2].answer.lower()
+    assert "not enough" in responses[-2].answer.lower()  # Persistent KB won't have much data
     assert not responses[-2].exception
 
     assert responses[-1].operation == AnswerOperation.DONE
