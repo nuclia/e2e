@@ -2,6 +2,7 @@ from nuclia.exceptions import RaoAPIException
 from nuclia.lib.agent import AsyncAgentClient
 from nuclia_e2e.tests.conftest import RegionalAPI
 from nuclia_e2e.tests.conftest import ZoneConfig
+from nuclia_e2e.utils import delete_test_kb
 from nuclia_models.agent.interaction import AnswerOperation
 from nuclia_models.agent.interaction import AragAnswer
 
@@ -184,3 +185,6 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
 
     with pytest.raises(RaoAPIException):
         await agent_client.get_session(sess_id)
+
+    # Delete RAO for cleanup
+    await delete_test_kb(regional_api_config, kbid=agent_id, kb_slug=f"nuclia-e2e-test-{slug_uuid}")
