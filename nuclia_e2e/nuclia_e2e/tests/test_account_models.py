@@ -13,9 +13,7 @@ TEST_ENV = os.environ.get("TEST_ENV")
 
 
 @pytest.fixture
-async def custom_models(
-    auth: AsyncNucliaAuth, zone: str, account_id: str, global_api_config
-) -> CustomModels:
+async def custom_models(auth: AsyncNucliaAuth, zone: str, account_id: str, global_api_config) -> CustomModels:
     return CustomModels(auth, zone, account_id, global_api_config.root_pat_token)
 
 
@@ -70,9 +68,7 @@ async def default_model(
     try:
         # If there is already one, return it
         found = next(
-            mo
-            for mo in default_list
-            if (mo.get("default_model_id", "")).startswith(generative_model)
+            mo for mo in default_list if (mo.get("default_model_id", "")).startswith(generative_model)
         )
         config_id = found["id"]
     except StopIteration:
@@ -112,9 +108,7 @@ async def test_account_models(
     if TEST_ENV == "stage":
         print("Running default and custom model tests in stage environment")
         # Default model tests
-        async with as_default_generative_model_for_kb(
-            kb_id, zone, auth, generative_model=default_model
-        ):
+        async with as_default_generative_model_for_kb(kb_id, zone, auth, generative_model=default_model):
             await run_generative_test(kb_id, zone, auth, generative_model=None)
             await run_generative_test(kb_id, zone, auth, generative_model=default_model)
             await run_resource_agents_test(

@@ -84,12 +84,8 @@ async def as_default_generative_model_for_kb(
             yield
         finally:
             if previous_generative_model != generative_model:
-                print(
-                    f"Resetting default model for kbid={kb_id} model={previous_generative_model}"
-                )
-                await kb.update_configuration(
-                    ndb=ndb, generative_model=previous_generative_model
-                )
+                print(f"Resetting default model for kbid={kb_id} model={previous_generative_model}")
+                await kb.update_configuration(ndb=ndb, generative_model=previous_generative_model)
 
 
 async def has_generated_field(
@@ -102,18 +98,13 @@ async def has_generated_field(
     Check if the resource has the extracted text for the generated field.
     """
     try:
-        res = await kb.resource.get(
-            slug=resource_slug, show=["values", "extracted"], ndb=ndb
-        )
+        res = await kb.resource.get(slug=resource_slug, show=["values", "extracted"], ndb=ndb)
     except NotFoundError:
         # some resource may still be missing from nucliadb, let's wait more
         return False
     try:
         for fid, data in res.data.texts.items():
-            if (
-                fid.startswith(expected_field_id_prefix)
-                and data.extracted.text.text is not None
-            ):
+            if fid.startswith(expected_field_id_prefix) and data.extracted.text.text is not None:
                 return True
     except (TypeError, AttributeError):
         # If the resource does not have the expected structure, let's wait more
@@ -129,11 +120,7 @@ async def create_omelette_resource(ndb: AsyncNucliaDBClient):
     await kb.resource.create(
         ndb=ndb,
         slug=slug,
-        texts={
-            "omelette": TextField(
-                body="To cook an omelette, you need to crack the egg."
-            )
-        },
+        texts={"omelette": TextField(body="To cook an omelette, you need to crack the egg.")},
     )
     max_wait_seconds: int = 300
     start = time.time()
@@ -184,9 +171,7 @@ async def create_ask_agent(
     return task_id
 
 
-async def clean_ask_test_tasks(
-    kb: sdk.AsyncNucliaKB, ndb: AsyncNucliaDBClient, to_delete: list[str]
-):
+async def clean_ask_test_tasks(kb: sdk.AsyncNucliaKB, ndb: AsyncNucliaDBClient, to_delete: list[str]):
     tasks = await kb.task.list(ndb=ndb)
     for task in tasks.running + tasks.done + tasks.configs:
         if task.id in to_delete:
@@ -217,20 +202,14 @@ class CustomModels:
     ):
         # Add model to the account
         path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/models")
-        response = await root_request(
-            self.auth, "POST", path, self.root_pat_token, data=model_data
-        )
+        response = await root_request(self.auth, "POST", path, self.root_pat_token, data=model_data)
         assert response is not None
         model_id = response["id"]
 
         # Add model to the kbs
         for kb in kbs:
-            path = get_regional_url(
-                self.zone, f"/api/v1/account/{self.account_id}/models/{kb}"
-            )
-            await root_request(
-                self.auth, "POST", path, self.root_pat_token, data={"id": model_id}
-            )
+            path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/models/{kb}")
+            await root_request(self.auth, "POST", path, self.root_pat_token, data={"id": model_id})
 
     async def list(self) -> list:
         path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/models")
@@ -240,9 +219,7 @@ class CustomModels:
         return models
 
     async def delete(self, model_id: str) -> None:
-        path = get_regional_url(
-            self.zone, f"/api/v1/account/{self.account_id}/model/{model_id}"
-        )
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/model/{model_id}")
         await root_request(self.auth, "DELETE", path, self.root_pat_token)
 
     async def remove_all(self) -> None:
@@ -272,29 +249,21 @@ class DefaultModels:
         if "default_model_id" not in model_data:
             model_data["default_model_id"] = generative_model
         # Add model to the account
-        path = get_regional_url(
-            self.zone, f"/api/v1/account/{self.account_id}/default_models"
-        )
-        response = await root_request(
-            self.auth, "POST", path, self.root_pat_token, data=model_data
-        )
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_models")
+        response = await root_request(self.auth, "POST", path, self.root_pat_token, data=model_data)
         assert response is not None
         model_id = response["id"]
         return model_id
 
     async def list(self) -> list[dict[str, str]]:
-        path = get_regional_url(
-            self.zone, f"/api/v1/account/{self.account_id}/default_models"
-        )
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_models")
         models = await root_request(self.auth, "GET", path, self.root_pat_token)
         assert models is not None
         assert isinstance(models, list)
         return models
 
     async def delete(self, model_id: str) -> None:
-        path = get_regional_url(
-            self.zone, f"/api/v1/account/{self.account_id}/default_model/{model_id}"
-        )
+        path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_model/{model_id}")
         await root_request(self.auth, "DELETE", path, self.root_pat_token)
 
     async def remove_all(self) -> None:
