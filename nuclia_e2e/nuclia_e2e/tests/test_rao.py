@@ -19,7 +19,6 @@ async def create_rao_with_agents(
     )["id"]
     assert regional_api_config.global_config is not None
     api_url = f"https://{regional_api_config.zone_slug}.{regional_api_config.global_config.base_domain}/api"
-    # TODO: Find where we can get a KB API Key for the persistent KB
     account = regional_api_config.global_config.permanent_account_id
     kbid = regional_api_config.permanent_kb_id
     new_sa = await regional_api.create_service_account(account, kbid, "rao-e2e-nucliadb-driver")
