@@ -633,7 +633,7 @@ wheels = [
 [[package]]
 name = "nuclia"
 version = "4.9.13.dev0"
-source = { git = "https://github.com/nuclia/nuclia.py?branch=rao-interaction#f546b8d3f8cb9a7df536a069628eef5786d83db4" }
+source = { git = "https://github.com/nuclia/nuclia.py?branch=rao-interaction#53c5dcff5969587262f18b42a4252e8f9b2f8cbf" }
 dependencies = [
     { name = "aiofiles" },
     { name = "backoff" },
