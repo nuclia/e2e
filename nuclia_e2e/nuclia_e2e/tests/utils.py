@@ -19,7 +19,6 @@ from pytest_asyncio_cooperative import Lock  # type: ignore[import-untyped]
 
 import asyncio
 import contextlib
-import os
 import time
 import traceback
 import uuid
