@@ -203,10 +203,12 @@ class CustomModels:
         auth: AsyncNucliaAuth,
         zone: str,
         account_id: str,
+        root_pat_token: str,
     ):
         self.auth = auth
         self.zone = zone
         self.account_id = account_id
+        self.root_pat_token = root_pat_token
 
     async def add(
         self,
