@@ -13,8 +13,8 @@ TEST_ENV = os.environ.get("TEST_ENV")
 
 
 @pytest.fixture
-async def custom_models(auth: AsyncNucliaAuth, zone: str, account_id: str) -> CustomModels:
-    return CustomModels(auth, zone, account_id)
+async def custom_models(auth: AsyncNucliaAuth, zone: str, account_id: str, global_api_config) -> CustomModels:
+    return CustomModels(auth, zone, account_id, global_api_config.root_pat_token)
 
 
 @pytest.fixture
@@ -52,8 +52,10 @@ async def custom_model(kb_id: str, custom_models: CustomModels) -> str:
 
 
 @pytest.fixture
-async def default_models(auth: AsyncNucliaAuth, zone: str, account_id: str) -> DefaultModels:
-    return DefaultModels(auth, zone, account_id)
+async def default_models(
+    auth: AsyncNucliaAuth, zone: str, account_id: str, global_api_config
+) -> DefaultModels:
+    return DefaultModels(auth, zone, account_id, global_api_config.root_pat_token)
 
 
 @pytest.fixture
@@ -142,7 +144,10 @@ async def test_account_models(
         ):
             await run_generative_test(kb_id, zone, auth, generative_model=None)
             await run_generative_test(
-                kb_id, zone, auth, generative_model=default_model_with_bedrock_assume_role
+                kb_id,
+                zone,
+                auth,
+                generative_model=default_model_with_bedrock_assume_role,
             )
             await run_resource_agents_test(
                 kb_id,
