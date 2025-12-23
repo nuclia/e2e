@@ -89,6 +89,7 @@ jobs:
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
           TEST_ZONES: ${{ matrix.zone }}
           TEST_ENV: "prod"
+          DEBUG_HTTPX_REQUESTS: "true"
 
         run: |
           source nuclia_e2e/.venv/bin/activate && pytest -sxvr nuclia_e2e/nuclia_e2e/tests \
