@@ -632,8 +632,8 @@ wheels = [
 
 [[package]]
 name = "nuclia"
-version = "4.9.13.dev0"
-source = { git = "https://github.com/nuclia/nuclia.py?branch=rao-interaction#53c5dcff5969587262f18b42a4252e8f9b2f8cbf" }
+version = "4.9.15"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
     { name = "backoff" },
@@ -652,6 +652,10 @@ dependencies = [
     { name = "tabulate" },
     { name = "tqdm" },
     { name = "websockets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/65/6918c0e8d2ef2294b71b18791887881307c961a05cd12c503da56e23674a/nuclia-4.9.15.tar.gz", hash = "sha256:9f562d7dac8f16279d71d2103a5aaf096593088b0a3559275a39f8c4788ace5b", size = 301549, upload-time = "2025-12-23T16:34:23.012Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/50/4c/421d75debfd38f936a70d2b455d615b7c9d00100edd113ee38579d22f66d/nuclia-4.9.15-py3-none-any.whl", hash = "sha256:0bf431954fb388edb547a1d958d18b42da77a08ad24c7febad347612d318df0d", size = 97750, upload-time = "2025-12-23T16:34:21.394Z" },
 ]
 
 [[package]]
@@ -698,7 +702,7 @@ requires-dist = [
     { name = "backoff" },
     { name = "mypy", specifier = "==1.15.0" },
     { name = "mypy-extensions", specifier = "==1.0.0" },
-    { name = "nuclia", git = "https://github.com/nuclia/nuclia.py?branch=rao-interaction" },
+    { name = "nuclia", specifier = ">=4.9.13" },
     { name = "nucliadb-protos" },
     { name = "prometheus-client" },
     { name = "pytest", specifier = "==8.3.4" },

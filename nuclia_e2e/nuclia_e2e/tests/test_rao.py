@@ -17,6 +17,8 @@ async def create_rao_with_agents(
     agent_id = (
         await regional_api.create_rao(account_id=account, slug=f"nuclia-e2e-test-{slug_uuid}", mode="agent")
     )["id"]
+    # Check it got created
+    assert agent_id is not None
     assert regional_api_config.global_config is not None
     api_url = f"https://{regional_api_config.zone_slug}.{regional_api_config.global_config.base_domain}/api"
     account = regional_api_config.global_config.permanent_account_id
@@ -63,6 +65,8 @@ async def create_rao_with_agents(
     ]
     postprocess = [{"module": "remi", "title": "agent", "max_retries": 1}]
     # Add in separate steps to identify issues more easily
+    # Wait a bit to ensure RAO is ready
+    await asyncio.sleep(2)
     # Drivers
     for driver in drivers:
         await regional_api.rao(
