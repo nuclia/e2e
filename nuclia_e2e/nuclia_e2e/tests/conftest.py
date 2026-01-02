@@ -380,6 +380,37 @@ class RegionalAPI:
             response.raise_for_status()
             return await response.json()
 
+    async def create_rao(self, account_id: str, slug: str, mode: str = "agent_no_memory") -> dict:
+        url = f"{self.base_url}/api/v1/account/{account_id}/kbs"
+        async with self.session.post(
+            url,
+            json={
+                "title": slug,
+                "slug": slug,
+                "mode": mode,
+            },
+            headers=self.auth_headers,
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
+
+    async def rao(
+        self,
+        method: str,
+        agent_id: str,
+        endpoint: str,
+        payload: dict | None = None,
+        params: dict | None = None,
+    ) -> dict:
+        # TODO: Switch to new Agent API path when promoted
+        # url = f"{self.base_url}/api/v1/agent/{agent_id}/{endpoint}"
+        url = f"{self.base_url}/api/v1/kb/{agent_id}/agent/{endpoint}"
+        async with self.session.request(
+            method, url, json=payload, headers=self.auth_headers, params=params
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
+
 
 @pytest.fixture(autouse=True)
 def set_logger_level():
