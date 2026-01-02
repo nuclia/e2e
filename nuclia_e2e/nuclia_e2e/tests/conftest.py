@@ -6,6 +6,7 @@
 # fmt: off
 from nuclia_e2e.tests.patch_httpx import patch_httpx; patch_httpx()  # noqa: I001,E702
 # fmt: on
+from collections.abc import AsyncIterator  # noqa: E402
 from collections.abc import Generator  # noqa: E402
 from copy import deepcopy  # noqa: E402
 from datetime import datetime  # noqa: E402
@@ -20,6 +21,9 @@ from nuclia.data import get_config  # noqa: E402
 from nuclia.lib.nua import AsyncNuaClient  # noqa: E402
 from nuclia.sdk.auth import AsyncNucliaAuth  # noqa: E402
 from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
+from nuclia_e2e.tests.utils import _tasks_to_delete  # noqa: E402
+from nuclia_e2e.tests.utils import clean_ask_test_tasks  # noqa: E402
+from nuclia_e2e.utils import get_async_kb_ndb_client  # noqa: E402
 from nuclia_e2e.utils import Retriable  # noqa: E402
 
 import aiohttp  # noqa: E402
@@ -150,6 +154,13 @@ CLUSTERS_CONFIG = {
                 test_kb_slug="nuclia-e2e-live-aws-eu-central-1-1",
                 permanent_kb_slug="pre-existing-kb",
                 permanent_nua_key=safe_get_prod_env("PROD_AWS_EU_CENTRAL_1_1_NUA"),
+            ),
+            ZoneConfig(
+                name="aws-me-central-1-1",
+                zone_slug="aws-me-central-1-1",
+                test_kb_slug="nuclia-e2e-live-aws-me-central-1-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=safe_get_prod_env("PROD_AWS_ME_CENTRAL_1_1_NUA"),
             ),
         ],
     ),
@@ -622,3 +633,15 @@ async def account_id(regional_api_config: ZoneConfig, auth: AsyncNucliaAuth) -> 
     account_slug = regional_api_config.global_config.permanent_account_slug
     sdk.NucliaAccounts().default(account_slug)
     return auth.get_account_id(account_slug)
+
+
+@pytest.fixture
+async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIterator[None]:
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    kb = sdk.AsyncNucliaKB()
+
+    yield
+
+    if _tasks_to_delete:
+        await clean_ask_test_tasks(kb, ndb, to_delete=_tasks_to_delete)
+        _tasks_to_delete.clear()

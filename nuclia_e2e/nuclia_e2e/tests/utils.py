@@ -19,11 +19,15 @@ from pytest_asyncio_cooperative import Lock  # type: ignore[import-untyped]
 
 import asyncio
 import contextlib
-import os
 import time
 import traceback
+import uuid
 
 locks: dict[str, Lock] = {}
+
+# Global variable to know which tasks were created in this test
+# suite so we can clean them up properly on fixture teardown
+_tasks_to_delete: list[str] = []
 
 
 @contextlib.asynccontextmanager
@@ -37,6 +41,7 @@ async def root_request(
     auth: AsyncNucliaAuth,
     method: str,
     path: str,
+    root_pat_token: str,
     data: dict | None = None,
     headers: dict | None = None,
 ) -> dict | None:
@@ -45,8 +50,7 @@ async def root_request(
     so we need to do it manually.
     """
     headers = headers or {}
-    stage_root_pat_token = os.environ["STAGE_ROOT_PAT_TOKEN"]
-    headers["Authorization"] = f"Bearer {stage_root_pat_token}"
+    headers["Authorization"] = f"Bearer {root_pat_token}"
     resp = await auth.client.request(
         method,
         path,
@@ -184,10 +188,12 @@ class CustomModels:
         auth: AsyncNucliaAuth,
         zone: str,
         account_id: str,
+        root_pat_token: str,
     ):
         self.auth = auth
         self.zone = zone
         self.account_id = account_id
+        self.root_pat_token = root_pat_token
 
     async def add(
         self,
@@ -196,25 +202,25 @@ class CustomModels:
     ):
         # Add model to the account
         path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/models")
-        response = await root_request(self.auth, "POST", path, data=model_data)
+        response = await root_request(self.auth, "POST", path, self.root_pat_token, data=model_data)
         assert response is not None
         model_id = response["id"]
 
         # Add model to the kbs
         for kb in kbs:
             path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/models/{kb}")
-            await root_request(self.auth, "POST", path, data={"id": model_id})
+            await root_request(self.auth, "POST", path, self.root_pat_token, data={"id": model_id})
 
     async def list(self) -> list:
         path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/models")
-        models = await root_request(self.auth, "GET", path)
+        models = await root_request(self.auth, "GET", path, self.root_pat_token)
         assert models is not None
         assert isinstance(models, list)
         return models
 
     async def delete(self, model_id: str) -> None:
         path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/model/{model_id}")
-        await root_request(self.auth, "DELETE", path)
+        await root_request(self.auth, "DELETE", path, self.root_pat_token)
 
     async def remove_all(self) -> None:
         models = await self.list()
@@ -228,10 +234,12 @@ class DefaultModels:
         auth: AsyncNucliaAuth,
         zone: str,
         account_id: str,
+        root_pat_token: str,
     ):
         self.auth = auth
         self.zone = zone
         self.account_id = account_id
+        self.root_pat_token = root_pat_token
 
     async def add(
         self,
@@ -242,23 +250,81 @@ class DefaultModels:
             model_data["default_model_id"] = generative_model
         # Add model to the account
         path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_models")
-        response = await root_request(self.auth, "POST", path, data=model_data)
+        response = await root_request(self.auth, "POST", path, self.root_pat_token, data=model_data)
         assert response is not None
         model_id = response["id"]
         return model_id
 
     async def list(self) -> list[dict[str, str]]:
         path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_models")
-        models = await root_request(self.auth, "GET", path)
+        models = await root_request(self.auth, "GET", path, self.root_pat_token)
         assert models is not None
         assert isinstance(models, list)
         return models
 
     async def delete(self, model_id: str) -> None:
         path = get_regional_url(self.zone, f"/api/v1/account/{self.account_id}/default_model/{model_id}")
-        await root_request(self.auth, "DELETE", path)
+        await root_request(self.auth, "DELETE", path, self.root_pat_token)
 
     async def remove_all(self) -> None:
         models = await self.list()
         for model in models:
             await self.delete(model["id"])
+
+
+async def run_resource_agents_test(
+    kb_id: str,
+    zone: str,
+    auth: AsyncNucliaAuth,
+    generative_model: str,
+    generative_model_provider: str,
+    da_name_prefix: str,
+    destination_field_prefix: str,
+):
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+
+    # Configure an ingestion agent (aka task)
+    unique_id = uuid.uuid4().hex
+    agent_id = await create_ask_agent(
+        kb_id,
+        zone,
+        auth,
+        da_name=f"{da_name_prefix}{unique_id}",
+        question="Summarize the contents of the document in a single sentence.",
+        generative_model=generative_model,
+        generative_model_provider=generative_model_provider,
+        destination_field_prefix=f"{destination_field_prefix}{unique_id}",
+    )
+
+    # Add to the list
+    _tasks_to_delete.append(agent_id)
+
+    # Get a resource
+    resources = await ndb.ndb.list_resources(kbid=kb_id)
+    rid = resources.resources[0].id
+
+    # Run the agent on the resource, simply make sure it doesn't fail and it returns some results
+    resp = await ndb.ndb.session.post(
+        f"/v1/kb/{kb_id}/resource/{rid}/run-agents", json={"agent_ids": [agent_id]}
+    )
+    assert str(resp.status_code).startswith("2"), resp.text
+    assert len(resp.json()["results"]) > 0
+
+
+async def run_generative_test(
+    kb_id: str, zone: str, auth: AsyncNucliaAuth, generative_model: str | None = None
+):
+    # Send an ask request with the model (if specified) or with the default configured model in the kb.
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    extra_params = {}
+    if generative_model:
+        extra_params["generative_model"] = generative_model
+    answer = await sdk.AsyncNucliaSearch().ask(
+        ndb=ndb,
+        query="how to cook an omelette? Answer in less than 200 words please.",
+        **extra_params,
+    )
+    assert answer.answer is not None
+    assert answer.status is not None
+    assert answer.status == "success"
+    print(f"Answer: {answer.answer}")
