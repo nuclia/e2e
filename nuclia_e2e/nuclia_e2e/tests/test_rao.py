@@ -3,20 +3,18 @@ from nuclia.lib.agent import AsyncAgentClient
 from nuclia_e2e.tests.conftest import RegionalAPI
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import delete_test_kb
+from nuclia_e2e.utils import get_kbid_from_slug
 from nuclia_models.agent.interaction import AnswerOperation
 from nuclia_models.agent.interaction import AragAnswer
 
 import asyncio
 import pytest
-import uuid
 
 
 async def create_rao_with_agents(
-    regional_api: RegionalAPI, regional_api_config: ZoneConfig, slug_uuid: str, account: str
+    regional_api: RegionalAPI, regional_api_config: ZoneConfig, slug: str, account: str
 ) -> str:
-    agent_id = (
-        await regional_api.create_rao(account_id=account, slug=f"nuclia-e2e-test-{slug_uuid}", mode="agent")
-    )["id"]
+    agent_id = (await regional_api.create_rao(account_id=account, slug=slug, mode="agent"))["id"]
     # Check it got created
     assert agent_id is not None
     assert regional_api_config.global_config is not None
@@ -113,6 +111,7 @@ async def create_rao_with_agents(
 @pytest.mark.asyncio_cooperative
 async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneConfig, global_api_config):
     """Basic test to check RAO works
+    0. Delete any previous test RAO (just in case)
     1. Create a no-memory RAO
     2. Create a NucliaDB driver against persistent KB
     3. Create an agent in the preprocess, context, generation and postprocess steps
@@ -120,11 +119,15 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
     5. Interact to ask a question and get an answer
     6. Delete the session
     """
-    slug_uuid = uuid.uuid4().hex[:8]
+    test_slug = "rao-e2e-test"
+    # Cleanup any previous test RAO
+    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, test_slug)
+    if kbid is not None:
+        await delete_test_kb(regional_api_config, kbid=kbid, kb_slug=test_slug)
     assert regional_api_config.global_config is not None
 
     account = regional_api_config.global_config.permanent_account_id
-    agent_id = await create_rao_with_agents(regional_api, regional_api_config, slug_uuid, account)
+    agent_id = await create_rao_with_agents(regional_api, regional_api_config, test_slug, account)
 
     agent_client = AsyncAgentClient(
         region=regional_api_config.zone_slug,
@@ -133,9 +136,9 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
         user_token=regional_api_config.global_config.permanent_account_owner_pat_token,
     )
     # Sessions
-    sess_id = await agent_client.new_session("nuclia-e2e-test-session")
+    sess_id = await agent_client.new_session("rao-e2e-test-session")
     session = await agent_client.get_session(sess_id)
-    assert session.title == "nuclia-e2e-test-session", "Session title does not match"
+    assert session.title == "rao-e2e-test-session", "Session title does not match"
     # List sessions, scan all pages since the endpoint does not support sorting by creation date
     last = False
     found = False
@@ -190,4 +193,4 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
         await agent_client.get_session(sess_id)
 
     # Delete RAO for cleanup
-    await delete_test_kb(regional_api_config, kbid=agent_id, kb_slug=f"nuclia-e2e-test-{slug_uuid}")
+    await delete_test_kb(regional_api_config, kbid=agent_id, kb_slug=test_slug)
