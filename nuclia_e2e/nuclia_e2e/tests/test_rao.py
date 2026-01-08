@@ -119,7 +119,7 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
     5. Interact to ask a question and get an answer
     6. Delete the session
     """
-    test_slug = "rao-e2e-test"
+    test_slug = f"{regional_api_config.test_kb_slug}-rao-e2e-test"
     # Cleanup any previous test RAO
     kbid = await get_kbid_from_slug(regional_api_config.zone_slug, test_slug)
     if kbid is not None:
