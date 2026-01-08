@@ -41,7 +41,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
         test_json=False,  # Structured output not working
     ),
     # "chatgpt-azure-5-nano": ModelInfo(),   EXCLUDED as it is too inconsistent
-    "claude-3": ModelInfo(),
+    # "claude-3": ModelInfo(),               DISCONTINUED
     # "claude-3-fast",                       DISCONTINUED
     # "claude-3-5-fast": ModelInfo(),        DISCONTINUED
     "claude-3-5-small": ModelInfo(),
