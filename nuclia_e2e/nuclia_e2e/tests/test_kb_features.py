@@ -653,6 +653,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                     pagination=Pagination(limit=100),
                 ),
             )
+            print(f"activity_log_is_stored -----> {len(logs.data)}")
             if len(logs.data) >= 2:
                 # as the asks may be retried more than once (because some times rephrase doesn't always work)
                 # we need to check the last logs. The way the tests are setup if we reach here is because we
