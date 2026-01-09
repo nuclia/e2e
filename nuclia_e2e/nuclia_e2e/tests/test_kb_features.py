@@ -663,9 +663,9 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                     and logs.data[-1].question == TEST_CHOCO_ASK_MORE
                 ):
                     return (True, logs)
-                from pprint import pprint #noqa: T203,I001
+                from pprint import pprint #noqa: T203,I001, RUF100
                 print("----------------------------")
-                pprint(logs.data)  #noqa: T203,I001
+                pprint(logs.data)  #noqa: T203,I001,RUF100
                 print("----------------------------")
             return (False, None)
 
