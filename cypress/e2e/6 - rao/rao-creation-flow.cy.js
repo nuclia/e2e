@@ -5,7 +5,7 @@ import { ACCOUNT, goTo, goToManageAccount, onlyPermanentKb } from '../../support
 describe('RAO creation flow', () => {
   ACCOUNT.availableZones.forEach((zone) => {
     beforeEach(() => {
-      onlyPermanentKb();
+      onlyPermanentKb('agent_no_memory');
     });
 
     it(`should allow to create a new RAO workflow and then delete it on ${zone.slug}`, () => {
