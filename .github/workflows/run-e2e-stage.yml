@@ -8,8 +8,6 @@ on:
       - '.github/workflows/run-e2e-stage.yml'
       - 'cypress/**'
   workflow_dispatch:
-    branches:
-      - main
   schedule:
     # Run at 00:25 and 12:25 on saturday and sunday
     - cron: '25 0,12 * * 0,6'
@@ -83,13 +81,12 @@ jobs:
           if-no-files-found: ignore
       - name: Slack notification
         id: slack
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v2.1.1
         if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
         with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_HOOK_URL }}
           payload: |
             {
               "text": "⚠️ Cypress E2E failed on Stage\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
