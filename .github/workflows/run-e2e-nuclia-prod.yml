@@ -134,15 +134,14 @@ jobs:
 
       - name: Send Slack Notification
         if: ${{ steps.collect.outputs.failed_zones != '' && github.ref_name == 'main' }}
-        uses: slackapi/slack-github-action@v1.24.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
           payload: |
             {
               "text": "⚠️ Tests failed in zones: ${{ steps.collect.outputs.failed_zones }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       # Always run to check if any zone failed. THis is needed because otherwise the `continue-on-error: true on the test config would make it always a success`
       - name: Mark workflow as failed if any zone failed

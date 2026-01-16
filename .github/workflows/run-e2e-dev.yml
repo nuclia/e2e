@@ -2,8 +2,6 @@ name: run-e2e-dev
 run-name: Running Cypress e2e tests on Dev
 on:
   workflow_dispatch:
-    branches:
-      - main
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
@@ -57,13 +55,12 @@ jobs:
           if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
       - name: Slack notification
         id: slack
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v2.1.1
         if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
         with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_HOOK_URL }}
           payload: |
             {
               "text": "⚠️ Cypress E2E failed on Dev\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

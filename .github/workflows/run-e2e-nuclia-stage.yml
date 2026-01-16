@@ -100,12 +100,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification
-        uses: slackapi/slack-github-action@v1.24.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
           payload: |
             {
               "text": "⚠️ Tests failed on STAGE\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
