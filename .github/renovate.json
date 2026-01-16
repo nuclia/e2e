@@ -17,7 +17,7 @@
         "jotare",
         "rastut"
     ],
-    "pep621": {
+    "pep723": {
         "enabled": true
     }
 }
