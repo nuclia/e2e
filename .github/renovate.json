@@ -1,13 +1,13 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "lockFileMaintenance": {
+        "enabled": true
+    },
     "extends": [
         "config:recommended",
         ":dependencyDashboard"
     ],
     "rebaseWhen": "never",
-    "lockFileMaintenance": {
-        "enabled": true
-    },
     "assignees": [
         "operramon",
         "ebrehault",
@@ -17,7 +17,10 @@
         "jotare",
         "rastut"
     ],
-    "pep723": {
+    "pep621": {
         "enabled": true
+    },
+    "poetry": {
+        "enabled": false
     }
 }
