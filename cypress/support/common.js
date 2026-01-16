@@ -144,12 +144,12 @@ export function getAuthHeader(synchronous = true) {
   return headers;
 }
 
-export function onlyPermanentKb() {
+export function onlyPermanentKb(mode) {
   const authHeader = { Authorization: `Bearer ${Cypress.env('BEARER_TOKEN')}` };
   ACCOUNT.availableZones.forEach((zone) => {
     cy.request({
       method: 'GET',
-      url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kbs`,
+      url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kbs${mode ? '?mode=' + mode : ''}`,
       headers: authHeader,
     }).then((response) => {
       expect(response.status).to.eq(200);
