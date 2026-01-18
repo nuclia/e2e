@@ -22,7 +22,7 @@ dependencies = [
     "ruff==0.8.1",
     # Typing
     "mypy==1.15.0",
-    "mypy-extensions==1.0.0",
+    "mypy-extensions==1.1.0",
     "types-colorama",
     "types-deprecated",
     "types-docutils",
