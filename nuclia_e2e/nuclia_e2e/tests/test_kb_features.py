@@ -495,9 +495,9 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         new_embedding_model_available(), max_wait=200, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
-    assert search_returned_results is True, (
-        "expected to be able to search with the new embedding model but nucliadb didn't return resources"
-    )
+    assert (
+        search_returned_results is True
+    ), "expected to be able to search with the new embedding model but nucliadb didn't return resources"
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
