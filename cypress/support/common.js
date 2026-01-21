@@ -35,7 +35,6 @@ export const ACCOUNT_STAGE = {
       askUrl: 'https://nuclia.github.io/frontend/e2e/ask.html',
       citationsUrl: 'https://nuclia.github.io/frontend/e2e/citations.html',
       findUrl: 'https://nuclia.github.io/frontend/e2e/find.html',
-      searchUrl: 'https://nuclia.github.io/frontend/e2e/search.html',
     },
   ],
   permanentKbCount: 2,
@@ -65,7 +64,6 @@ export const ACCOUNT_PROD = {
       askUrl: 'https://nuclia.github.io/frontend/e2e/prod/ask-europe.html',
       citationsUrl: 'https://nuclia.github.io/frontend/e2e/prod/citations-europe.html',
       findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-europe.html',
-      searchUrl: 'https://nuclia.github.io/frontend/e2e/prod/search-europe.html',
     },
     {
       slug: ZONES['usa'],
@@ -85,7 +83,6 @@ export const ACCOUNT_PROD = {
       askUrl: 'https://nuclia.github.io/frontend/e2e/prod/ask-usa.html',
       citationsUrl: 'https://nuclia.github.io/frontend/e2e/prod/citations-usa.html',
       findUrl: 'https://nuclia.github.io/frontend/e2e/prod/find-usa.html',
-      searchUrl: 'https://nuclia.github.io/frontend/e2e/prod/search-usa.html',
     },
   ],
   permanentKbCount: 4,
@@ -116,7 +113,6 @@ export const ACCOUNT_DEV = {
       askUrl: 'https://nuclia.github.io/frontend/e2e/dev/ask.html',
       citationsUrl: 'https://nuclia.github.io/frontend/e2e/dev/citations.html',
       findUrl: 'https://nuclia.github.io/frontend/e2e/dev/find.html',
-      searchUrl: 'https://nuclia.github.io/frontend/e2e/dev/search.html',
     },
   ],
   permanentKbCount: 2,
@@ -126,8 +122,8 @@ export const ACCOUNT =
   `${Cypress.env('RUNNING_ENV')}` === 'prod'
     ? ACCOUNT_PROD
     : `${Cypress.env('RUNNING_ENV')}` === 'dev'
-    ? ACCOUNT_DEV
-    : ACCOUNT_STAGE;
+      ? ACCOUNT_DEV
+      : ACCOUNT_STAGE;
 
 export const user = {
   email: `${Cypress.env('USER_NAME')}`,
