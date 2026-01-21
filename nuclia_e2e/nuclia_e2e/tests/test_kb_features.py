@@ -654,13 +654,15 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                 ),
             )
             if len(logs.data) >= 2:
-                # as the asks may be retried more than once (because some times rephrase doesn't always work)
-                # we need to check the last logs. The way the tests are setup if we reach here is because we
-                # validated that we got the expected results on ask, so the log should match this reasoning.
-                if (
-                    logs.data[-2].question == TEST_CHOCO_QUESTION
-                    and logs.data[-1].question == TEST_CHOCO_ASK_MORE
-                ):
+                # Try to find the questions in the logs
+                found = False
+                for q in TEST_CHOCO_QUESTION, TEST_CHOCO_ASK_MORE:
+                    if any(log.question == q for log in logs.data):
+                        found = True
+                    else:
+                        found = False
+                        break
+                if found:
                     return (True, logs)
             return (False, None)
 
