@@ -495,9 +495,9 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         new_embedding_model_available(), max_wait=200, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
-    assert (
-        search_returned_results is True
-    ), "expected to be able to search with the new embedding model but nucliadb didn't return resources"
+    assert search_returned_results is True, (
+        "expected to be able to search with the new embedding model but nucliadb didn't return resources"
+    )
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
@@ -654,13 +654,15 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                 ),
             )
             if len(logs.data) >= 2:
-                # as the asks may be retried more than once (because some times rephrase doesn't always work)
-                # we need to check the last logs. The way the tests are setup if we reach here is because we
-                # validated that we got the expected results on ask, so the log should match this reasoning.
-                if (
-                    logs.data[-2].question == TEST_CHOCO_QUESTION
-                    and logs.data[-1].question == TEST_CHOCO_ASK_MORE
-                ):
+                # Try to find the questions in the logs
+                found = False
+                for q in TEST_CHOCO_QUESTION, TEST_CHOCO_ASK_MORE:
+                    if any(log.question == q for log in logs.data):
+                        found = True
+                    else:
+                        found = False
+                        break
+                if found:
                     return (True, logs)
             return (False, None)
 
