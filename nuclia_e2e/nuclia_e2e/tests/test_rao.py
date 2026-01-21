@@ -2,8 +2,8 @@ from nuclia.exceptions import RaoAPIException
 from nuclia.lib.agent import AsyncAgentClient
 from nuclia_e2e.tests.conftest import RegionalAPI
 from nuclia_e2e.tests.conftest import ZoneConfig
-from nuclia_e2e.utils import delete_test_kb
-from nuclia_e2e.utils import get_kbid_from_slug
+from nuclia_e2e.utils import delete_test_agent
+from nuclia_e2e.utils import get_agent_from_slug
 from nuclia_models.agent.interaction import AnswerOperation
 from nuclia_models.agent.interaction import AragAnswer
 
@@ -121,9 +121,9 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
     """
     test_slug = f"{regional_api_config.test_kb_slug}-rao-e2e-test"
     # Cleanup any previous test RAO
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, test_slug)
-    if kbid is not None:
-        await delete_test_kb(regional_api_config, kbid=kbid, kb_slug=test_slug)
+    agent_id = await get_agent_from_slug(regional_api_config.zone_slug, test_slug)
+    if agent_id is not None:
+        await delete_test_agent(regional_api_config, agent_id=agent_id, agent_slug=test_slug)
     assert regional_api_config.global_config is not None
 
     account = regional_api_config.global_config.permanent_account_id
@@ -160,7 +160,7 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
     ):
         responses.append(message)
         assert len(responses) > 0
-    assert responses[0].operation == AnswerOperation.START
+    assert responses[0].operation == AnswerOperation.START, responses[0]
 
     assert responses[1].operation == AnswerOperation.ANSWER
     assert responses[1].step
@@ -193,4 +193,4 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
         await agent_client.get_session(sess_id)
 
     # Delete RAO for cleanup
-    await delete_test_kb(regional_api_config, kbid=agent_id, kb_slug=test_slug)
+    await delete_test_agent(regional_api_config, agent_id=agent_id, agent_slug=test_slug)

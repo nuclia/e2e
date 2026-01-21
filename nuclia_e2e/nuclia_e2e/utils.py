@@ -5,6 +5,7 @@ from nuclia.exceptions import NuaAPIException
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.lib.kb import Environment
 from nuclia.lib.kb import NucliaDBClient
+from nuclia.sdk.agents import AsyncNucliaAgents
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from pathlib import Path
 from tenacity import retry
@@ -55,7 +56,7 @@ async def create_test_kb(regional_api_config, kb_slug, logger: Logger = print) -
 
 async def delete_test_kb(regional_api_config, kbid, kb_slug, logger=print):
     kbs = AsyncNucliaKBS()
-    logger("Deleting kb {kbid}")
+    logger(f"Deleting kb {kbid}")
     await kbs.delete(zone=regional_api_config.zone_slug, id=kbid)
 
     kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
@@ -85,6 +86,21 @@ async def get_kbid_from_slug(zone: str, slug: str) -> str | None:
     kbids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kbid = kbids_by_slug.get(slug)
     return kbid
+
+
+async def get_agent_from_slug(zone: str, slug: str) -> str | None:
+    agents = AsyncNucliaAgents()
+    all_agents = await agents.list()
+    agentids_by_slug = {agent.slug: agent.id for agent in all_agents}
+    agentid = agentids_by_slug.get(slug)
+    return agentid
+
+
+async def delete_test_agent(regional_api_config, agent_id, agent_slug, logger=print):
+    # Via kbs since AsyncNucliaAgents doesn't have delete method yet
+    agents = AsyncNucliaKBS()
+    logger(f"Deleting agent {agent_id}")
+    await agents.delete(zone=regional_api_config.zone_slug, id=agent_id)
 
 
 class Retriable(Generic[T]):
