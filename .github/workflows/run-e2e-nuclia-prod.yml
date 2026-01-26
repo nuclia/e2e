@@ -1,5 +1,5 @@
 name: run-nuclia-e2e-prod
-run-name: Running e2e PROD NUCLIA tests
+run-name: Running e2e PROD NUCLIA tests.
 on:
   push:
     branches:
