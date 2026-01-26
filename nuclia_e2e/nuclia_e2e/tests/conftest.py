@@ -114,10 +114,10 @@ class ClusterConfig:
 
 def debug_env_vars():
     """Debug function to extract and display all environment variables used in CLUSTERS_CONFIG.
-    
+
     Inserts '_' between each character to avoid GitHub Actions secret masking.
     To decode: python -c "import base64, json, sys; print(json.dumps(json.loads(base64.b64decode(''.join([line.strip().replace('_', '') for line in sys.stdin if not line.startswith('===')])).decode()), indent=2))"
-    """
+    """  # noqa: E501
     import base64
     import json
 
@@ -150,9 +150,9 @@ def debug_env_vars():
     # Convert to JSON and encode to base64
     json_str = json.dumps(env_dict, indent=2)
     base64_encoded = base64.b64encode(json_str.encode()).decode()
-    
+
     # Insert '_' between each character to avoid GitHub Actions secret masking
-    obfuscated = '_'.join(base64_encoded)
+    obfuscated = "_".join(base64_encoded)
 
     # Split into 80 character chunks and print line by line
     print("=== Environment Variables (Base64 encoded with _ separators) ===")
