@@ -632,7 +632,7 @@ wheels = [
 
 [[package]]
 name = "nuclia"
-version = "4.9.15"
+version = "4.9.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -653,9 +653,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a8/65/6918c0e8d2ef2294b71b18791887881307c961a05cd12c503da56e23674a/nuclia-4.9.15.tar.gz", hash = "sha256:9f562d7dac8f16279d71d2103a5aaf096593088b0a3559275a39f8c4788ace5b", size = 301549, upload-time = "2025-12-23T16:34:23.012Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/38/5d/5f7ceccb8d1d5876dff49bd8567ac0dd1c83ad9a2af970f1ad65716f19d6/nuclia-4.9.16.tar.gz", hash = "sha256:f339bd30f0b31514cd4fab91433a5e1483bdfef4347a3109ce879564935159e9", size = 305747, upload-time = "2026-01-20T10:49:20.028Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/50/4c/421d75debfd38f936a70d2b455d615b7c9d00100edd113ee38579d22f66d/nuclia-4.9.15-py3-none-any.whl", hash = "sha256:0bf431954fb388edb547a1d958d18b42da77a08ad24c7febad347612d318df0d", size = 97750, upload-time = "2025-12-23T16:34:21.394Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/71/60339a8e65b0ba4a44f5ac194d51e2ee5560ad00c67b94f2cd8c961c3c0d/nuclia-4.9.16-py3-none-any.whl", hash = "sha256:ae10ff3c2f446473259fe32b2d345f935274280e088e9687cd00791c11140aff", size = 98267, upload-time = "2026-01-20T10:49:18.686Z" },
 ]
 
 [[package]]

@@ -402,9 +402,7 @@ class RegionalAPI:
         payload: dict | None = None,
         params: dict | None = None,
     ) -> dict:
-        # TODO: Switch to new Agent API path when promoted
-        # url = f"{self.base_url}/api/v1/agent/{agent_id}/{endpoint}"
-        url = f"{self.base_url}/api/v1/kb/{agent_id}/agent/{endpoint}"
+        url = f"{self.base_url}/api/v1/agent/{agent_id}/{endpoint}"
         async with self.session.request(
             method, url, json=payload, headers=self.auth_headers, params=params
         ) as response:
