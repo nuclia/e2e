@@ -70,7 +70,7 @@ async def create_rao_with_agents(
         await regional_api.rao(
             method="POST",
             agent_id=agent_id,
-            endpoint="/drivers",
+            endpoint="drivers",
             payload=driver,
         )
     # Preprocess Agents
@@ -78,7 +78,7 @@ async def create_rao_with_agents(
         await regional_api.rao(
             method="POST",
             agent_id=agent_id,
-            endpoint="/preprocess",
+            endpoint="preprocess",
             payload=pre,
         )
     # Context Agents
@@ -86,7 +86,7 @@ async def create_rao_with_agents(
         await regional_api.rao(
             method="POST",
             agent_id=agent_id,
-            endpoint="/context",
+            endpoint="context",
             payload=ctx,
         )
     # Generation Agents
@@ -94,7 +94,7 @@ async def create_rao_with_agents(
         await regional_api.rao(
             method="POST",
             agent_id=agent_id,
-            endpoint="/generation",
+            endpoint="generation",
             payload=gen,
         )
     # Postprocess Agents
@@ -102,7 +102,7 @@ async def create_rao_with_agents(
         await regional_api.rao(
             method="POST",
             agent_id=agent_id,
-            endpoint="/postprocess",
+            endpoint="postprocess",
             payload=post,
         )
     return agent_id

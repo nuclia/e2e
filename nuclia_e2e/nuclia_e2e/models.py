@@ -88,7 +88,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "deepseek-reasoner",                   DISCONTINUED
     # "deepseek-chat",                       DISCONTINUED
     # "azure-deepseek-r1",                   EXCLUDED as it is too slow
-    "azure-mistral-large-2": ModelInfo(),
+    # "azure-mistral-large-2": ModelInfo(),  DISCONTINUED
     # "gcp-claude-3-5-sonnet-v2": ModelInfo(), DISCONTINUED
     "gcp-claude-3-7-sonnet": ModelInfo(),
     "gcp-claude-4-5-sonnet": ModelInfo(),
