@@ -5,7 +5,7 @@ description = "Your project description"
 readme = "README.md"  # Relative to nuclia_e2e
 requires-python = ">=3.10"
 dependencies = [
-    "nuclia>=4.9.13",
+    "nuclia>=4.9.17",
     "nucliadb-protos",
     "pytest-timeout",
     "pytest==8.3.4",
