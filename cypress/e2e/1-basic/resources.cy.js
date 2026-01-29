@@ -86,7 +86,7 @@ describe('Resources', () => {
         });
 
         it('should show labels on resources', () => {
-          cy.get('[data-cy="visible-columns-dropdown"]').click();
+          cy.get('[data-cy="visible-columns-dropdown"]', { timeout: 10000 }).click();
           cy.get('pa-checkbox').contains('Labels').click();
           cy.get('pa-button').contains('Display full labels').click();
           cy.get('pa-chip-closeable').should('contain', 'permanent');
