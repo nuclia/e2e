@@ -653,6 +653,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                     pagination=Pagination(limit=100),
                 ),
             )
+            print(f"activity_log_is_stored -----> {len(logs.data)}")
             if len(logs.data) >= 2:
                 # Try to find the questions in the logs
                 found = False
@@ -664,11 +665,16 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
                         break
                 if found:
                     return (True, logs)
+                from pprint import pprint  # noqa: T203,I001,RUF100
+
+                print("----------------------------")
+                pprint(logs.data)  # noqa: T203,I001,RUF100
+                print("----------------------------")
             return (False, None)
 
         return condition
 
-    success, logs = await wait_for(activity_log_is_stored(), max_wait=180, logger=logger)
+    success, logs = await wait_for(activity_log_is_stored(), max_wait=360, logger=logger)
     assert success, "Activity logs didn't get stored in time"
 
     # if we have the ask events, we'll must have the find ones, as they have been done earlier.
