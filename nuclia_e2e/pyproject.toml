@@ -8,7 +8,7 @@ dependencies = [
     "nuclia>=4.9.17",
     "nucliadb-protos",
     "pytest-timeout",
-    "pytest==8.3.4",
+    "pytest==8.4.2",
     "backoff",
     "aiohttp",
     "pytest-asyncio-cooperative", # not compatible with pytest-asyncio
