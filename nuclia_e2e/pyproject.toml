@@ -19,7 +19,7 @@ dependencies = [
     "pyyaml",
     "tenacity",
     # Lint and format
-    "ruff==0.8.1",
+    "ruff==0.14.13",
     # Typing
     "mypy==1.15.0",
     "mypy-extensions==1.0.0",
