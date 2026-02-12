@@ -76,9 +76,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
         test_json=False,  # Structured output not working
     ),
     # "huggingface"                          EXCLUDED as not a model,just a driver, that needs a key to work
-    "llama-3.2-90b-vision-instruct-maas": ModelInfo(
-        test_json=False,  # Json functionality not operational
-    ),
     "llama-4-maverick-17b-128e-instruct-maas": ModelInfo(
         test_json=False,  # Json functionality not operational
     ),
