@@ -12,6 +12,7 @@ from nuclia_e2e.tests.conftest import GlobalAPI
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.tests.utils import has_generated_field
 from nuclia_e2e.utils import ASSETS_FILE_PATH
+from nuclia_e2e.utils import create_test_kb
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
 from nuclia_e2e.utils import wait_for
@@ -54,20 +55,6 @@ Logger = Callable[[str], None]
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "how has this impacted customers?"
-
-
-async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
-    kbs = AsyncNucliaKBS()
-    new_kb = await kbs.add(
-        zone=regional_api_config.zone_slug,
-        slug=kb_slug,
-        learning_configuration={"semantic_models": ["en-2024-04-24"]},
-    )
-
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
-    assert kbid is not None
-    logger(f"Created kb {new_kb['id']}")
-    return kbid
 
 
 async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
@@ -809,7 +796,7 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
+    kbid = await create_test_kb(regional_api_config, kb_slug, logger)
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
@@ -908,7 +895,7 @@ async def test_kb_usage(
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
+    kbid = await create_test_kb(regional_api_config, kb_slug, logger)
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client

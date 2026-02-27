@@ -14,6 +14,7 @@ from tenacity import retry_if_exception_type
 from tenacity import RetryCallState
 from tenacity import stop_after_attempt
 from tenacity import wait_fixed
+from tenacity import wait_random
 from time import monotonic
 from typing import cast
 from typing import ClassVar
@@ -40,6 +41,16 @@ def get_asset_file_path(file: str):
     return str(ASSETS_FILE_PATH.joinpath(file))
 
 
+def _is_kb_creation_rate_limited(exc: BaseException) -> bool:
+    return "429" in str(exc)
+
+
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_random(2, 10),
+    retry=retry_if_exception(_is_kb_creation_rate_limited),
+    reraise=True,
+)
 async def create_test_kb(regional_api_config, kb_slug, logger: Logger = print) -> str:
     kbs = AsyncNucliaKBS()
     new_kb = await kbs.add(
