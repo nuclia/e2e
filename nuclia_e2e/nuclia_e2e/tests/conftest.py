@@ -228,6 +228,8 @@ if not TEST_CLUSTER.zones:
     print("Exiting, no zones defined or all of them filtered")
     sys.exit(1)
 
+print(f"TEST CLUSTER zones: {[zone.name for zone in TEST_CLUSTER.zones]}")
+
 
 class ManagerAPI:
     def __init__(self, global_api, session: aiohttp.ClientSession):
