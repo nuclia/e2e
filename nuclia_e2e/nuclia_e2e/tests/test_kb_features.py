@@ -49,6 +49,7 @@ from typing import Any
 import asyncio
 import backoff
 import base64
+import httpx
 import pytest
 
 Logger = Callable[[str], None]
@@ -95,6 +96,7 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
     assert success, "File was not indexed in time, not enough paragraphs found on resource"
 
 
+@backoff.on_exception(backoff.constant, (httpx.ReadError, ClientError), max_tries=3, interval=5)
 async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
     """
     Imports a kb with three resources and some labelsets already created
