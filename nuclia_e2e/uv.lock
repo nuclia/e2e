@@ -632,7 +632,7 @@ wheels = [
 
 [[package]]
 name = "nuclia"
-version = "4.9.17"
+version = "4.9.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -653,9 +653,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/86/3a58b4bfde2d1f8553eee7cac0742499e4aa202b1fc2b4c7f7ff0b1f125f/nuclia-4.9.17.tar.gz", hash = "sha256:e1e445b6162ea319a711200533eadcce5ca2059d372ece4388010cdd72bf7c5c", size = 305747, upload-time = "2026-01-27T08:13:57.184Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5b/3d/38423ce582393b782af4815c0f91ef56153e124ccf28ec8a5a38c1d5c17a/nuclia-4.9.18.tar.gz", hash = "sha256:8c8ef3d6bf0c1b98eb5d2542bffe1e9fd0a5cb4fd2ec32361773827a4cc7baa3", size = 307316, upload-time = "2026-03-06T10:10:20.18Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/ea/4d77fcede972c6392921527f6327e0ef2fb8c092cdc9fabc6628b215c81b/nuclia-4.9.17-py3-none-any.whl", hash = "sha256:86175eb9a782cc54af45d2fd3d77d158277ecc06bc47d219660ad50aaa76fe99", size = 98272, upload-time = "2026-01-27T08:13:55.314Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/eb/6d80289cce29f927d3585b091ec4df3984e75f69a2533bdbb6cd8e2cb4df/nuclia-4.9.18-py3-none-any.whl", hash = "sha256:b208d7d8132d07233e53d192afb0074b8f67719517e2addf44981d6b5e5db45c", size = 99837, upload-time = "2026-03-06T10:10:17.287Z" },
 ]
 
 [[package]]
@@ -702,7 +702,7 @@ requires-dist = [
     { name = "backoff" },
     { name = "mypy", specifier = "==1.15.0" },
     { name = "mypy-extensions", specifier = "==1.0.0" },
-    { name = "nuclia", specifier = ">=4.9.17" },
+    { name = "nuclia", specifier = ">=4.9.18" },
     { name = "nucliadb-protos" },
     { name = "prometheus-client" },
     { name = "pytest", specifier = "==8.3.4" },

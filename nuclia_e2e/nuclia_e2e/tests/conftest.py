@@ -477,8 +477,7 @@ async def regional_api_config(request: pytest.FixtureRequest, global_api_config:
 
     kbs = {
         kb.slug: kb.id
-        for kb in await auth.kbs(zone_config.global_config.permanent_account_id)
-        if kb.region == zone_config.zone_slug
+        for kb in await auth.kbs(zone_config.global_config.permanent_account_id, zone=zone_config.zone_slug)
     }
     zone_config.permanent_kb_id = kbs[zone_config.permanent_kb_slug]
 
