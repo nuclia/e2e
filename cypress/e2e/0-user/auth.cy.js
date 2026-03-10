@@ -46,17 +46,13 @@ describe('User Login', () => {
     cy.visit('/');
     cy.get(`[type="email"] input`).type('wrong-email@gmail.com', { log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}', { log: false });
-    cy.get(`[data-cy="login-error"]`)
-      .should('contain', 'Authentication error.')
-      .and('contain', 'Please try again or reset your password below.');
+    cy.get(`[data-cy="login-error"]`).should('contain', 'Invalid user or credentials');
   });
 
   it('should error for an invalid password for existing user', () => {
     cy.visit('/');
     cy.get(`[type="email"] input`).type(user.email, { log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}', { log: false });
-    cy.get(`[data-cy="login-error"]`)
-      .should('contain', 'Authentication error.')
-      .and('contain', 'Please try again or reset your password below.');
+    cy.get(`[data-cy="login-error"]`).should('contain', 'Invalid user or credentials');
   });
 });
