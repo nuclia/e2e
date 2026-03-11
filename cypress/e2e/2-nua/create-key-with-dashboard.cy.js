@@ -2,6 +2,14 @@
 
 import { ACCOUNT, getAuthHeader, goTo, goToManageAccount } from '../../support/common';
 
+Cypress.automation('remote:debugger:protocol', {
+  command: 'Browser.grantPermissions',
+  params: {
+    permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'],
+    origin: window.location.origin,
+  },
+});
+
 describe('Create NUA key with the dashboard', () => {
   const authHeader = getAuthHeader();
   ACCOUNT.availableZones.forEach((zone) => {
