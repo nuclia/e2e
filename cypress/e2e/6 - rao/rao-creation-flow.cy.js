@@ -24,10 +24,11 @@ describe('RAO creation flow', () => {
       cy.get('[data-cy="new-arag-save-button"] button').should('be.enabled').click();
       cy.get(`[data-cy="${newAragName}-link"]`, { timeout: 20000 }).should('contain', newAragName);
       cy.get(`[data-cy="${newAragName}-link"]`).click();
-      cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${zone.slug}/arag/${newAragName}`);
+      cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${zone.slug}/arag/${newAragName}/workflows`);
       cy.get('app-kb-switch').should('contain', newAragName);
 
       // workflow config
+      cy.get('.pa-table-grid--cell').contains('default').click();
       cy.get('.agent-dashboard-toolbar [aria-label="Add node"]').click();
       // TODO: fix the right panel open/collapse behavior, it is broken under Cypress
 
