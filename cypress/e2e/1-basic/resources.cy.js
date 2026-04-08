@@ -86,6 +86,7 @@ describe('Resources', () => {
         });
 
         it('should show labels on resources', () => {
+          cy.get('.filters button:disabled', { timeout: 10000 }).should('not.exist');
           cy.get('[data-cy="visible-columns-dropdown"]', { timeout: 10000 }).click();
           cy.get('pa-checkbox').contains('Labels').click();
           cy.get('pa-button').contains('Display full labels').click();
