@@ -4,15 +4,13 @@ import { ACCOUNT, goTo, goToManageAccount, onlyPermanentKb } from '../../support
 
 describe('RAO creation flow', () => {
   ACCOUNT.availableZones.forEach((zone) => {
+    const newAragName = `new-rao-${Date.now()}`;
     beforeEach(() => {
       onlyPermanentKb('agent_no_memory');
-    });
 
-    it(`should allow to create a new RAO workflow and then delete it on ${zone.slug}`, () => {
-      const newAragName = `new-rao-${Date.now()}`;
       cy.login(zone);
 
-      // creation test
+      // creation
       goToManageAccount();
       goTo('go-to-retrieval-agents');
       cy.get('[data-cy="add-arag"]').click();
@@ -26,9 +24,11 @@ describe('RAO creation flow', () => {
       cy.get(`[data-cy="${newAragName}-link"]`).click();
       cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${zone.slug}/arag/${newAragName}/workflows`);
       cy.get('app-kb-switch').should('contain', newAragName);
-
-      // workflow config
       cy.get('.pa-table-grid--cell').contains('default').click();
+    });
+
+    it(`should allow to create a new RAO workflow and then delete it on ${zone.slug}`, () => {
+      // workflow config
       cy.get('.agent-dashboard-toolbar [aria-label="Add node"]').click();
       // TODO: fix the right panel open/collapse behavior, it is broken under Cypress
 
