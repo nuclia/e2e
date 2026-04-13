@@ -88,7 +88,11 @@ describe('Resources', () => {
         it('should show labels on resources', () => {
           cy.get('.filters button:disabled', { timeout: 10000 }).should('not.exist');
           cy.get('[data-cy="visible-columns-dropdown"]', { timeout: 10000 }).click();
-          cy.get('pa-checkbox').contains('Labels').click();
+          // Because of the sticky header, the dropdown is not visible in Cypress at the time we click it
+          // so we use `force: true` here to trigger the label display.
+          // It is not ideal because if for some reason the menu is really not visible, this test will not
+          // reveal the problem. But at least we do test the feature a bit…
+          cy.get('pa-checkbox').contains('Labels').click({ force: true });
           cy.get('pa-button').contains('Display full labels').click();
           cy.get('pa-chip-closeable').should('contain', 'permanent');
         });
