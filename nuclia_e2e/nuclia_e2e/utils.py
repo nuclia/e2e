@@ -49,10 +49,10 @@ def _is_kb_creation_rate_limited(exc: BaseException) -> bool:
 
 @contextmanager
 def skip_on_provider_rate_limit():
-    """Skip the test if the LLM provider returns a rate-limit (429).
+    """Skip the test if the LLM provider returns a rate-limit/quota error.
 
     Useful for models served via Vertex/Bedrock dynamic shared quota (DSQ)
-    where 429s are expected, transient and not actionable from the test.
+    where quota errors are expected, transient and not actionable from the test.
     """
     try:
         yield
@@ -60,6 +60,8 @@ def skip_on_provider_rate_limit():
         msg = str(exc)
         if "429" in msg and "Rate limited by" in msg:
             pytest.skip(f"Provider rate-limited (DSQ): {msg[:200]}")
+        if "specified API usage limits" in msg:
+            pytest.skip(f"Provider quota exhausted: {msg[:200]}")
         raise
 
 

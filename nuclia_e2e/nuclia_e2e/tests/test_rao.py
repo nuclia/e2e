@@ -13,8 +13,18 @@ import pytest
 RAO_SA_NAME = "rao-e2e-nucliadb-driver"
 
 
+async def get_or_create_rao_service_account(
+    regional_api: RegionalAPI, account: str, kbid: str
+) -> dict[str, str]:
+    service_accounts = await regional_api.get_kb_sa(account, kbid)
+    matching_service_accounts = [sa for sa in service_accounts if sa["title"] == RAO_SA_NAME]
+    if matching_service_accounts:
+        return matching_service_accounts[0]
+    return await regional_api.create_service_account(account, kbid, RAO_SA_NAME)
+
+
 async def create_rao_with_agents(
-    regional_api: RegionalAPI, regional_api_config: ZoneConfig, slug: str, account: str
+    regional_api: RegionalAPI, regional_api_config: ZoneConfig, slug: str, account: str, kb_id: str
 ) -> str:
     agent_id = (await regional_api.create_rao(account_id=account, slug=slug, mode="agent"))["id"]
     # Check it got created
@@ -22,18 +32,15 @@ async def create_rao_with_agents(
     assert regional_api_config.global_config is not None
     api_url = f"https://{regional_api_config.zone_slug}.{regional_api_config.global_config.base_domain}/api"
     account = regional_api_config.global_config.permanent_account_id
-    kbid = regional_api_config.permanent_kb_id
-    # Defensively remove any leftover SA from a previous run so we don't accumulate
-    # orphaned service accounts on the persistent KB. Idempotent (no-op if absent).
-    await regional_api.delete_service_account_by_name(account, kbid, RAO_SA_NAME)
-    new_sa = await regional_api.create_service_account(account, kbid, RAO_SA_NAME)
-    key = await regional_api.create_service_account_key(account, kbid, new_sa["id"])
+    kbid = kb_id
+    service_account = await get_or_create_rao_service_account(regional_api, account, kbid)
+    key = await regional_api.create_service_account_key(account, kbid, service_account["id"])
     drivers = [
         {
             "name": "my-nucliadb-driver",
             "provider": "nucliadb",
             "config": {
-                "kbid": regional_api_config.permanent_kb_id,
+                "kbid": kb_id,
                 "description": "General Knowledge KB",
                 "key": key,
                 "url": api_url,
@@ -114,7 +121,9 @@ async def create_rao_with_agents(
 
 
 @pytest.mark.asyncio_cooperative
-async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneConfig, global_api_config):
+async def test_rao_basic(
+    regional_api: RegionalAPI, regional_api_config: ZoneConfig, global_api_config, kb_id: str
+):
     """Basic test to check RAO works
     0. Delete any previous test RAO (just in case)
     1. Create a no-memory RAO
@@ -132,16 +141,12 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
     assert regional_api_config.global_config is not None
 
     account = regional_api_config.global_config.permanent_account_id
-    kbid = regional_api_config.permanent_kb_id
-    agent_id = await create_rao_with_agents(regional_api, regional_api_config, test_slug, account)
+    agent_id = await create_rao_with_agents(regional_api, regional_api_config, test_slug, account, kb_id)
 
     try:
         await _run_rao_basic_assertions(regional_api_config, account, agent_id)
     finally:
-        # Always clean up: delete RAO and the SA created for the nucliadb driver,
-        # so re-runs don't accumulate orphaned service accounts on the persistent KB.
         await delete_test_agent(regional_api_config, agent_id=agent_id, agent_slug=test_slug)
-        await regional_api.delete_service_account_by_name(account, kbid, RAO_SA_NAME)
 
 
 async def _run_rao_basic_assertions(regional_api_config: ZoneConfig, account: str, agent_id: str):

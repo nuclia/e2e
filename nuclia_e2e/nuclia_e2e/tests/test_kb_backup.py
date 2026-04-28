@@ -20,11 +20,10 @@ Logger = Callable[[str], None]
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: ZoneConfig):
+async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: ZoneConfig, kb_id: str):
     def logger(msg):
         print(f"{request.node.name} ::: {msg}")
 
-    kb_id = regional_api_config.permanent_kb_id
     zone = regional_api_config.zone_slug
     assert regional_api_config.global_config is not None
     account_slug = regional_api_config.global_config.permanent_account_slug

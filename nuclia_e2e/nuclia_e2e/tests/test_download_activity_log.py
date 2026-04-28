@@ -44,8 +44,7 @@ def extract_download_url_from_email(email_html: str) -> str:
 
 
 @pytest.mark.asyncio_cooperative
-async def test_download_activity_log(regional_api_config: ZoneConfig, email_util: EmailUtil):
-    kb_id = regional_api_config.permanent_kb_id
+async def test_download_activity_log(regional_api_config: ZoneConfig, email_util: EmailUtil, kb_id: str):
     zone = regional_api_config.zone_slug
 
     auth = get_auth()
