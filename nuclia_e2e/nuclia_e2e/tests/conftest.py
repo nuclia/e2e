@@ -498,7 +498,7 @@ async def resolve_permanent_kb_id(zone_config: ZoneConfig) -> str:
     except TypeError:
         knowledge_boxes = [kb for kb in await auth.kbs(account_id) if kb.region == zone_config.zone_slug]
 
-    kbs = {kb.slug: kb.id for kb in knowledge_boxes}
+    kbs = {kb.slug: kb.id for kb in knowledge_boxes if kb.slug is not None}
     kb_id = kbs.get(zone_config.permanent_kb_slug)
     if kb_id is None:
         available_slugs = ", ".join(sorted(kbs)) or "<none>"
