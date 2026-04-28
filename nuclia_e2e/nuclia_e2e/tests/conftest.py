@@ -28,6 +28,7 @@ from nuclia_e2e.utils import Retriable  # noqa: E402
 
 import aiohttp  # noqa: E402
 import asyncio  # noqa: E402
+import backoff  # noqa: E402
 import dataclasses  # noqa: E402
 import email  # noqa: E402
 import imaplib  # noqa: E402
@@ -380,6 +381,13 @@ class RegionalAPI:
             response.raise_for_status()
             return await response.json()
 
+    @backoff.on_exception(
+        backoff.expo,
+        aiohttp.ClientResponseError,
+        max_tries=6,
+        max_time=120,
+        giveup=lambda exc: not (isinstance(exc, aiohttp.ClientResponseError) and exc.status == 429),
+    )
     async def create_rao(self, account_id: str, slug: str, mode: str = "agent_no_memory") -> dict:
         url = f"{self.base_url}/api/v1/account/{account_id}/kbs"
         async with self.session.post(

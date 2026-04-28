@@ -185,9 +185,13 @@ class Retriable(Generic[T]):
             reraise=True,
         )
 
-    def _is_transient_exception(self, exc: BaseException) -> bool:
+    def _is_transient_exception(self, exc: BaseException) -> bool:  # noqa: PLR0911
         if isinstance(exc, httpx.HTTPStatusError):
-            return exc.response.status_code in self.RETRIABLE_STATUS_CODES
+            if exc.response.status_code in self.RETRIABLE_STATUS_CODES:
+                return True
+            # Provider-side transient LLM errors come back as 412 with a generic
+            # "Unknown LLM exception" detail. Retry instead of failing the test.
+            return exc.response.status_code == 412 and "Unknown LLM exception" in str(exc)
 
         if isinstance(exc, requests.HTTPError) and exc.response is not None:
             return exc.response.status_code in self.RETRIABLE_STATUS_CODES
