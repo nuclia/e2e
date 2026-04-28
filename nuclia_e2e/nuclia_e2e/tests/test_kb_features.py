@@ -56,6 +56,7 @@ Logger = Callable[[str], None]
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "how has this impacted customers?"
+FINANCIAL_EXPORT_SEMANTIC_MODEL = "en-2024-04-24"
 
 
 async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
@@ -806,7 +807,9 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await create_test_kb(regional_api_config, kb_slug, logger)
+    kbid = await create_test_kb(
+        regional_api_config, kb_slug, logger, semantic_model=FINANCIAL_EXPORT_SEMANTIC_MODEL
+    )
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
@@ -905,7 +908,9 @@ async def test_kb_usage(
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await create_test_kb(regional_api_config, kb_slug, logger)
+    kbid = await create_test_kb(
+        regional_api_config, kb_slug, logger, semantic_model=FINANCIAL_EXPORT_SEMANTIC_MODEL
+    )
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client

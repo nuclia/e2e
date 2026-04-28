@@ -71,12 +71,15 @@ def skip_on_provider_rate_limit():
     retry=retry_if_exception(_is_kb_creation_rate_limited),
     reraise=True,
 )
-async def create_test_kb(regional_api_config, kb_slug, logger: Logger = print) -> str:
+async def create_test_kb(
+    regional_api_config, kb_slug, logger: Logger = print, semantic_model: str | None = None
+) -> str:
     kbs = AsyncNucliaKBS()
     new_kb = await kbs.add(
         zone=regional_api_config.zone_slug,
         slug=kb_slug,
-        sentence_embedder="en-2024-04-24",
+        learning_configuration={"semantic_model": semantic_model} if semantic_model is not None else None,
+        sentence_embedder=semantic_model,
     )
 
     kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
