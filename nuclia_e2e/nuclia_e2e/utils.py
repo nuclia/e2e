@@ -1,5 +1,6 @@
 from collections.abc import Awaitable
 from collections.abc import Callable
+from contextlib import contextmanager
 from functools import wraps
 from nuclia.exceptions import NuaAPIException
 from nuclia.lib.kb import AsyncNucliaDBClient
@@ -25,6 +26,7 @@ import asyncio
 import httpx
 import inspect
 import nucliadb_sdk
+import pytest
 import re
 import requests
 
@@ -43,6 +45,22 @@ def get_asset_file_path(file: str):
 
 def _is_kb_creation_rate_limited(exc: BaseException) -> bool:
     return "429" in str(exc)
+
+
+@contextmanager
+def skip_on_provider_rate_limit():
+    """Skip the test if the LLM provider returns a rate-limit (429).
+
+    Useful for models served via Vertex/Bedrock dynamic shared quota (DSQ)
+    where 429s are expected, transient and not actionable from the test.
+    """
+    try:
+        yield
+    except (NuaAPIException, RuntimeError, httpx.HTTPStatusError) as exc:
+        msg = str(exc)
+        if "429" in msg and "Rate limited by" in msg:
+            pytest.skip(f"Provider rate-limited (DSQ): {msg[:200]}")
+        raise
 
 
 @retry(

@@ -4,6 +4,7 @@ from nuclia_e2e.models import ALL_LLMS
 from nuclia_e2e.models import model_zone_check
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import make_retry_async
+from nuclia_e2e.utils import skip_on_provider_rate_limit
 
 import pytest
 
@@ -32,4 +33,5 @@ async def test_llm_rag(nua_client: AsyncNuaClient, model: str, regional_api_conf
         )
         assert "Eudald" in generated.answer
 
-    await retryable_block()
+    with skip_on_provider_rate_limit():
+        await retryable_block()
