@@ -10,7 +10,6 @@ from nuclia_models.agent.interaction import AragAnswer
 import asyncio
 import pytest
 
-
 RAO_SA_NAME = "rao-e2e-nucliadb-driver"
 
 
