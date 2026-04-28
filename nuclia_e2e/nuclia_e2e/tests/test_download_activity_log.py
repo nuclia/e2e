@@ -69,6 +69,16 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
     request = await kb.logs.download(
         ndb=async_ndb, type=EventType.ASK, query=query, download_format=DownloadFormat.NDJSON, wait=True
     )
+    # `wait=True` only polls the download for ~120s. On stage the export can take
+    # longer when the platform is under load, in which case `download_url` comes
+    # back as None. Keep polling via download_status until it is ready.
+    if request.download_url is None:
+        for _ in range(24):  # up to ~2 extra minutes
+            await asyncio.sleep(5)
+            request = await kb.logs.download_status(ndb=async_ndb, request_id=request.request_id)
+            if request.download_url is not None:
+                break
+    assert request.download_url is not None, "Download URL was not generated in time"
     data = await fetch_ndjson_async(request.download_url)
     assert len(data) > 1
     await asyncio.sleep(5)

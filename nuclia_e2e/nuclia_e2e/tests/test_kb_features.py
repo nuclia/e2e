@@ -104,9 +104,9 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
 
     @backoff.on_exception(
         backoff.expo,
-        (httpx.ReadError, httpx.ConnectError, httpx.RemoteProtocolError),
-        max_tries=8,
-        max_time=120,
+        (httpx.ReadError, httpx.ConnectError, httpx.RemoteProtocolError, httpx.ReadTimeout),
+        max_tries=12,
+        max_time=300,
     )
     async def _start_import():
         return await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export", ndb=ndb)

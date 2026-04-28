@@ -138,7 +138,10 @@ class Retriable(Generic[T]):
     def __init__(self, client: T, is_async: bool):  # noqa: FBT001
         self._client = client
         self._is_async = is_async
-        self.max_attempts = 24
+        # 36 attempts * 5s wait = up to 3 minutes total. Bumped from 24 because
+        # provider-side outages (e.g. 412 "Unknown LLM exception") have been
+        # observed to last longer than 2 minutes on stage.
+        self.max_attempts = 36
 
     def __getattr__(self, name: str):
         attr = getattr(self._client, name)

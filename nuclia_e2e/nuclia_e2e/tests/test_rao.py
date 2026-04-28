@@ -172,10 +172,16 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
     assert responses[2].step.module == "basic_ask"
     assert not responses[2].exception
 
-    assert responses[-3].operation == AnswerOperation.ANSWER
-    assert responses[-3].step
-    assert responses[-3].step.module == "remi"
-    assert not responses[-3].exception
+    # The remi postprocess step is emitted somewhere between basic_ask and the
+    # final answer. Its exact position depends on whether intermediate steps
+    # (e.g. "summarize") are emitted in the stream, so locate it by module name
+    # instead of relying on a fixed negative index.
+    remi_responses = [
+        r for r in responses if r.operation == AnswerOperation.ANSWER and r.step and r.step.module == "remi"
+    ]
+    emitted_modules = [r.step.module for r in responses if r.step]
+    assert remi_responses, f"No remi step found. Modules emitted: {emitted_modules}"
+    assert not remi_responses[-1].exception
 
     assert responses[-2].operation == AnswerOperation.ANSWER
     assert responses[-2].answer
