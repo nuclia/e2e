@@ -48,6 +48,7 @@ from typing import Any
 
 import asyncio
 import backoff
+import httpx
 import base64
 import pytest
 
@@ -101,7 +102,16 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
     """
     kb = AsyncNucliaKB()
 
-    response = await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export", ndb=ndb)
+    @backoff.on_exception(
+        backoff.constant,
+        (httpx.ReadError, httpx.ConnectError, httpx.RemoteProtocolError),
+        max_tries=5,
+        interval=5,
+    )
+    async def _start_import():
+        return await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export", ndb=ndb)
+
+    response = await _start_import()
     logger(f"Import started with id {response.import_id}")
 
     def resources_are_imported(resources):
