@@ -48,8 +48,8 @@ from typing import Any
 
 import asyncio
 import backoff
-import httpx
 import base64
+import httpx
 import pytest
 
 Logger = Callable[[str], None]
