@@ -11,6 +11,9 @@ import asyncio
 import pytest
 
 
+RAO_SA_NAME = "rao-e2e-nucliadb-driver"
+
+
 async def create_rao_with_agents(
     regional_api: RegionalAPI, regional_api_config: ZoneConfig, slug: str, account: str
 ) -> str:
@@ -21,7 +24,10 @@ async def create_rao_with_agents(
     api_url = f"https://{regional_api_config.zone_slug}.{regional_api_config.global_config.base_domain}/api"
     account = regional_api_config.global_config.permanent_account_id
     kbid = regional_api_config.permanent_kb_id
-    new_sa = await regional_api.create_service_account(account, kbid, "rao-e2e-nucliadb-driver")
+    # Defensively remove any leftover SA from a previous run so we don't accumulate
+    # orphaned service accounts on the persistent KB. Idempotent (no-op if absent).
+    await regional_api.delete_service_account_by_name(account, kbid, RAO_SA_NAME)
+    new_sa = await regional_api.create_service_account(account, kbid, RAO_SA_NAME)
     key = await regional_api.create_service_account_key(account, kbid, new_sa["id"])
     drivers = [
         {
@@ -127,8 +133,20 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
     assert regional_api_config.global_config is not None
 
     account = regional_api_config.global_config.permanent_account_id
+    kbid = regional_api_config.permanent_kb_id
     agent_id = await create_rao_with_agents(regional_api, regional_api_config, test_slug, account)
 
+    try:
+        await _run_rao_basic_assertions(regional_api_config, account, agent_id)
+    finally:
+        # Always clean up: delete RAO and the SA created for the nucliadb driver,
+        # so re-runs don't accumulate orphaned service accounts on the persistent KB.
+        await delete_test_agent(regional_api_config, agent_id=agent_id, agent_slug=test_slug)
+        await regional_api.delete_service_account_by_name(account, kbid, RAO_SA_NAME)
+
+
+async def _run_rao_basic_assertions(regional_api_config: ZoneConfig, account: str, agent_id: str):
+    assert regional_api_config.global_config is not None
     agent_client = AsyncAgentClient(
         region=regional_api_config.zone_slug,
         agent_id=agent_id,
@@ -197,6 +215,3 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
 
     with pytest.raises(RaoAPIException):
         await agent_client.get_session(sess_id)
-
-    # Delete RAO for cleanup
-    await delete_test_agent(regional_api_config, agent_id=agent_id, agent_slug=test_slug)
