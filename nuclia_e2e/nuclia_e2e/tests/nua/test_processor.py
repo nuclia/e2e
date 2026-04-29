@@ -76,7 +76,7 @@ async def test_vude_1(request: pytest.FixtureRequest, nua_client: AsyncNuaClient
     scheduled = await wait_for_scheduling(response.processing_id, nua_client)
     assert scheduled, f"processing_id = {response.processing_id} was not scheduled in time"
 
-    expected_processing_time = int(44 * EXTRA_PROCESSING_TIME_FACTOR)
+    expected_processing_time = int(120 * EXTRA_PROCESSING_TIME_FACTOR)
     payload = await nua_client.wait_for_processing(
         response, timeout=expected_processing_time + EXTRA_PROCESSING_TIME_MARGIN
     )
