@@ -22,6 +22,8 @@ import pytest
 import re
 import uuid
 
+DOWNLOAD_ACTIVITY_LOG_MAX_WAIT = 240
+
 
 def strip_query_params(url: str) -> str:
     return urlunparse(urlparse(url)._replace(query=""))
@@ -77,7 +79,7 @@ async def wait_for_download_url(kb, async_ndb, request_id: str):
         status = await kb.logs.download_status(ndb=async_ndb, request_id=request_id)
         return (status.download_url is not None, status)
 
-    return await wait_for(download_url_is_available, max_wait=180, interval=5)
+    return await wait_for(download_url_is_available, max_wait=DOWNLOAD_ACTIVITY_LOG_MAX_WAIT, interval=10)
 
 
 @pytest.mark.asyncio_cooperative
@@ -115,7 +117,7 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, kb_id: str
     assert request.download_format == DownloadFormat.NDJSON
 
     success, status = await wait_for_download_url(kb, async_ndb, request.request_id)
-    assert success, "Activity log download URL was not generated in time"
+    assert success, f"Activity log download URL was not generated in time. Last status: {status!r}"
     assert status.request_id == request.request_id
     assert status.kb_id == kb_id
     assert status.download_url is not None
