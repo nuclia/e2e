@@ -135,12 +135,12 @@ async def delete_test_agent(regional_api_config, agent_id, agent_slug, logger=pr
 
 
 class Retriable(Generic[T]):
-    RETRIABLE_STATUS_CODES: ClassVar[set[int]] = {502, 503, 504, 511, 512}
+    RETRIABLE_STATUS_CODES: ClassVar[set[int]] = {429, 502, 503, 504, 512}
 
     def __init__(self, client: T, is_async: bool):  # noqa: FBT001
         self._client = client
         self._is_async = is_async
-        self.max_attempts = 36
+        self.max_attempts = 24
 
     def __getattr__(self, name: str):
         attr = getattr(self._client, name)
