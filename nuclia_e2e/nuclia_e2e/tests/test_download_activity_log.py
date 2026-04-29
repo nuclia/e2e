@@ -72,6 +72,14 @@ async def wait_for_email_body(email_util: EmailUtil, test_email: str):
     return await wait_for(email_is_received, max_wait=60, interval=5)
 
 
+async def wait_for_download_url(kb, async_ndb, request_id: str):
+    async def download_url_is_available():
+        status = await kb.logs.download_status(ndb=async_ndb, request_id=request_id)
+        return (status.download_url is not None, status)
+
+    return await wait_for(download_url_is_available, max_wait=180, interval=5)
+
+
 @pytest.mark.asyncio_cooperative
 async def test_download_activity_log(regional_api_config: ZoneConfig, kb_id: str, email_util: EmailUtil):
     zone = regional_api_config.zone_slug
@@ -105,9 +113,15 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, kb_id: str
     assert request.kb_id == kb_id
     assert request.event_type == EventType.SEARCH
     assert request.download_format == DownloadFormat.NDJSON
-    assert request.download_url is not None
 
-    data = await fetch_ndjson_async(request.download_url)
+    success, status = await wait_for_download_url(kb, async_ndb, request.request_id)
+    assert success, "Activity log download URL was not generated in time"
+    assert status.request_id == request.request_id
+    assert status.kb_id == kb_id
+    assert status.download_url is not None
+
+    download_url = status.download_url
+    data = await fetch_ndjson_async(download_url)
     assert len(data) >= 1
 
     success, last_email = await wait_for_email_body(email_util, test_email)
@@ -120,8 +134,4 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, kb_id: str
         session.head(email_download_url, allow_redirects=True) as resp,
     ):
         redirected_url = str(resp.url)
-    assert strip_query_params(request.download_url) == strip_query_params(unquote_plus(redirected_url))
-
-    status = await kb.logs.download_status(ndb=async_ndb, request_id=request.request_id)
-    assert status.request_id == request.request_id
-    assert status.kb_id == kb_id
+    assert strip_query_params(download_url) == strip_query_params(unquote_plus(redirected_url))
