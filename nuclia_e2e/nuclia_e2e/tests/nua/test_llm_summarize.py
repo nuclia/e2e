@@ -1,6 +1,6 @@
 from nuclia.lib.nua import AsyncNuaClient
 from nuclia.sdk.predict import AsyncNucliaPredict
-from nuclia_e2e.utils import skip_on_provider_rate_limit
+from nuclia_e2e.utils import skip_on_provider_transient_error
 
 import pytest
 
@@ -48,7 +48,7 @@ async def test_summarize_azure_chatgpt(nua_client: AsyncNuaClient):
 @pytest.mark.asyncio_cooperative
 async def test_summarize_claude(nua_client: AsyncNuaClient):
     np = AsyncNucliaPredict()
-    with skip_on_provider_rate_limit():
+    with skip_on_provider_transient_error():
         embed = await np.summarize(DATA_COFFEE, model="claude-4-sonnet", nc=nua_client)
     # changed to partial summaries since anthropic is not consistent in the global summary at all
     assert "flat white" in embed.resources["Flat white"].summary.lower()

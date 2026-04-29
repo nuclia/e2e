@@ -48,7 +48,7 @@ def _is_kb_creation_rate_limited(exc: BaseException) -> bool:
 
 
 @contextmanager
-def skip_on_provider_rate_limit():
+def skip_on_provider_transient_error():
     """Skip the test if the LLM provider returns a rate-limit/quota/unavailable error.
 
     Useful for models served via Vertex/Bedrock dynamic shared quota (DSQ)
@@ -81,7 +81,6 @@ async def create_test_kb(
         zone=regional_api_config.zone_slug,
         slug=kb_slug,
         learning_configuration={"semantic_model": semantic_model} if semantic_model is not None else None,
-        sentence_embedder=semantic_model,
     )
 
     kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
@@ -140,7 +139,7 @@ async def delete_test_agent(regional_api_config, agent_id, agent_slug, logger=pr
 
 
 class Retriable(Generic[T]):
-    RETRIABLE_STATUS_CODES: ClassVar[set[int]] = {500, 502, 503, 504, 511, 512}
+    RETRIABLE_STATUS_CODES: ClassVar[set[int]] = {502, 503, 504, 511, 512}
 
     def __init__(self, client: T, is_async: bool):  # noqa: FBT001
         self._client = client
@@ -190,14 +189,16 @@ class Retriable(Generic[T]):
         return retry(
             stop=stop_after_attempt(self.max_attempts),
             wait=wait_fixed(5),
-            retry=retry_if_exception(self._is_transient_exception),
+            retry=retry_if_exception(lambda exc: self._is_transient_exception(exc, func_name)),
             before_sleep=log_before_sleep,
             reraise=True,
         )
 
-    def _is_transient_exception(self, exc: BaseException) -> bool:  # noqa: PLR0911
+    def _is_transient_exception(self, exc: BaseException, func_name: str) -> bool:  # noqa: PLR0911
         if isinstance(exc, httpx.HTTPStatusError):
             if exc.response.status_code in self.RETRIABLE_STATUS_CODES:
+                return True
+            if func_name == "ask" and exc.response.status_code == 500:
                 return True
             # Provider-side transient LLM errors come back as 412 with a generic
             # "Unknown LLM exception" detail. Retry instead of failing the test.

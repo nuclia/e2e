@@ -650,7 +650,7 @@ def auth() -> AsyncNucliaAuth:
 
 
 @pytest.fixture(autouse=True)
-async def account_id(regional_api_config: ZoneConfig, auth: AsyncNucliaAuth) -> str:
+async def account_id(regional_api_config: ZoneConfig) -> str:
     """
     Fixture to provide the account slug for the tests.
     """

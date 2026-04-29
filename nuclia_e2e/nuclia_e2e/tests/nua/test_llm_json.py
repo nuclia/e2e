@@ -5,7 +5,7 @@ from nuclia.sdk.predict import AsyncNucliaPredict
 from nuclia_e2e.models import JSON_OUTPUT_TEST_LLMS
 from nuclia_e2e.models import model_zone_check
 from nuclia_e2e.tests.conftest import ZoneConfig
-from nuclia_e2e.utils import skip_on_provider_rate_limit
+from nuclia_e2e.utils import skip_on_provider_transient_error
 
 import pytest
 
@@ -36,7 +36,7 @@ TEXT = (
 async def test_llm_json(nua_client: AsyncNuaClient, model_name: str, regional_api_config: ZoneConfig):
     model_zone_check(model_name, regional_api_config.name)
     np = AsyncNucliaPredict()
-    with skip_on_provider_rate_limit():
+    with skip_on_provider_transient_error():
         results = await np.generate(
             text=ChatModel(
                 question="",

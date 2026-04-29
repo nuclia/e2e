@@ -4,7 +4,7 @@ from nuclia_e2e.models import ALL_LLMS
 from nuclia_e2e.models import model_zone_check
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import make_retry_async
-from nuclia_e2e.utils import skip_on_provider_rate_limit
+from nuclia_e2e.utils import skip_on_provider_transient_error
 
 import pytest
 
@@ -24,5 +24,5 @@ async def test_llm_generate(nua_client: AsyncNuaClient, model: str, regional_api
         generated = await np.generate("Which is the capital of Catalonia?", model=model, nc=nua_client)
         assert "Barcelona" in generated.answer
 
-    with skip_on_provider_rate_limit():
+    with skip_on_provider_transient_error():
         await test_nua_generate()

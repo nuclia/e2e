@@ -5,7 +5,7 @@ from nuclia_e2e.tests.utils import CustomModels
 from nuclia_e2e.tests.utils import DefaultModels
 from nuclia_e2e.tests.utils import run_generative_test
 from nuclia_e2e.tests.utils import run_resource_agents_test
-from nuclia_e2e.utils import skip_on_provider_rate_limit
+from nuclia_e2e.utils import skip_on_provider_transient_error
 
 import os
 import pytest
@@ -123,7 +123,7 @@ async def test_account_models(
             )
 
         # Custom model tests
-        with skip_on_provider_rate_limit():
+        with skip_on_provider_transient_error():
             async with as_default_generative_model_for_kb(kb_id, zone, auth, custom_model):
                 await run_generative_test(kb_id, zone, auth, generative_model=None)
                 await run_generative_test(kb_id, zone, auth, generative_model=custom_model)
