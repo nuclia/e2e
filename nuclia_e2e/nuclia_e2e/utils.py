@@ -49,7 +49,7 @@ def _is_kb_creation_rate_limited(exc: BaseException) -> bool:
 
 @contextmanager
 def skip_on_provider_transient_error():
-    """Skip the test if the LLM provider returns a rate-limit/quota/unavailable error.
+    """Skip the test if the LLM provider returns a rate-limit error.
 
     Useful for models served via Vertex/Bedrock dynamic shared quota (DSQ)
     where provider-side errors are expected, transient and not actionable from the test.
@@ -59,11 +59,7 @@ def skip_on_provider_transient_error():
     except (NuaAPIException, RuntimeError, httpx.HTTPStatusError) as exc:
         msg = str(exc)
         if "429" in msg and "Rate limited by" in msg:
-            pytest.skip(f"Provider rate-limited (DSQ): {msg[:200]}")
-        if "specified API usage limits" in msg:
-            pytest.skip(f"Provider quota exhausted: {msg[:200]}")
-        if "412" in msg and "Unknown LLM exception" in msg:
-            pytest.skip(f"Provider unavailable: {msg[:200]}")
+            pytest.skip(f"Provider rate-limited {msg[:200]}")
         raise
 
 
@@ -144,9 +140,6 @@ class Retriable(Generic[T]):
     def __init__(self, client: T, is_async: bool):  # noqa: FBT001
         self._client = client
         self._is_async = is_async
-        # 36 attempts * 5s wait = up to 3 minutes total. Bumped from 24 because
-        # provider-side outages (e.g. 412 "Unknown LLM exception") have been
-        # observed to last longer than 2 minutes on stage.
         self.max_attempts = 36
 
     def __getattr__(self, name: str):
@@ -198,11 +191,7 @@ class Retriable(Generic[T]):
         if isinstance(exc, httpx.HTTPStatusError):
             if exc.response.status_code in self.RETRIABLE_STATUS_CODES:
                 return True
-            if func_name == "ask" and exc.response.status_code == 500:
-                return True
-            # Provider-side transient LLM errors come back as 412 with a generic
-            # "Unknown LLM exception" detail. Retry instead of failing the test.
-            return exc.response.status_code == 412 and "Unknown LLM exception" in str(exc)
+            return func_name == "ask" and exc.response.status_code == 500
 
         if isinstance(exc, requests.HTTPError) and exc.response is not None:
             return exc.response.status_code in self.RETRIABLE_STATUS_CODES
