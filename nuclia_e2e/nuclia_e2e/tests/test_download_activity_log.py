@@ -4,10 +4,14 @@ from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia_e2e.tests.conftest import EmailUtil
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
+from nuclia_e2e.utils import wait_for
+from nuclia_models.common.pagination import Pagination
+from nuclia_models.events.activity_logs import ActivityLogsAskQuery
 from nuclia_models.events.activity_logs import DownloadActivityLogsAskQuery
 from nuclia_models.events.activity_logs import DownloadFormat
 from nuclia_models.events.activity_logs import EventType
 from nuclia_models.events.activity_logs import QueryFiltersAsk
+from nuclia_models.events.activity_logs import StringFilter
 from urllib.parse import unquote_plus
 from urllib.parse import urlparse
 from urllib.parse import urlunparse
@@ -17,6 +21,7 @@ import asyncio
 import json
 import pytest
 import re
+import uuid
 
 
 def strip_query_params(url):
@@ -64,6 +69,25 @@ async def wait_for_download_url(kb, async_ndb, request, email_util: EmailUtil, t
     return status_download_url, email_download_url
 
 
+async def wait_for_ask_activity_log(kb, async_ndb, year_month: str, question: str):
+    def ask_activity_log_is_stored():
+        async def condition():
+            logs = await kb.logs.query(
+                ndb=async_ndb,
+                type=EventType.ASK,
+                query=ActivityLogsAskQuery(
+                    year_month=year_month,
+                    filters=QueryFiltersAsk(question=StringFilter(eq=question)),  # type: ignore[call-arg]
+                    pagination=Pagination(limit=10),
+                ),
+            )
+            return (any(log.question == question for log in logs.data), logs)
+
+        return condition
+
+    return await wait_for(ask_activity_log_is_stored(), max_wait=180, interval=5)
+
+
 @pytest.mark.asyncio_cooperative
 async def test_download_activity_log(regional_api_config: ZoneConfig, email_util: EmailUtil, kb_id: str):
     zone = regional_api_config.zone_slug
@@ -75,13 +99,18 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
 
     # Very simple ask to ensure at least we have something in the database for this month and kb
     kb = AsyncNucliaKB()
-    await kb.search.ask(ndb=async_ndb, query="omelette")
+    activity_log_query = f"omelette activity log export {uuid.uuid4().hex}"
+    await kb.search.ask(ndb=async_ndb, query=activity_log_query)
+
+    year_month = f"{date.year}-{str(date.month).zfill(2)}"
+    success, _ = await wait_for_ask_activity_log(kb, async_ndb, year_month, activity_log_query)
+    assert success, "Ask activity log was not generated in time"
 
     test_email = email_util.generate_email_address()
     query = DownloadActivityLogsAskQuery(
-        year_month=f"{date.year}-{str(date.month).zfill(2)}",
+        year_month=year_month,
         show={"id"},
-        filters=QueryFiltersAsk(),  # type: ignore[call-arg]
+        filters=QueryFiltersAsk(question=StringFilter(eq=activity_log_query)),  # type: ignore[call-arg]
         email_address=test_email,
         notify_via_email=True,
     )

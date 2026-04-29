@@ -21,6 +21,8 @@ from nuclia_models.events.activity_logs import ActivityLogsAskQuery
 from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
 from nuclia_models.events.activity_logs import EventType
 from nuclia_models.events.activity_logs import QueryFiltersAsk
+from nuclia_models.events.activity_logs import QueryFiltersSearch
+from nuclia_models.events.activity_logs import StringFilter
 from nuclia_models.worker.proto import ApplyTo
 from nuclia_models.worker.proto import AskOperation
 from nuclia_models.worker.proto import Filter
@@ -669,16 +671,26 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
     success, logs = await wait_for(activity_log_is_stored(), max_wait=180, logger=logger)
     assert success, "Activity logs didn't get stored in time"
 
-    # if we have the ask events, we'll must have the find ones, as they have been done earlier.
-    logs = await kb.logs.query(
-        ndb=ndb,
-        type=EventType.SEARCH,
-        query=ActivityLogsSearchQuery(
-            year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)
-        ),
-    )
+    def search_log_is_stored():
+        @wraps(search_log_is_stored)
+        async def condition() -> tuple[bool, Any]:
+            search_logs = await kb.logs.query(
+                ndb=ndb,
+                type=EventType.SEARCH,
+                query=ActivityLogsSearchQuery(
+                    year_month=f"{now.year}-{now.month:02}",
+                    filters=QueryFiltersSearch(  # type: ignore[call-arg]
+                        question=StringFilter(eq=TEST_CHOCO_QUESTION)
+                    ),
+                    pagination=Pagination(limit=100),
+                ),
+            )
+            return (any(log.question == TEST_CHOCO_QUESTION for log in search_logs.data), search_logs)
 
-    assert logs.data[-1].question == TEST_CHOCO_QUESTION
+        return condition
+
+    success, _ = await wait_for(search_log_is_stored(), max_wait=180, logger=logger)
+    assert success, "Search activity log didn't get stored in time"
 
 
 async def run_test_remi_query(regional_api_config, ndb, logger):
