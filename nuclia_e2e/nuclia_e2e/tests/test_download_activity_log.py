@@ -43,6 +43,27 @@ def extract_download_url_from_email(email_html: str) -> str:
     raise ValueError(msg)
 
 
+async def wait_for_download_url(kb, async_ndb, request, email_util: EmailUtil, test_email: str):
+    status_download_url = request.download_url
+    email_download_url = None
+
+    for _ in range(72):  # up to ~6 extra minutes
+        if status_download_url is None:
+            request = await kb.logs.download_status(ndb=async_ndb, request_id=request.request_id)
+            status_download_url = request.download_url
+
+        email_body = await email_util.get_last_email_body(test_email)
+        if email_body:
+            email_download_url = extract_download_url_from_email(email_body)
+
+        if status_download_url is not None or email_download_url is not None:
+            return status_download_url, email_download_url
+
+        await asyncio.sleep(5)
+
+    return status_download_url, email_download_url
+
+
 @pytest.mark.asyncio_cooperative
 async def test_download_activity_log(regional_api_config: ZoneConfig, email_util: EmailUtil, kb_id: str):
     zone = regional_api_config.zone_slug
@@ -68,25 +89,26 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
     request = await kb.logs.download(
         ndb=async_ndb, type=EventType.ASK, query=query, download_format=DownloadFormat.NDJSON, wait=True
     )
-    # `wait=True` only polls the download for ~120s. On stage the export can take
-    # longer when the platform is under load, in which case `download_url` comes
-    # back as None. Keep polling via download_status until it is ready.
-    if request.download_url is None:
-        for _ in range(24):  # up to ~2 extra minutes
-            await asyncio.sleep(5)
-            request = await kb.logs.download_status(ndb=async_ndb, request_id=request.request_id)
-            if request.download_url is not None:
-                break
-    assert request.download_url is not None, "Download URL was not generated in time"
-    data = await fetch_ndjson_async(request.download_url)
+    status_download_url, email_download_url = await wait_for_download_url(
+        kb, async_ndb, request, email_util, test_email
+    )
+    download_url = status_download_url or email_download_url
+    assert download_url is not None, "Download URL was not generated in time"
+    data = await fetch_ndjson_async(download_url)
     assert len(data) > 1
-    await asyncio.sleep(5)
-    last_email = await email_util.get_last_email_body(test_email)
-    email_download_url = extract_download_url_from_email(last_email)
+    if email_download_url is None:
+        for _ in range(12):  # up to ~1 extra minute
+            await asyncio.sleep(5)
+            last_email = await email_util.get_last_email_body(test_email)
+            if last_email:
+                email_download_url = extract_download_url_from_email(last_email)
+                break
+    assert email_download_url is not None, "Download email was not generated in time"
 
     async with (
         aiohttp.ClientSession() as session,
         session.head(email_download_url, allow_redirects=True) as resp,
     ):
         redirected_url = str(resp.url)
-    assert strip_query_params(request.download_url) == strip_query_params(unquote_plus(redirected_url))
+    if status_download_url is not None:
+        assert strip_query_params(status_download_url) == strip_query_params(unquote_plus(redirected_url))

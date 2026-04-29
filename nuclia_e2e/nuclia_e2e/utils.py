@@ -49,10 +49,10 @@ def _is_kb_creation_rate_limited(exc: BaseException) -> bool:
 
 @contextmanager
 def skip_on_provider_rate_limit():
-    """Skip the test if the LLM provider returns a rate-limit/quota error.
+    """Skip the test if the LLM provider returns a rate-limit/quota/unavailable error.
 
     Useful for models served via Vertex/Bedrock dynamic shared quota (DSQ)
-    where quota errors are expected, transient and not actionable from the test.
+    where provider-side errors are expected, transient and not actionable from the test.
     """
     try:
         yield
@@ -62,6 +62,8 @@ def skip_on_provider_rate_limit():
             pytest.skip(f"Provider rate-limited (DSQ): {msg[:200]}")
         if "specified API usage limits" in msg:
             pytest.skip(f"Provider quota exhausted: {msg[:200]}")
+        if "412" in msg and "Unknown LLM exception" in msg:
+            pytest.skip(f"Provider unavailable: {msg[:200]}")
         raise
 
 
@@ -236,6 +238,8 @@ def get_async_kb_ndb_client(
     kbid: str,
     user_token: str | None = None,
     service_account_token: str | None = None,
+    account_id: str | None = None,
+    account_type: str = "v3enterprise",
 ) -> AsyncNucliaDBClient:
     from nuclia import REGIONAL
 
@@ -253,6 +257,17 @@ def get_async_kb_ndb_client(
         auth_params["api_key"] = service_account_token
 
     ndb = AsyncNucliaDBClient(environment=Environment.CLOUD, url=kb_base_url, region=zone, **auth_params)
+    if account_id is not None:
+        stf_headers = {
+            "X-STF-ACCOUNT": account_id,
+            "X-STF-ACCOUNT-TYPE": account_type,
+        }
+        ndb.reader_headers.update(stf_headers)
+        ndb.writer_headers.update(stf_headers)
+        if ndb.reader_session is not None:
+            ndb.reader_session.headers.update(stf_headers)
+        if ndb.writer_session is not None:
+            ndb.writer_session.headers.update(stf_headers)
     return Retriable.wrap_async(ndb)
 
 

@@ -798,6 +798,8 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         print(f"{request.node.name} ::: {msg}")
 
     zone = regional_api_config.zone_slug
+    assert regional_api_config.global_config is not None
+    account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_features"
 
@@ -814,7 +816,7 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
     # as this is incompatible with the cooperative tests
-    async_ndb = get_async_kb_ndb_client(zone, kbid, user_token=auth._config.token)
+    async_ndb = get_async_kb_ndb_client(zone, kbid, user_token=auth._config.token, account_id=account)
 
     # Import a preexisting export containing several resources (coming from the financial-news kb)
     # and wait for the resources to be completely imported
@@ -898,7 +900,7 @@ async def test_kb_usage(
 
     zone = regional_api_config.zone_slug
     assert regional_api_config.global_config is not None
-    account = regional_api_config.global_config.permanent_account_id  # noqa: F841
+    account = regional_api_config.global_config.permanent_account_id
     auth = get_auth()
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_usage"
 
@@ -915,7 +917,7 @@ async def test_kb_usage(
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
     # as this is incompatible with the cooperative tests
-    async_ndb = get_async_kb_ndb_client(zone, kbid, user_token=auth._config.token)
+    async_ndb = get_async_kb_ndb_client(zone, kbid, user_token=auth._config.token, account_id=account)
 
     # Import a preexisting export containing several resources (coming from the financial-news kb)
     # and wait for the resources to be completely imported
