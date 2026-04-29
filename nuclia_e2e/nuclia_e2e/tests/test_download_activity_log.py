@@ -53,7 +53,7 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, kb_id: str
     success, _ = await wait_for_search_activity_log(kb, async_ndb, year_month, activity_log_query)
     assert success, "Search activity log was not generated in time"
 
-    test_email = f"nucliaemailvalidation+activity-log-{uuid.uuid4().hex}@gmail.com"
+    test_email = f"nucliaemailvalidation+al-{uuid.uuid4().hex[:12]}@gmail.com"
     query = DownloadActivityLogsSearchQuery(
         year_month=year_month,
         show={"id"},
