@@ -13,10 +13,35 @@ from nuclia_models.accounts.backups import BackupResponse
 from nuclia_models.accounts.backups import BackupRestore
 from nucliadb_models.search import CatalogResponse
 
+import backoff
 import pytest
 import uuid
 
 Logger = Callable[[str], None]
+
+
+def is_kb_creation_in_progress(exc: Exception) -> bool:
+    if not exc.args or not isinstance(exc.args[0], dict):
+        return False
+    error = exc.args[0]
+    return error.get("status") == 429 and "Knowledge Box is currently being created" in str(
+        error.get("message", "")
+    )
+
+
+@backoff.on_exception(
+    backoff.constant,
+    Exception,
+    interval=5,
+    max_time=60,
+    giveup=lambda exc: not is_kb_creation_in_progress(exc),
+)
+async def restore_backup_when_creation_slot_is_available(
+    backup_id: uuid.UUID,
+    restore: BackupRestore,
+    zone: str,
+):
+    return await sdk.AsyncNucliaBackup().restore(restore=restore, backup_id=backup_id, zone=zone)
 
 
 @pytest.mark.asyncio_cooperative
@@ -58,7 +83,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Restore Backup
-    new_kb = await sdk.AsyncNucliaBackup().restore(
+    new_kb = await restore_backup_when_creation_slot_is_available(
         restore=BackupRestore(slug=new_kb_slug, title="Test E2E Backup (can be deleted)"),
         backup_id=backup_create.id,
         zone=zone,
