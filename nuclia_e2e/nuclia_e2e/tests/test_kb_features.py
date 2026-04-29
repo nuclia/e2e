@@ -487,7 +487,7 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
                 query=TEST_CHOCO_QUESTION,
             )
             search_returned_results = bool(result.resources)
-            return (True, search_returned_results)
+            return (search_returned_results, search_returned_results)
 
         return condition
 
