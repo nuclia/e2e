@@ -709,13 +709,13 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
                 to=to,
                 aggregation="day",
             )
-            if len(scores[0].metrics) > 0:
+            if scores and len(scores[0].metrics) > 0:
                 return (True, scores)
             return (False, None)
 
         return condition
 
-    _, success = await wait_for(remi_data_is_computed(), max_wait=180, logger=logger)
+    success, _ = await wait_for(remi_data_is_computed(), max_wait=180, logger=logger)
     assert success, "Remi scores didn't get computed in time"
 
 
@@ -875,13 +875,9 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     )
 
     # Validate that all the data about the usage we generated is correctly stored on the activity log
-    # and can be queried, and that the remi quality metrics. Even if the remi metrics won't be computed until
-    # the activity log is stored, the test_activity_log tests several things aside the ask events (the ones
-    # affecting the remi queries) and so we can benefit of running them in parallel.
-    await asyncio.gather(
-        run_test_activity_log(regional_api_config, async_ndb, logger),
-        run_test_remi_query(regional_api_config, async_ndb, logger),
-    )
+    # and can be queried, and that the remi quality metrics are computed from those activity logs.
+    await run_test_activity_log(regional_api_config, async_ndb, logger)
+    await run_test_remi_query(regional_api_config, async_ndb, logger)
 
     # Delete the kb as a final step
     await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
