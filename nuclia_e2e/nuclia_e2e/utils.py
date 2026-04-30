@@ -1,5 +1,6 @@
 from collections.abc import Awaitable
 from collections.abc import Callable
+from contextlib import contextmanager
 from functools import wraps
 from nuclia.exceptions import NuaAPIException
 from nuclia.lib.kb import AsyncNucliaDBClient
@@ -25,6 +26,7 @@ import asyncio
 import httpx
 import inspect
 import nucliadb_sdk
+import pytest
 import re
 import requests
 
@@ -45,18 +47,36 @@ def _is_kb_creation_rate_limited(exc: BaseException) -> bool:
     return "429" in str(exc)
 
 
+@contextmanager
+def skip_on_provider_transient_error():
+    """Skip the test if the LLM provider returns a rate-limit error.
+
+    Useful for models served via Vertex/Bedrock dynamic shared quota (DSQ)
+    where provider-side errors are expected, transient and not actionable from the test.
+    """
+    try:
+        yield
+    except (NuaAPIException, RuntimeError, httpx.HTTPStatusError) as exc:
+        msg = str(exc)
+        if "429" in msg and "Rate limited by" in msg:
+            pytest.skip(f"Provider rate-limited {msg[:200]}")
+        raise
+
+
 @retry(
     stop=stop_after_attempt(5),
     wait=wait_random(2, 10),
     retry=retry_if_exception(_is_kb_creation_rate_limited),
     reraise=True,
 )
-async def create_test_kb(regional_api_config, kb_slug, logger: Logger = print) -> str:
+async def create_test_kb(
+    regional_api_config, kb_slug, logger: Logger = print, semantic_model: str | None = None
+) -> str:
     kbs = AsyncNucliaKBS()
     new_kb = await kbs.add(
         zone=regional_api_config.zone_slug,
         slug=kb_slug,
-        sentence_embedder="en-2024-04-24",
+        learning_configuration={"semantic_model": semantic_model} if semantic_model is not None else None,
     )
 
     kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
@@ -115,7 +135,7 @@ async def delete_test_agent(regional_api_config, agent_id, agent_slug, logger=pr
 
 
 class Retriable(Generic[T]):
-    RETRIABLE_STATUS_CODES: ClassVar[set[int]] = {502, 503, 504, 512}
+    RETRIABLE_STATUS_CODES: ClassVar[set[int]] = {429, 502, 503, 504, 512}
 
     def __init__(self, client: T, is_async: bool):  # noqa: FBT001
         self._client = client
@@ -162,12 +182,12 @@ class Retriable(Generic[T]):
         return retry(
             stop=stop_after_attempt(self.max_attempts),
             wait=wait_fixed(5),
-            retry=retry_if_exception(self._is_transient_exception),
+            retry=retry_if_exception(lambda exc: self._is_transient_exception(exc, func_name)),
             before_sleep=log_before_sleep,
             reraise=True,
         )
 
-    def _is_transient_exception(self, exc: BaseException) -> bool:
+    def _is_transient_exception(self, exc: BaseException, func_name: str) -> bool:
         if isinstance(exc, httpx.HTTPStatusError):
             return exc.response.status_code in self.RETRIABLE_STATUS_CODES
 

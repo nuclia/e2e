@@ -5,6 +5,7 @@ from nuclia_e2e.tests.utils import CustomModels
 from nuclia_e2e.tests.utils import DefaultModels
 from nuclia_e2e.tests.utils import run_generative_test
 from nuclia_e2e.tests.utils import run_resource_agents_test
+from nuclia_e2e.utils import skip_on_provider_transient_error  # noqa: F401
 
 import os
 import pytest
@@ -95,7 +96,7 @@ async def test_account_models(
     kb_id: str,
     zone: str,
     auth: AsyncNucliaAuth,
-    custom_model: str,
+    # custom_model: str,
     default_model: str,
     default_model_with_bedrock_assume_role: str,
     clean_tasks: None,
@@ -121,19 +122,22 @@ async def test_account_models(
                 destination_field_prefix="summary_",
             )
 
-        # Custom model tests
-        async with as_default_generative_model_for_kb(kb_id, zone, auth, custom_model):
-            await run_generative_test(kb_id, zone, auth, generative_model=None)
-            await run_generative_test(kb_id, zone, auth, generative_model=custom_model)
-            await run_resource_agents_test(
-                kb_id,
-                zone,
-                auth,
-                generative_model=custom_model,
-                generative_model_provider="custom",
-                da_name_prefix="test-e2e-custom-models-",
-                destination_field_prefix="summary_",
-            )
+        # Custom model tests are disabled for now because there is no stable
+        # vLLM-backed LLM deployed across all E2E regions. The previous
+        # custom:qwen3-8b model no longer exists.
+        # with skip_on_provider_transient_error():
+        #     async with as_default_generative_model_for_kb(kb_id, zone, auth, custom_model):
+        #         await run_generative_test(kb_id, zone, auth, generative_model=None)
+        #         await run_generative_test(kb_id, zone, auth, generative_model=custom_model)
+        #         await run_resource_agents_test(
+        #             kb_id,
+        #             zone,
+        #             auth,
+        #             generative_model=custom_model,
+        #             generative_model_provider="custom",
+        #             da_name_prefix="test-e2e-custom-models-",
+        #             destination_field_prefix="summary_",
+        #         )
 
     elif TEST_ENV == "prod" and regional_api_config.name == "aws-us-east-2-1":
         print("Running Bedrock assume role tests in aws-us-east-2-1 region")

@@ -11,8 +11,7 @@ import pytest
 
 
 @pytest.mark.asyncio_cooperative
-async def test_ask_with_json_output(regional_api_config: ZoneConfig):
-    kb_id = regional_api_config.permanent_kb_id
+async def test_ask_with_json_output(regional_api_config: ZoneConfig, kb_id: str):
     zone = regional_api_config.zone_slug
 
     auth = get_auth()
