@@ -187,11 +187,9 @@ class Retriable(Generic[T]):
             reraise=True,
         )
 
-    def _is_transient_exception(self, exc: BaseException, func_name: str) -> bool:  # noqa: PLR0911
+    def _is_transient_exception(self, exc: BaseException, func_name: str) -> bool:
         if isinstance(exc, httpx.HTTPStatusError):
-            if exc.response.status_code in self.RETRIABLE_STATUS_CODES:
-                return True
-            return func_name == "ask" and exc.response.status_code == 500
+            return exc.response.status_code in self.RETRIABLE_STATUS_CODES
 
         if isinstance(exc, requests.HTTPError) and exc.response is not None:
             return exc.response.status_code in self.RETRIABLE_STATUS_CODES
