@@ -11,7 +11,9 @@ import pytest
 
 
 @pytest.mark.asyncio_cooperative
-async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regional_api, clean_kb_sa):
+async def test_kb_auth(
+    request: pytest.FixtureRequest, regional_api_config, regional_api, clean_kb_sa, kb_id: str
+):
     """
     Tests the different authorizations we have available to access the nucliadb namespace
     """
@@ -22,7 +24,7 @@ async def test_kb_auth(request: pytest.FixtureRequest, regional_api_config, regi
     zone = regional_api_config.zone_slug
     account = regional_api_config.global_config.permanent_account_id
 
-    kbid = regional_api_config.permanent_kb_id
+    kbid = kb_id
 
     new_sa = await regional_api.create_service_account(account, kbid, "test-e2e-kb-auth")
     new_sa_key = await regional_api.create_service_account_key(account, kbid, new_sa["id"])

@@ -30,3 +30,5 @@ docker build -t e2e .
 ## e2e on prod
 
 When promoting to prod any changes that had impact on the e2e test, the `e2e-on-prod` branch must be rebased on `main`.
+
+The test account email and passwords are saved in the gcp secret manager (project=nuclia-internal, secret=E2E_GITHUB_SECRETS_USER_PWD_PROD)
