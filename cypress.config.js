@@ -4,7 +4,7 @@ module.exports = defineConfig({
   reporter: 'cypress-mochawesome-reporter',
   video: false,
   screenshotsFolder: 'cypress/reports/assets',
-  viewportWidth: 1260,
+  viewportWidth: 1461,
   viewportHeight: 800,
   reporterOptions: {
     overwrite: false,

@@ -4,6 +4,7 @@ from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nucliadb_models.search import AskRequest
 from nucliadb_models.search import ChatOptions
+from nucliadb_models.search import Reasoning
 from nucliadb_models.search import RerankerName
 from textwrap import dedent
 
@@ -11,7 +12,7 @@ import pytest
 
 
 @pytest.mark.asyncio_cooperative
-async def test_ask_with_json_output(regional_api_config: ZoneConfig, kb_id: str):
+async def test_ask_with_reasoning(regional_api_config: ZoneConfig, kb_id: str):
     zone = regional_api_config.zone_slug
 
     auth = get_auth()
@@ -20,6 +21,7 @@ async def test_ask_with_json_output(regional_api_config: ZoneConfig, kb_id: str)
 
     ask_result = await kb.search.ask(
         ndb=async_ndb,
+        show_consumption=True,
         query=AskRequest(
             autofilter=True,
             rephrase=True,
@@ -29,8 +31,9 @@ async def test_ask_with_json_output(regional_api_config: ZoneConfig, kb_id: str)
                 ChatOptions.SEMANTIC,
                 ChatOptions.RELATIONS,
             ],
+            reasoning=Reasoning(display=True, effort="high"),
             query="how to cook an omelette?",
-            generative_model="chatgpt-azure-4o-mini",
+            generative_model="chatgpt-azure-5",
             prompt=dedent(
                 """
             Answer the following question based **only** on the provided context. Do **not** use any outside
@@ -46,31 +49,8 @@ async def test_ask_with_json_output(regional_api_config: ZoneConfig, kb_id: str)
             - **Do not** mention the source of the context in any case
             """
             ),
-            answer_json_schema={
-                "name": "omelette_recipe",
-                "description": "Structured answer for the instructions on how to make an omeletter",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "ingredients": {
-                            "type": "string",
-                            "description": "Comma separated list of ingredients needed",
-                        },
-                        "actions": {
-                            "type": "string",
-                            "description": "Comma separated list of actions to complete the recipe",
-                        },
-                        "time": {
-                            "type": "number",
-                            "description": "The time duration in minutes needed to complete the recipe",
-                        },
-                    },
-                    "required": ["ingredients", "actions", "time"],
-                },
-            },
         ),
     )
-    response = ask_result.object
-    assert "eggs" in response["ingredients"]
-    assert "eggs" in response["actions"]
-    assert response["time"] > 0
+    assert "egg" in str(ask_result.answer)
+    assert "omelette" in ask_result.reasoning
+    assert ask_result.consumption is not None

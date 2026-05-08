@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        zone: [gke-prod-1, aws-us-east-2-1, aws-il-central-1-1]
+        zone: [gke-prod-1, aws-us-east-2-1, aws-il-central-1-1, aws-eu-central-1-1, aws-me-central-1-1]
         shard_index: [0, 1, 2]  # Running tests in 3 parallel shards
     needs:
       - build-virtual-env
@@ -80,9 +80,11 @@ jobs:
           PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN: ${{ secrets.PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}
           PROD_ROOT_PAT_TOKEN: ${{ secrets.PROD_ROOT_PAT_TOKEN }}
           PROD_GLOBAL_RECAPTCHA: ${{ secrets.PROD_GLOBAL_RECAPTCHA }}
-          TEST_EUROPE1_NUCLIA_NUA: ${{ secrets.TEST_EUROPE1_NUCLIA_NUA }}
-          TEST_AWS_US_EAST_2_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_US_EAST_2_1_NUCLIA_NUA }}
-          TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA: ${{ secrets.TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA }}
+          PROD_GCP_EUROPE1_NUA: ${{ secrets.PROD_GCP_EUROPE1_NUA }}
+          PROD_AWS_US_EAST_2_1_NUA: ${{ secrets.PROD_AWS_US_EAST_2_1_NUA }}
+          PROD_AWS_IL_CENTRAL_1_1_NUA: ${{ secrets.PROD_AWS_IL_CENTRAL_1_1_NUA }}
+          PROD_AWS_EU_CENTRAL_1_1_NUA: ${{ secrets.PROD_AWS_EU_CENTRAL_1_1_NUA }}
+          PROD_AWS_ME_CENTRAL_1_1_NUA: ${{ secrets.PROD_AWS_ME_CENTRAL_1_1_NUA }}
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
           TEST_ZONES: ${{ matrix.zone }}
@@ -132,15 +134,14 @@ jobs:
 
       - name: Send Slack Notification
         if: ${{ steps.collect.outputs.failed_zones != '' && github.ref_name == 'main' }}
-        uses: slackapi/slack-github-action@v1.24.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
           payload: |
             {
               "text": "⚠️ Tests failed in zones: ${{ steps.collect.outputs.failed_zones }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       # Always run to check if any zone failed. THis is needed because otherwise the `continue-on-error: true on the test config would make it always a success`
       - name: Mark workflow as failed if any zone failed
