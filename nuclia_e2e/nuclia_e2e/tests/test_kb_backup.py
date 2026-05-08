@@ -1,9 +1,10 @@
 from collections.abc import Callable
 from nuclia import sdk
-from nuclia.data import get_auth
+from nuclia.data import get_async_auth
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia.sdk.search import AsyncNucliaSearch
 from nuclia_e2e.tests.conftest import ZoneConfig
+from nuclia_e2e.tests.utils import as_default_generative_model_for_kb
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
 from nuclia_e2e.utils import wait_for
@@ -12,42 +13,67 @@ from nuclia_models.accounts.backups import BackupResponse
 from nuclia_models.accounts.backups import BackupRestore
 from nucliadb_models.search import CatalogResponse
 
+import backoff
 import pytest
 import uuid
 
 Logger = Callable[[str], None]
 
 
+def is_kb_creation_in_progress(exc: Exception) -> bool:
+    if not exc.args or not isinstance(exc.args[0], dict):
+        return False
+    error = exc.args[0]
+    return error.get("status") == 429 and "Knowledge Box is currently being created" in str(
+        error.get("message", "")
+    )
+
+
+@backoff.on_exception(
+    backoff.constant,
+    Exception,
+    interval=5,
+    max_time=60,
+    giveup=lambda exc: not is_kb_creation_in_progress(exc),
+)
+async def restore_backup_when_creation_slot_is_available(
+    backup_id: uuid.UUID,
+    restore: BackupRestore,
+    zone: str,
+):
+    return await sdk.AsyncNucliaBackup().restore(restore=restore, backup_id=backup_id, zone=zone)
+
+
 @pytest.mark.asyncio_cooperative
-async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: ZoneConfig):
+async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: ZoneConfig, kb_id: str):
     def logger(msg):
         print(f"{request.node.name} ::: {msg}")
 
-    kb_id = regional_api_config.permanent_kb_id
     zone = regional_api_config.zone_slug
     assert regional_api_config.global_config is not None
     account_slug = regional_api_config.global_config.permanent_account_slug
     sdk.NucliaAccounts().default(account_slug)
 
     # Create an extract configuration for the source KB
-    auth = get_auth()
+    auth = get_async_auth()
     ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
     await sdk.AsyncNucliaKB().extract_strategies.add(ndb=ndb, config={"name": "strategy1", "vllm_config": {}})
 
     # Create Backup
-    backup_create = await sdk.AsyncNucliaBackup().create(
-        backup=BackupCreate(kb_id=uuid.UUID(kb_id)), zone=zone
-    )
+    async with as_default_generative_model_for_kb(kb_id, zone, auth, generative_model="chatgpt4o"):
+        backup_create = await sdk.AsyncNucliaBackup().create(
+            backup=BackupCreate(kb_id=uuid.UUID(kb_id)), zone=zone
+        )
 
-    # Wait till backup is finished
-    async def check_backup_finished() -> tuple[bool, BackupResponse]:
-        backups = await sdk.AsyncNucliaBackup().list(zone=zone)
-        backup_list = [b for b in backups if b.id == backup_create.id]
-        assert len(backup_list) == 1
-        backup_object = backup_list[0]
-        return backup_object.finished_at is not None, backup_object
+        # Wait till backup is finished
+        async def check_backup_finished() -> tuple[bool, BackupResponse]:
+            backups = await sdk.AsyncNucliaBackup().list(zone=zone)
+            backup_list = [b for b in backups if b.id == backup_create.id]
+            assert len(backup_list) == 1
+            backup_object = backup_list[0]
+            return backup_object.finished_at is not None, backup_object
 
-    await wait_for(condition=check_backup_finished, max_wait=180, interval=10)
+        await wait_for(condition=check_backup_finished, max_wait=180, interval=10)
 
     new_kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_backup"
 
@@ -57,7 +83,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Restore Backup
-    new_kb = await sdk.AsyncNucliaBackup().restore(
+    new_kb = await restore_backup_when_creation_slot_is_available(
         restore=BackupRestore(slug=new_kb_slug, title="Test E2E Backup (can be deleted)"),
         backup_id=backup_create.id,
         zone=zone,
@@ -68,7 +94,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     assert kb_get is not None
 
     # Wait restore is completed
-    auth = get_auth()
+    auth = get_async_auth()
     ndb = get_async_kb_ndb_client(zone=zone, kbid=new_kb.id, user_token=auth._config.token)
     search = AsyncNucliaSearch()
 

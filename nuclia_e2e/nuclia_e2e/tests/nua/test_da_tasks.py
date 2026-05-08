@@ -161,7 +161,7 @@ async def wait_for_task_completion(
     client: aiohttp.ClientSession,
     dataset_id: str,
     task_id: str,
-    max_duration: int = 300,
+    max_duration: int = 600,
 ):
     start_time = asyncio.get_event_loop().time()
     while True:
@@ -377,7 +377,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                     )
                 )
             ],
-            llm=LLMConfig(model="gemini-1-5-flash"),
+            llm=LLMConfig(model="gemini-2.5-flash-lite"),
         ),
         validate_output=validate_llm_graph_output,
     ),

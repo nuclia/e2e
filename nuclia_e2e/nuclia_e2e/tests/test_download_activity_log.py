@@ -4,15 +4,23 @@ from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia_e2e.tests.conftest import EmailUtil
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import get_async_kb_ndb_client
-from nuclia_models.events.activity_logs import DownloadActivityLogsChatQuery
+from nuclia_models.events.activity_logs import DownloadActivityLogsSearchQuery
 from nuclia_models.events.activity_logs import DownloadFormat
 from nuclia_models.events.activity_logs import EventType
-from nuclia_models.events.activity_logs import QueryFiltersChat
+from nuclia_models.events.activity_logs import QueryFiltersSearch
+from urllib.parse import unquote_plus
+from urllib.parse import urlparse
+from urllib.parse import urlunparse
 
 import aiohttp
 import asyncio
 import json
 import pytest
+import re
+
+
+def strip_query_params(url):
+    return urlunparse(urlparse(url)._replace(query=""))
 
 
 async def fetch_ndjson_async(url: str):
@@ -24,9 +32,19 @@ async def fetch_ndjson_async(url: str):
         return data
 
 
+def extract_download_url_from_email(email_html: str) -> str:
+    """Extract the download URL from the button with class 'button-a button-a-primary' in the email HTML."""
+    # Pattern to match the href attribute of the button with the specific classes
+    pattern = r'<a[^>]*class="[^"]*button-a button-a-primary[^"]*"[^>]*href="([^"]*)"'
+    match = re.search(pattern, email_html)
+    if match:
+        return match.group(1)
+    msg = "Could not find download URL in email HTML"
+    raise ValueError(msg)
+
+
 @pytest.mark.asyncio_cooperative
-async def test_download_activity_log(regional_api_config: ZoneConfig, email_util: EmailUtil):
-    kb_id = regional_api_config.permanent_kb_id
+async def test_download_activity_log(regional_api_config: ZoneConfig, kb_id: str, email_util: EmailUtil):
     zone = regional_api_config.zone_slug
 
     auth = get_auth()
@@ -34,24 +52,32 @@ async def test_download_activity_log(regional_api_config: ZoneConfig, email_util
 
     date = datetime.now()
 
-    # Very simple ask to ensure at least we have something in the database for this month and kb
+    # Very simple search to ensure at least we have something in the database for this month and kb.
+    # This test validates activity log downloads, so it should not depend on a generative provider.
     kb = AsyncNucliaKB()
-    await kb.search.ask(ndb=async_ndb, query="omelette")
+    await kb.search.find(ndb=async_ndb, query="omelette", features=["keyword"], rephrase=False)
 
     test_email = email_util.generate_email_address()
-    query = DownloadActivityLogsChatQuery(
+    query = DownloadActivityLogsSearchQuery(
         year_month=f"{date.year}-{str(date.month).zfill(2)}",
         show={"id"},
-        filters=QueryFiltersChat(),
+        filters=QueryFiltersSearch(),  # type: ignore[call-arg]
         email_address=test_email,
         notify_via_email=True,
     )
     kb = AsyncNucliaKB()
     request = await kb.logs.download(
-        ndb=async_ndb, type=EventType.CHAT, query=query, download_format=DownloadFormat.NDJSON, wait=True
+        ndb=async_ndb, type=EventType.SEARCH, query=query, download_format=DownloadFormat.NDJSON, wait=True
     )
     data = await fetch_ndjson_async(request.download_url)
     assert len(data) > 1
     await asyncio.sleep(5)
     last_email = await email_util.get_last_email_body(test_email)
-    assert request.download_url in last_email
+    email_download_url = extract_download_url_from_email(last_email)
+
+    async with (
+        aiohttp.ClientSession() as session,
+        session.head(email_download_url, allow_redirects=True) as resp,
+    ):
+        redirected_url = str(resp.url)
+    assert strip_query_params(request.download_url) == strip_query_params(unquote_plus(redirected_url))

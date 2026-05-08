@@ -6,22 +6,29 @@
 # fmt: off
 from nuclia_e2e.tests.patch_httpx import patch_httpx; patch_httpx()  # noqa: I001,E702
 # fmt: on
+from collections.abc import AsyncIterator  # noqa: E402
 from collections.abc import Generator  # noqa: E402
 from copy import deepcopy  # noqa: E402
 from datetime import datetime  # noqa: E402
 from datetime import timedelta  # noqa: E402
 from email.header import decode_header  # noqa: E402
 from functools import partial  # noqa: E402
+from nuclia import sdk  # noqa: E402
 from nuclia.config import reset_config_file  # noqa: E402
 from nuclia.config import set_config_file  # noqa: E402
 from nuclia.data import get_async_auth  # noqa: E402
 from nuclia.data import get_config  # noqa: E402
 from nuclia.lib.nua import AsyncNuaClient  # noqa: E402
+from nuclia.sdk.auth import AsyncNucliaAuth  # noqa: E402
 from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
+from nuclia_e2e.tests.utils import _tasks_to_delete  # noqa: E402
+from nuclia_e2e.tests.utils import clean_ask_test_tasks  # noqa: E402
+from nuclia_e2e.utils import get_async_kb_ndb_client  # noqa: E402
 from nuclia_e2e.utils import Retriable  # noqa: E402
 
 import aiohttp  # noqa: E402
 import asyncio  # noqa: E402
+import backoff  # noqa: E402
 import dataclasses  # noqa: E402
 import email  # noqa: E402
 import imaplib  # noqa: E402
@@ -110,7 +117,7 @@ CLUSTERS_CONFIG = {
     "prod": ClusterConfig(
         global_config=GlobalConfig(
             name="prod",
-            base_domain="nuclia.cloud",
+            base_domain="rag.progress.cloud",
             recaptcha=safe_get_prod_env("PROD_GLOBAL_RECAPTCHA"),
             root_pat_token=safe_get_prod_env("PROD_ROOT_PAT_TOKEN"),
             permanent_account_owner_pat_token=safe_get_prod_env("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
@@ -126,21 +133,35 @@ CLUSTERS_CONFIG = {
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_prod_env("TEST_EUROPE1_NUCLIA_NUA"),
+                permanent_nua_key=safe_get_prod_env("PROD_GCP_EUROPE1_NUA"),
             ),
             ZoneConfig(
                 name="aws-us-east-2-1",
                 zone_slug="aws-us-east-2-1",
                 test_kb_slug="nuclia-e2e-live-aws-us-east-2-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_prod_env("TEST_AWS_US_EAST_2_1_NUCLIA_NUA"),
+                permanent_nua_key=safe_get_prod_env("PROD_AWS_US_EAST_2_1_NUA"),
             ),
             ZoneConfig(
                 name="aws-il-central-1-1",
                 zone_slug="aws-il-central-1-1",
                 test_kb_slug="nuclia-e2e-live-aws-il-central-1-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_prod_env("TEST_AWS_IL_CENTRAL_1_1_NUCLIA_NUA"),
+                permanent_nua_key=safe_get_prod_env("PROD_AWS_IL_CENTRAL_1_1_NUA"),
+            ),
+            ZoneConfig(
+                name="aws-eu-central-1-1",
+                zone_slug="aws-eu-central-1-1",
+                test_kb_slug="nuclia-e2e-live-aws-eu-central-1-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=safe_get_prod_env("PROD_AWS_EU_CENTRAL_1_1_NUA"),
+            ),
+            ZoneConfig(
+                name="aws-me-central-1-1",
+                zone_slug="aws-me-central-1-1",
+                test_kb_slug="nuclia-e2e-live-aws-me-central-1-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=safe_get_prod_env("PROD_AWS_ME_CENTRAL_1_1_NUA"),
             ),
         ],
     ),
@@ -163,7 +184,7 @@ CLUSTERS_CONFIG = {
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_stage_env("TEST_EUROPE1_STASHIFY_NUA"),
+                permanent_nua_key=safe_get_stage_env("STAGE_GCP_EUROPE1_NUA"),
             )
         ],
     ),
@@ -188,7 +209,7 @@ CLUSTERS_CONFIG = {
                 zone_slug="progress-proc-us-east-2-1",
                 test_kb_slug="nuclia-e2e-live-progress-proc-us-east-2-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_progress_env("TEST_PROGRESS_PROC_US_EAST_2_1_NUCLIA_NUA"),
+                permanent_nua_key=safe_get_progress_env("PROGRESS_AWS_PROC_US_EAST_2_1_NUA"),
             ),
         ],
     ),
@@ -360,6 +381,42 @@ class RegionalAPI:
             response.raise_for_status()
             return await response.json()
 
+    @backoff.on_exception(
+        backoff.expo,
+        aiohttp.ClientResponseError,
+        max_tries=6,
+        max_time=120,
+        giveup=lambda exc: not (isinstance(exc, aiohttp.ClientResponseError) and exc.status == 429),
+    )
+    async def create_rao(self, account_id: str, slug: str, mode: str = "agent_no_memory") -> dict:
+        url = f"{self.base_url}/api/v1/account/{account_id}/kbs"
+        async with self.session.post(
+            url,
+            json={
+                "title": slug,
+                "slug": slug,
+                "mode": mode,
+            },
+            headers=self.auth_headers,
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
+
+    async def rao(
+        self,
+        method: str,
+        agent_id: str,
+        endpoint: str,
+        payload: dict | None = None,
+        params: dict | None = None,
+    ) -> dict:
+        url = f"{self.base_url}/api/v1/agent/{agent_id}/{endpoint}"
+        async with self.session.request(
+            method, url, json=payload, headers=self.auth_headers, params=params
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
+
 
 @pytest.fixture(autouse=True)
 def set_logger_level():
@@ -426,14 +483,32 @@ async def regional_api_config(request: pytest.FixtureRequest, global_api_config:
     # Store a reference for convenience
     zone_config.global_config = global_api_config
 
-    kbs = {
-        kb.slug: kb.id
-        for kb in await auth.kbs(zone_config.global_config.permanent_account_id)
-        if kb.region == zone_config.zone_slug
-    }
-    zone_config.permanent_kb_id = kbs[zone_config.permanent_kb_slug]
-
     return zone_config
+
+
+async def resolve_permanent_kb_id(zone_config: ZoneConfig) -> str:
+    if zone_config.permanent_kb_id:
+        return zone_config.permanent_kb_id
+    assert zone_config.global_config is not None
+
+    auth = get_async_auth()
+    account_id = zone_config.global_config.permanent_account_id
+    try:
+        knowledge_boxes = await auth.kbs(account_id, zone=zone_config.zone_slug)
+    except TypeError:
+        knowledge_boxes = [kb for kb in await auth.kbs(account_id) if kb.region == zone_config.zone_slug]
+
+    kbs = {kb.slug: kb.id for kb in knowledge_boxes if kb.slug is not None}
+    kb_id = kbs.get(zone_config.permanent_kb_slug)
+    if kb_id is None:
+        available_slugs = ", ".join(sorted(kbs)) or "<none>"
+        pytest.fail(
+            f"Permanent KB '{zone_config.permanent_kb_slug}' was not found in "
+            f"account '{account_id}' for zone '{zone_config.zone_slug}'. "
+            f"Available KB slugs: {available_slugs}"
+        )
+    zone_config.permanent_kb_id = kb_id
+    return kb_id
 
 
 class EmailUtil:
@@ -528,10 +603,12 @@ async def cleanup_test_account(global_api: GlobalAPI):
 
 
 @pytest.fixture
-async def clean_kb_sa(request: pytest.FixtureRequest, regional_api_config, regional_api: RegionalAPI):
+async def clean_kb_sa(
+    request: pytest.FixtureRequest, regional_api_config, regional_api: RegionalAPI, kb_id: str
+):
     deleted_sa_id = await regional_api.delete_service_account_by_name(
         regional_api_config.global_config.permanent_account_id,
-        regional_api_config.permanent_kb_id,
+        kb_id,
         "test-e2e-kb-auth",
     )
     if deleted_sa_id:
@@ -546,3 +623,48 @@ async def nua_client(regional_api_config) -> AsyncNuaClient:
         token=regional_api_config.permanent_nua_key,
     )
     return Retriable.wrap_async(nc)
+
+
+@pytest.fixture
+async def kb_id(regional_api_config: ZoneConfig) -> str:
+    """
+    Fixture to provide the knowledge base ID for the tests.
+    """
+    return await resolve_permanent_kb_id(regional_api_config)
+
+
+@pytest.fixture
+async def zone(regional_api_config: ZoneConfig) -> str:
+    """
+    Fixture to provide the zone slug for the tests.
+    """
+    return regional_api_config.zone_slug
+
+
+@pytest.fixture
+def auth() -> AsyncNucliaAuth:
+    """
+    Fixture to provide the async Nuclia authentication object.
+    """
+    return get_async_auth()
+
+
+@pytest.fixture(autouse=True)
+async def account_id(regional_api_config: ZoneConfig) -> str:
+    """
+    Fixture to provide the account slug for the tests.
+    """
+    assert regional_api_config.global_config is not None
+    return regional_api_config.global_config.permanent_account_id
+
+
+@pytest.fixture
+async def clean_tasks(kb_id: str, zone: str, auth: AsyncNucliaAuth) -> AsyncIterator[None]:
+    ndb = get_async_kb_ndb_client(zone=zone, kbid=kb_id, user_token=auth._config.token)
+    kb = sdk.AsyncNucliaKB()
+
+    yield
+
+    if _tasks_to_delete:
+        await clean_ask_test_tasks(kb, ndb, to_delete=_tasks_to_delete)
+        _tasks_to_delete.clear()

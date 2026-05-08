@@ -67,7 +67,7 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
      - Email: `testing_sdk+root@nuclia.com`.
      - Has pre-generated PAT tokens: `PROD_ROOT_PAT_TOKEN` and `STAGE_ROOT_PAT_TOKEN`.
      - **Caution**: This user can delete accounts by slug. Only use if owner-level PATs are insufficient.
-   - **Account nua tokens**: `TEST_{ZONE}_NUCLIA_NUA`
+   - **Account nua tokens**: `{ENV}_{ZONE}_NUA`
 
 3. **Pre-Existing Knowledge Boxes (KBs)**
    - `pre-existing-kb`: Used by betterstack external monitors on all regions; by these tests.
@@ -82,6 +82,24 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
       BASE_NUCLIA_DOMAIN=stashify.cloud nuclia kb exports download --export_id {id_from previous start command} --path assets/e2e.financial.mini.export
    ```
 
+### Setup testing for a new region
+
+1 - Create a new `pre-existing-kb` in the new zone:
+   - Account: `automated-testing`
+   - KB name `{PROVIDER} {REGION} pre-existing-kb` (to easily distinguish in the dashboard, but keep the slugs the same).
+   - Add user `testing_sdk@nuclia.com` as owner on the KB.
+2 - Upload the `roasted-chicken.txt` and `omelette.txt` files in the [assets folder](nuclia_e2e/assets) to the kb. 
+3 - Wait for the files to be processed and assign this security groups:
+  - `omelette.txt`: apprentices
+  - `roasted-chicken.txt`: apprentices, chefs (one per line)
+4 - Create a new Nua key from the "Manage Account" of `automated-testing`. Name it `nuclia-e2e` with the proper configuration:
+  - Select the correct zone
+  - No webhook
+  - No allow management of kbs
+5 - Edit the [assets folder](nuclia_e2e/nuclia_e2e/tests/conftest.py) and add the new region configuration in the appropiate `CLUSTERS_CONFIG` section
+6 - Create a [repository secret](../settings/secrets/actions) named `{ENV}_{ZONE}_NUA` (e.g. `STAGE_GCP_EUROPE1_NUA` or `PROD_AWS_EU_CENTRAL_1_1_NUA`)
+7 - Map this new secret to an env var in the appropiate worflow file (`run-e2e-nuclia-stage.yaml` or `run-e2e-nuclia-prod.yaml`), in the "Run Tests" step.  
+8 - If you're adding a new PROD region, and if the region is ready, add it also on `run-e2e-nuclia-prod.yaml`, in the job strategy matrix zone list using the name used in step 5.
 ---
 
 ## Test Implementation Details

@@ -7,8 +7,6 @@ on:
     paths:
       - '.github/workflows/run-e2e-prod.yml'
   workflow_dispatch:
-    branches:
-      - e2e-on-prod
   schedule:
     # Run at minute 45 past every 3rd hour on every day-of-week from Sunday through Saturday.
     - cron: '45 */3 * * 0-6'
@@ -86,13 +84,12 @@ jobs:
           if-no-files-found: ignore
       - name: Slack notification
         id: slack
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v2.1.1
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
         with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_HOOK_URL }}
           payload: |
             {
               "text": "‼️️Cypress E2E failed on PROD ‼️\nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_HOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

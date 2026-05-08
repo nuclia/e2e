@@ -14,8 +14,7 @@ import pytest
 
 
 @pytest.mark.asyncio_cooperative
-async def test_inception_paragraph_type_is_generated(regional_api_config: ZoneConfig):
-    kb_id = regional_api_config.permanent_kb_id
+async def test_inception_paragraph_type_is_generated(regional_api_config: ZoneConfig, kb_id: str):
     zone = regional_api_config.zone_slug
 
     auth = get_auth()
