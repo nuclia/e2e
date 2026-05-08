@@ -23,7 +23,7 @@ describe('User Login', () => {
     cy.get(`[data-cy="password"] input[type="password"]`).type(`${user.password}{enter}`, { log: false });
     cy.get('.select-kb-list a').contains(permanentKb.name).click();
     cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${permanentKb.zone}/${permanentKb.slug}`);
-    cy.get(`.kb-details .title-xxs`).should('contain', 'NucliaDB API endpoint');
+    cy.get(`.kb-details .title-xxs`).should('contain', 'Knowledge Box status');
 
     // logout
     cy.get('[data-cy="user-menu"]').click();
@@ -46,17 +46,13 @@ describe('User Login', () => {
     cy.visit('/');
     cy.get(`[type="email"] input`).type('wrong-email@gmail.com', { log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}', { log: false });
-    cy.get(`[data-cy="login-error"]`)
-      .should('contain', 'Authentication error.')
-      .and('contain', 'Please try again or reset your password below.');
+    cy.get(`[data-cy="login-error"]`).should('contain', 'Invalid user or credentials');
   });
 
   it('should error for an invalid password for existing user', () => {
     cy.visit('/');
     cy.get(`[type="email"] input`).type(user.email, { log: false });
     cy.get(`[data-cy="password"] input[type="password"]`).type('invalid{enter}', { log: false });
-    cy.get(`[data-cy="login-error"]`)
-      .should('contain', 'Authentication error.')
-      .and('contain', 'Please try again or reset your password below.');
+    cy.get(`[data-cy="login-error"]`).should('contain', 'Invalid user or credentials');
   });
 });

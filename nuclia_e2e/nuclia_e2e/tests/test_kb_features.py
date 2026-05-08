@@ -12,6 +12,7 @@ from nuclia_e2e.tests.conftest import GlobalAPI
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.tests.utils import has_generated_field
 from nuclia_e2e.utils import ASSETS_FILE_PATH
+from nuclia_e2e.utils import create_test_kb
 from nuclia_e2e.utils import get_async_kb_ndb_client
 from nuclia_e2e.utils import get_kbid_from_slug
 from nuclia_e2e.utils import wait_for
@@ -20,6 +21,8 @@ from nuclia_models.events.activity_logs import ActivityLogsAskQuery
 from nuclia_models.events.activity_logs import ActivityLogsSearchQuery
 from nuclia_models.events.activity_logs import EventType
 from nuclia_models.events.activity_logs import QueryFiltersAsk
+from nuclia_models.events.activity_logs import QueryFiltersSearch
+from nuclia_models.events.activity_logs import StringFilter
 from nuclia_models.worker.proto import ApplyTo
 from nuclia_models.worker.proto import AskOperation
 from nuclia_models.worker.proto import Filter
@@ -48,26 +51,14 @@ from typing import Any
 import asyncio
 import backoff
 import base64
+import httpx
 import pytest
 
 Logger = Callable[[str], None]
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "how has this impacted customers?"
-
-
-async def run_test_kb_creation(regional_api_config, kb_slug, logger: Logger) -> str:
-    kbs = AsyncNucliaKBS()
-    new_kb = await kbs.add(
-        zone=regional_api_config.zone_slug,
-        slug=kb_slug,
-        learning_configuration={"semantic_models": ["en-2024-04-24"]},
-    )
-
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
-    assert kbid is not None
-    logger(f"Created kb {new_kb['id']}")
-    return kbid
+FINANCIAL_EXPORT_SEMANTIC_MODEL = "en-2024-04-24"
 
 
 async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBClient, logger: Logger):
@@ -114,7 +105,16 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
     """
     kb = AsyncNucliaKB()
 
-    response = await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export", ndb=ndb)
+    @backoff.on_exception(
+        backoff.expo,
+        (httpx.ReadError, httpx.ConnectError, httpx.RemoteProtocolError, httpx.ReadTimeout),
+        max_tries=4,
+        max_time=60,
+    )
+    async def _start_import():
+        return await kb.imports.start(path=f"{ASSETS_FILE_PATH}/e2e.financial.mini.export", ndb=ndb)
+
+    response = await _start_import()
     logger(f"Import started with id {response.import_id}")
 
     def resources_are_imported(resources):
@@ -487,7 +487,7 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
                 query=TEST_CHOCO_QUESTION,
             )
             search_returned_results = bool(result.resources)
-            return (True, search_returned_results)
+            return (search_returned_results, search_returned_results)
 
         return condition
 
@@ -671,16 +671,26 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
     success, logs = await wait_for(activity_log_is_stored(), max_wait=180, logger=logger)
     assert success, "Activity logs didn't get stored in time"
 
-    # if we have the ask events, we'll must have the find ones, as they have been done earlier.
-    logs = await kb.logs.query(
-        ndb=ndb,
-        type=EventType.SEARCH,
-        query=ActivityLogsSearchQuery(
-            year_month=f"{now.year}-{now.month:02}", filters={}, pagination=Pagination(limit=100)
-        ),
-    )
+    def search_log_is_stored():
+        @wraps(search_log_is_stored)
+        async def condition() -> tuple[bool, Any]:
+            search_logs = await kb.logs.query(
+                ndb=ndb,
+                type=EventType.SEARCH,
+                query=ActivityLogsSearchQuery(
+                    year_month=f"{now.year}-{now.month:02}",
+                    filters=QueryFiltersSearch(  # type: ignore[call-arg]
+                        question=StringFilter(eq=TEST_CHOCO_QUESTION)
+                    ),
+                    pagination=Pagination(limit=100),
+                ),
+            )
+            return (any(log.question == TEST_CHOCO_QUESTION for log in search_logs.data), search_logs)
 
-    assert logs.data[-1].question == TEST_CHOCO_QUESTION
+        return condition
+
+    success, _ = await wait_for(search_log_is_stored(), max_wait=180, logger=logger)
+    assert success, "Search activity log didn't get stored in time"
 
 
 async def run_test_remi_query(regional_api_config, ndb, logger):
@@ -699,13 +709,13 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
                 to=to,
                 aggregation="day",
             )
-            if len(scores[0].metrics) > 0:
+            if scores and len(scores[0].metrics) > 0:
                 return (True, scores)
             return (False, None)
 
         return condition
 
-    _, success = await wait_for(remi_data_is_computed(), max_wait=180, logger=logger)
+    success, _ = await wait_for(remi_data_is_computed(), max_wait=180, logger=logger)
     assert success, "Remi scores didn't get computed in time"
 
 
@@ -809,7 +819,9 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
+    kbid = await create_test_kb(
+        regional_api_config, kb_slug, logger, semantic_model=FINANCIAL_EXPORT_SEMANTIC_MODEL
+    )
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client
@@ -863,13 +875,9 @@ async def test_kb_features(request: pytest.FixtureRequest, regional_api_config):
     )
 
     # Validate that all the data about the usage we generated is correctly stored on the activity log
-    # and can be queried, and that the remi quality metrics. Even if the remi metrics won't be computed until
-    # the activity log is stored, the test_activity_log tests several things aside the ask events (the ones
-    # affecting the remi queries) and so we can benefit of running them in parallel.
-    await asyncio.gather(
-        run_test_activity_log(regional_api_config, async_ndb, logger),
-        run_test_remi_query(regional_api_config, async_ndb, logger),
-    )
+    # and can be queried, and that the remi quality metrics are computed from those activity logs.
+    await run_test_activity_log(regional_api_config, async_ndb, logger)
+    await run_test_remi_query(regional_api_config, async_ndb, logger)
 
     # Delete the kb as a final step
     await run_test_kb_deletion(regional_api_config, kbid, kb_slug, logger)
@@ -897,8 +905,6 @@ async def test_kb_usage(
         print(f"{request.node.name} ::: {msg}")
 
     zone = regional_api_config.zone_slug
-    assert regional_api_config.global_config is not None
-    account = regional_api_config.global_config.permanent_account_id  # noqa: F841
     auth = get_auth()
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_usage"
 
@@ -908,7 +914,9 @@ async def test_kb_usage(
         await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
 
     # Creates a brand new kb that will be used troughout this test
-    kbid = await run_test_kb_creation(regional_api_config, kb_slug, logger)
+    kbid = await create_test_kb(
+        regional_api_config, kb_slug, logger, semantic_model=FINANCIAL_EXPORT_SEMANTIC_MODEL
+    )
 
     # Configures a nucliadb client defaulting to a specific kb, to be used
     # to override all the sdk endpoints that automagically creates the client

@@ -43,7 +43,6 @@ describe('Create NUA key with the dashboard', () => {
           cy.get('[formcontrolname="zone"] pa-option').contains(zone.title).click();
         }
         cy.get('pa-modal-advanced').get('[data-cy="save-nua-client"]').click();
-        cy.get('pa-modal-dialog').get('[data-cy="copy-token"]').click();
         cy.get('pa-modal-dialog').get('[data-cy="close-token-dialog"]').click();
 
         // Delete NUA key

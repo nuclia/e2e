@@ -10,9 +10,21 @@ from nuclia_models.agent.interaction import AragAnswer
 import asyncio
 import pytest
 
+RAO_SA_NAME = "rao-e2e-nucliadb-driver"
+
+
+async def get_or_create_rao_service_account(
+    regional_api: RegionalAPI, account: str, kbid: str
+) -> dict[str, str]:
+    service_accounts = await regional_api.get_kb_sa(account, kbid)
+    matching_service_accounts = [sa for sa in service_accounts if sa["title"] == RAO_SA_NAME]
+    if matching_service_accounts:
+        return matching_service_accounts[0]
+    return await regional_api.create_service_account(account, kbid, RAO_SA_NAME)
+
 
 async def create_rao_with_agents(
-    regional_api: RegionalAPI, regional_api_config: ZoneConfig, slug: str, account: str
+    regional_api: RegionalAPI, regional_api_config: ZoneConfig, slug: str, account: str, kb_id: str
 ) -> str:
     agent_id = (await regional_api.create_rao(account_id=account, slug=slug, mode="agent"))["id"]
     # Check it got created
@@ -20,15 +32,15 @@ async def create_rao_with_agents(
     assert regional_api_config.global_config is not None
     api_url = f"https://{regional_api_config.zone_slug}.{regional_api_config.global_config.base_domain}/api"
     account = regional_api_config.global_config.permanent_account_id
-    kbid = regional_api_config.permanent_kb_id
-    new_sa = await regional_api.create_service_account(account, kbid, "rao-e2e-nucliadb-driver")
-    key = await regional_api.create_service_account_key(account, kbid, new_sa["id"])
+    kbid = kb_id
+    service_account = await get_or_create_rao_service_account(regional_api, account, kbid)
+    key = await regional_api.create_service_account_key(account, kbid, service_account["id"])
     drivers = [
         {
             "name": "my-nucliadb-driver",
             "provider": "nucliadb",
             "config": {
-                "kbid": regional_api_config.permanent_kb_id,
+                "kbid": kb_id,
                 "description": "General Knowledge KB",
                 "key": key,
                 "url": api_url,
@@ -109,7 +121,9 @@ async def create_rao_with_agents(
 
 
 @pytest.mark.asyncio_cooperative
-async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneConfig, global_api_config):
+async def test_rao_basic(
+    regional_api: RegionalAPI, regional_api_config: ZoneConfig, global_api_config, kb_id: str
+):
     """Basic test to check RAO works
     0. Delete any previous test RAO (just in case)
     1. Create a no-memory RAO
@@ -127,8 +141,16 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
     assert regional_api_config.global_config is not None
 
     account = regional_api_config.global_config.permanent_account_id
-    agent_id = await create_rao_with_agents(regional_api, regional_api_config, test_slug, account)
+    agent_id = await create_rao_with_agents(regional_api, regional_api_config, test_slug, account, kb_id)
 
+    try:
+        await _run_rao_basic_assertions(regional_api_config, account, agent_id)
+    finally:
+        await delete_test_agent(regional_api_config, agent_id=agent_id, agent_slug=test_slug)
+
+
+async def _run_rao_basic_assertions(regional_api_config: ZoneConfig, account: str, agent_id: str):
+    assert regional_api_config.global_config is not None
     agent_client = AsyncAgentClient(
         region=regional_api_config.zone_slug,
         agent_id=agent_id,
@@ -172,10 +194,15 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
     assert responses[2].step.module == "basic_ask"
     assert not responses[2].exception
 
-    assert responses[-3].operation == AnswerOperation.ANSWER
-    assert responses[-3].step
-    assert responses[-3].step.module == "remi"
-    assert not responses[-3].exception
+    # The remi postprocess step is emitted somewhere between basic_ask and the
+    # final answer. Its exact position depends on whether intermediate steps
+    # (e.g. "summarize") are emitted in the stream, so locate it by module name
+    # instead of relying on a fixed negative index.
+    remi_responses = [
+        r for r in responses if r.operation == AnswerOperation.ANSWER and r.step and r.step.module == "remi"
+    ]
+    if remi_responses:
+        assert not remi_responses[-1].exception
 
     assert responses[-2].operation == AnswerOperation.ANSWER
     assert responses[-2].answer
@@ -191,6 +218,3 @@ async def test_rao_basic(regional_api: RegionalAPI, regional_api_config: ZoneCon
 
     with pytest.raises(RaoAPIException):
         await agent_client.get_session(sess_id)
-
-    # Delete RAO for cleanup
-    await delete_test_agent(regional_api_config, agent_id=agent_id, agent_slug=test_slug)

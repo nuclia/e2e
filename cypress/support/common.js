@@ -150,7 +150,8 @@ export function onlyPermanentKb(mode) {
     }).then((response) => {
       expect(response.status).to.eq(200);
 
-      if (response.body.length > 2) {
+      const max = mode === 'agent_no_memory' ? 0 : 2;
+      if (response.body.length > max) {
         response.body.forEach((kb) => {
           if (!kb.slug.includes('permanent')) {
             cy.request({
