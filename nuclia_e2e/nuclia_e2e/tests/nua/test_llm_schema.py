@@ -14,8 +14,8 @@ async def test_llm_schema_nua(nua_client: AsyncNuaClient):
 
 
 @pytest.mark.asyncio_cooperative
-async def test_llm_schema_kbid(nua_client: AsyncNuaClient):
+async def test_llm_schema_kbid(nua_client: AsyncNuaClient, kb_id: str):
     np = AsyncNucliaPredict()
-    config = await np.schema("fake_kbid", nc=nua_client)
+    config = await np.schema(kb_id, nc=nua_client)
     assert len(config.ner_model.options) == 1
     assert len(config.generative_model.options) >= 5

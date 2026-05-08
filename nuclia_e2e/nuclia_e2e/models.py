@@ -44,7 +44,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "claude-3": ModelInfo(),               DISCONTINUED
     # "claude-3-fast",                       DISCONTINUED
     # "claude-3-5-fast": ModelInfo(),        DISCONTINUED
-    "claude-3-5-small": ModelInfo(),
+    # "claude-3-5-small": ModelInfo(),       DISCONTINUED
     "claude-4-opus": ModelInfo(),
     "claude-4-sonnet": ModelInfo(),
     "claude-4-5-sonnet": ModelInfo(),
@@ -54,7 +54,8 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "gemini-2.5-pro": ModelInfo(),
     "gemini-2.5-flash": ModelInfo(),
     "gemini-2.5-flash-lite": ModelInfo(),
-    "gemini-3-pro": ModelInfo(),
+    # "gemini-3-pro": ModelInfo(),            DISCONTINUED
+    "gemini-3.1-pro": ModelInfo(),
     # "mistral": ModelInfo(est_json=False,),  DISCONTINUED
     # "azure-mistral",                       DISCONTINUED
     "chatgpt4o": ModelInfo(),
@@ -76,9 +77,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
         test_json=False,  # Structured output not working
     ),
     # "huggingface"                          EXCLUDED as not a model,just a driver, that needs a key to work
-    "llama-3.2-90b-vision-instruct-maas": ModelInfo(
-        test_json=False,  # Json functionality not operational
-    ),
     "llama-4-maverick-17b-128e-instruct-maas": ModelInfo(
         test_json=False,  # Json functionality not operational
     ),
@@ -88,19 +86,19 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "deepseek-reasoner",                   DISCONTINUED
     # "deepseek-chat",                       DISCONTINUED
     # "azure-deepseek-r1",                   EXCLUDED as it is too slow
-    "azure-mistral-large-2": ModelInfo(),
+    # "azure-mistral-large-2": ModelInfo(),  DISCONTINUED
     # "gcp-claude-3-5-sonnet-v2": ModelInfo(), DISCONTINUED
-    "gcp-claude-3-7-sonnet": ModelInfo(),
     "gcp-claude-4-5-sonnet": ModelInfo(),
     "gcp-claude-4-5-haiku": ModelInfo(),
     # AWS claude models are available in all AWS-based regions except aws-il
-    "aws-claude-3-7-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     "aws-claude-4-sonnet": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
     "aws-claude-4-5-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     "aws-claude-4-5-haiku": ModelInfo(zones_re="(aws-(?!il|me)).*"),
+    "aws-claude-4-6-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     # The opus models are not available in europe
     "aws-claude-4-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
+    "aws-claude-4-6-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
     "azure-gpt-oss-120b": ModelInfo(test_rephrase=False),
     "nova-premier": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
