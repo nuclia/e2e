@@ -51,6 +51,7 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
 
     # Derive auth headers and zone URL from fixtures
     global_config = regional_api_config.global_config
+    assert global_config is not None, "global_config must be set on ZoneConfig"
     zone_url = f"https://{regional_api_config.zone_slug}.{global_config.base_domain}"
     auth_headers = {"Authorization": f"Bearer {global_config.permanent_account_owner_pat_token}"}
 
@@ -120,6 +121,7 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
             },
         )
         config_id = sync_config["id"]
+        assert config_id is not None
         logger.info("Created sync config: %s", config_id)
 
         job_id = await run_sync_and_wait(session, zone_url, auth_headers, kb_id, config_id)
@@ -157,7 +159,7 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
             session, zone_url, auth_headers, kb_id, dynamic_file_id
         )
         assert dynamic_resource is not None
-        initial_modified = dynamic_resource.get("modified")
+        initial_modified = dynamic_resource["modified"]
 
         # --- Phase 2: Incremental — Create + Update ---
         logger.info("Phase 2: Creating new file and updating dynamic file")
@@ -254,15 +256,16 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
     finally:
         # --- Phase 4: Cleanup (idempotent) ---
         logger.info("Cleanup: removing test artifacts")
+        cleanup_token: str | None = None
         try:
-            access_token = await gdrive.refresh_token(session)
+            cleanup_token = await gdrive.refresh_token(session)
         except Exception:
-            access_token = None
+            cleanup_token = None
 
         # Delete the entire test folder from Drive (recursively deletes all contents)
-        if folder_id and access_token:
+        if folder_id and cleanup_token:
             try:
-                await gdrive.delete_file(session, access_token, folder_id)
+                await gdrive.delete_file(session, cleanup_token, folder_id)
             except Exception as e:
                 logger.warning("Failed to delete test folder: %s", e)
 
