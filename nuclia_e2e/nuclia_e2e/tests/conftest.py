@@ -21,6 +21,7 @@ from nuclia.data import get_config  # noqa: E402
 from nuclia.lib.nua import AsyncNuaClient  # noqa: E402
 from nuclia.sdk.auth import AsyncNucliaAuth  # noqa: E402
 from nuclia_e2e.data import TEST_ACCOUNT_SLUG  # noqa: E402
+from nuclia_e2e.settings import settings  # noqa: E402
 from nuclia_e2e.tests.utils import _tasks_to_delete  # noqa: E402
 from nuclia_e2e.tests.utils import clean_ask_test_tasks  # noqa: E402
 from nuclia_e2e.utils import get_async_kb_ndb_client  # noqa: E402
@@ -42,39 +43,9 @@ import string  # noqa: E402
 import sys  # noqa: E402
 import tempfile  # noqa: E402
 
-
-def safe_get_env(env_var_name: str) -> str:
-    value = os.environ.get(env_var_name, None)
-    if value is None:
-        raise RuntimeError(f"Missing {env_var_name} check your test config")
-
-    if value.strip() == "":
-        raise RuntimeError(f"Env var {env_var_name} cannot be empty string")
-
-    return value
-
-
-TEST_ENV = safe_get_env("TEST_ENV").lower()
-GRAFANA_URL = safe_get_env("GRAFANA_URL")
+TEST_ENV = settings.test_env.lower()
+GRAFANA_URL = settings.grafana_url
 TEMPO_DATASOURCE_ID = "P95F6455D1776E941"  # is the same one on progress and our clusters
-
-
-def safe_get_prod_env(env_var_name: str) -> str:
-    if TEST_ENV != "prod":
-        return ""
-    return safe_get_env(env_var_name)
-
-
-def safe_get_stage_env(env_var_name: str) -> str:
-    if TEST_ENV != "stage":
-        return ""
-    return safe_get_env(env_var_name)
-
-
-def safe_get_progress_env(env_var_name: str) -> str:
-    if TEST_ENV != "progress":
-        return ""
-    return safe_get_env(env_var_name)
 
 
 @dataclasses.dataclass(slots=True)
@@ -118,10 +89,10 @@ CLUSTERS_CONFIG = {
         global_config=GlobalConfig(
             name="prod",
             base_domain="rag.progress.cloud",
-            recaptcha=safe_get_prod_env("PROD_GLOBAL_RECAPTCHA"),
-            root_pat_token=safe_get_prod_env("PROD_ROOT_PAT_TOKEN"),
-            permanent_account_owner_pat_token=safe_get_prod_env("PROD_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
-            gmail_app_password=safe_get_prod_env("TEST_GMAIL_APP_PASSWORD"),
+            recaptcha=settings.prod_global_recaptcha,
+            root_pat_token=settings.prod_root_pat_token,
+            permanent_account_owner_pat_token=settings.prod_permament_account_owner_pat_token,
+            gmail_app_password=settings.test_gmail_app_password,
             permanent_account_slug="automated-testing",
             permanent_account_id="8c7db65c-3b7e-4140-8165-d37bb4e6e9b8",
             grafana_url="http://platform.grafana.nuclia.com",
@@ -133,35 +104,35 @@ CLUSTERS_CONFIG = {
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_prod_env("PROD_GCP_EUROPE1_NUA"),
+                permanent_nua_key=settings.prod_gcp_europe1_nua,
             ),
             ZoneConfig(
                 name="aws-us-east-2-1",
                 zone_slug="aws-us-east-2-1",
                 test_kb_slug="nuclia-e2e-live-aws-us-east-2-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_prod_env("PROD_AWS_US_EAST_2_1_NUA"),
+                permanent_nua_key=settings.prod_aws_us_east_2_1_nua,
             ),
             ZoneConfig(
                 name="aws-il-central-1-1",
                 zone_slug="aws-il-central-1-1",
                 test_kb_slug="nuclia-e2e-live-aws-il-central-1-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_prod_env("PROD_AWS_IL_CENTRAL_1_1_NUA"),
+                permanent_nua_key=settings.prod_aws_il_central_1_1_nua,
             ),
             ZoneConfig(
                 name="aws-eu-central-1-1",
                 zone_slug="aws-eu-central-1-1",
                 test_kb_slug="nuclia-e2e-live-aws-eu-central-1-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_prod_env("PROD_AWS_EU_CENTRAL_1_1_NUA"),
+                permanent_nua_key=settings.prod_aws_eu_central_1_1_nua,
             ),
             ZoneConfig(
                 name="aws-me-central-1-1",
                 zone_slug="aws-me-central-1-1",
                 test_kb_slug="nuclia-e2e-live-aws-me-central-1-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_prod_env("PROD_AWS_ME_CENTRAL_1_1_NUA"),
+                permanent_nua_key=settings.prod_aws_me_central_1_1_nua,
             ),
         ],
     ),
@@ -169,10 +140,10 @@ CLUSTERS_CONFIG = {
         global_config=GlobalConfig(
             name="stage",
             base_domain="stashify.cloud",
-            recaptcha=safe_get_stage_env("STAGE_GLOBAL_RECAPTCHA"),
-            root_pat_token=safe_get_stage_env("STAGE_ROOT_PAT_TOKEN"),
-            permanent_account_owner_pat_token=safe_get_stage_env("STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"),
-            gmail_app_password=safe_get_stage_env("TEST_GMAIL_APP_PASSWORD"),
+            recaptcha=settings.stage_global_recaptcha,
+            root_pat_token=settings.stage_root_pat_token,
+            permanent_account_owner_pat_token=settings.stage_permament_account_owner_pat_token,
+            gmail_app_password=settings.test_gmail_app_password,
             permanent_account_slug="automated-testing",
             permanent_account_id="f2edd58e-431f-4197-be76-6fc611082fe8",
             grafana_url="http://platform.grafana.nuclia.com",
@@ -184,7 +155,7 @@ CLUSTERS_CONFIG = {
                 zone_slug="europe-1",
                 test_kb_slug="nuclia-e2e-live-europe-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_stage_env("STAGE_GCP_EUROPE1_NUA"),
+                permanent_nua_key=settings.stage_gcp_europe1_nua,
             )
         ],
     ),
@@ -192,12 +163,10 @@ CLUSTERS_CONFIG = {
         global_config=GlobalConfig(
             name="progress",
             base_domain="syntha.progress.com",
-            recaptcha=safe_get_progress_env("PROGRESS_GLOBAL_RECAPTCHA"),
-            root_pat_token=safe_get_progress_env("PROGRESS_ROOT_PAT_TOKEN"),
-            permanent_account_owner_pat_token=safe_get_progress_env(
-                "PROGRESS_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN"
-            ),
-            gmail_app_password=safe_get_progress_env("TEST_GMAIL_APP_PASSWORD"),
+            recaptcha=settings.progress_global_recaptcha,
+            root_pat_token=settings.progress_root_pat_token,
+            permanent_account_owner_pat_token=settings.progress_permament_account_owner_pat_token,
+            gmail_app_password=settings.test_gmail_app_password,
             permanent_account_slug="automated-testing",
             permanent_account_id="0e515342-3b5c-4778-acf0-0723a71eafa3",
             grafana_url="http://progress-global-us-east-2-1.grafana.nuclia.com",
@@ -209,7 +178,7 @@ CLUSTERS_CONFIG = {
                 zone_slug="progress-proc-us-east-2-1",
                 test_kb_slug="nuclia-e2e-live-progress-proc-us-east-2-1",
                 permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=safe_get_progress_env("PROGRESS_AWS_PROC_US_EAST_2_1_NUA"),
+                permanent_nua_key=settings.progress_aws_proc_us_east_2_1_nua,
             ),
         ],
     ),
@@ -218,11 +187,10 @@ CLUSTERS_CONFIG = {
 TEST_CLUSTER = CLUSTERS_CONFIG[TEST_ENV.lower()]
 
 ALL_TEST_ZONES = [zone.name for zone in TEST_CLUSTER.zones]
-TEST_ZONES = os.environ.get("TEST_ZONES", None)
-if TEST_ZONES is None:
+if settings.test_zones is None:
     ENABLED_ZONES = ALL_TEST_ZONES
 else:
-    ENABLED_ZONES = [zone.strip(" ") for zone in TEST_ZONES.split(",") if zone.strip(" ")]
+    ENABLED_ZONES = [zone.strip(" ") for zone in settings.test_zones.split(",") if zone.strip(" ")]
 TEST_CLUSTER.zones = [zone for zone in TEST_CLUSTER.zones if zone.name in ENABLED_ZONES]
 
 if not TEST_CLUSTER.zones:

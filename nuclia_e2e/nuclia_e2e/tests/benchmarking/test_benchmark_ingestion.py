@@ -6,6 +6,7 @@ from nuclia.data import get_auth
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.sdk.kb import AsyncNucliaKB
 from nuclia.sdk.kbs import AsyncNucliaKBS
+from nuclia_e2e.settings import settings
 from nuclia_e2e.utils import ASSETS_FILE_PATH
 from nuclia_e2e.utils import create_test_kb
 from nuclia_e2e.utils import delete_test_kb
@@ -23,7 +24,6 @@ from typing import Any
 
 import backoff
 import json
-import os
 import pytest
 import yaml
 
@@ -31,11 +31,9 @@ Logger = Callable[[str], None]
 
 TEST_CHOCO_QUESTION = "why are cocoa prices high?"
 TEST_CHOCO_ASK_MORE = "When did they start being high?"
-GHA_RUN_ID = os.getenv("GHA_RUN_ID", "unknown")
-PROMETHEUS_PUSHGATEWAY = os.getenv(
-    "PROMETHEUS_PUSHGATEWAY", "http://prometheus-cloud-pushgateway-prometheus-pushgateway:9091"
-)
-CORE_APPS_REPO_PATH = os.getenv("CORE_APPS_REPO_PATH", "/tmp/core-apps")
+GHA_RUN_ID = settings.gha_run_id
+PROMETHEUS_PUSHGATEWAY = settings.prometheus_pushgateway
+CORE_APPS_REPO_PATH = settings.core_apps_repo_path
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
@@ -184,7 +182,7 @@ def extract_versions(components, cluster):
     return versions
 
 
-@pytest.mark.skipif(os.getenv("BENCHMARK") != "1", reason="Benchmark not enabled")
+@pytest.mark.skipif(settings.benchmark != "1", reason="Benchmark not enabled")
 @pytest.mark.asyncio_cooperative
 async def test_benchmark_kb_ingestion(request: pytest.FixtureRequest, regional_api_config):
     """
