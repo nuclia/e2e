@@ -1,6 +1,6 @@
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
-from typing import Self
+from typing_extensions import Self
 
 
 class E2ESettings(BaseSettings):
