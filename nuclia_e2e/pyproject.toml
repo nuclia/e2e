@@ -9,6 +9,7 @@ dependencies = [
     "nucliadb-protos",
     "pytest-timeout",
     "pytest==9.0.3",
+    "pydantic-settings",
     "backoff",
     "aiohttp",
     "pytest-asyncio-cooperative", # not compatible with pytest-asyncio

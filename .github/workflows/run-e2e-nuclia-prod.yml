@@ -86,6 +86,8 @@ jobs:
           PROD_AWS_EU_CENTRAL_1_1_NUA: ${{ secrets.PROD_AWS_EU_CENTRAL_1_1_NUA }}
           PROD_AWS_ME_CENTRAL_1_1_NUA: ${{ secrets.PROD_AWS_ME_CENTRAL_1_1_NUA }}
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
+          GOOGLE_DRIVE_CLIENT_SECRET: ${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}
+          GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
           TEST_ZONES: ${{ matrix.zone }}
           TEST_ENV: "prod"

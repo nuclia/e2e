@@ -1,4 +1,5 @@
 from nuclia.sdk.auth import AsyncNucliaAuth
+from nuclia_e2e.settings import settings
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.tests.utils import as_default_generative_model_for_kb
 from nuclia_e2e.tests.utils import CustomModels
@@ -7,10 +8,9 @@ from nuclia_e2e.tests.utils import run_generative_test
 from nuclia_e2e.tests.utils import run_resource_agents_test
 from nuclia_e2e.utils import skip_on_provider_transient_error  # noqa: F401
 
-import os
 import pytest
 
-TEST_ENV = os.environ.get("TEST_ENV")
+TEST_ENV = settings.test_env
 
 
 @pytest.fixture
