@@ -1,15 +1,3 @@
-"""
-E2E test: Google Drive Sync Lifecycle
-
-Validates the full sync lifecycle (initial → incremental create+update → incremental delete)
-against a deployed cloud_storage_sync service, a real Google Drive folder, and NucliaDB.
-
-Prerequisites (not managed by the test):
-- Pre-existing KB (resolved via regional_api_config fixture)
-- Pre-existing external_connection (GOOGLE_OAUTH) in that KB
-- Google Drive OAuth credentials as env vars
-"""
-
 from datetime import datetime
 from nuclia_e2e.settings import settings
 from nuclia_e2e.tests.cloud_storage_sync import css_helpers
@@ -45,9 +33,9 @@ SEED_FILES_DIR = Path(__file__).parent / "seed_files"
 async def test_google_drive_sync_lifecycle(  # noqa: C901
     regional_api_config: ZoneConfig, kb_id: str, aiohttp_session: aiohttp.ClientSession
 ):
-    """Full lifecycle: initial sync → incremental create+update → incremental delete."""
+    """Full lifecycle: initial → create+update → delete+move-out → move-back → rename root."""
     run_id = uuid.uuid4().hex[:8]
-    external_connection_id = settings.external_connection_id
+    external_connection_id = settings.google_external_connection_id
 
     # Derive auth headers and zone URL from fixtures
     global_config = regional_api_config.global_config
@@ -56,10 +44,12 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
     auth_headers = {"Authorization": f"Bearer {global_config.permanent_account_owner_pat_token}"}
 
     folder_name = f"e2e_{regional_api_config.zone_slug}_{run_id}"
+    dynamic_folder_name = f"dynamic_folder_{run_id}"
     dynamic_filename = "dynamic_file.txt"
     new_filename = "new_file.txt"
 
     folder_id: str | None = None
+    dynamic_folder_id: str | None = None
     dynamic_file_id: str | None = None
     new_file_id: str | None = None
     config_id: str | None = None
@@ -89,13 +79,19 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
         logger.info("Created %d files (%d excluded by filter)", len(uploaded_files), len(excluded_file_ids))
 
         # --- Phase 1: Initial Sync ---
-        logger.info("Phase 1: Creating dynamic file and running initial sync")
+        logger.info("Phase 1: Creating dynamic folder with dynamic file and running initial sync")
+
+        # Create a dynamic subfolder and place the dynamic file inside it
+        dynamic_folder_id = await gdrive.create_folder(
+            session, access_token, folder_id, dynamic_folder_name
+        )
+        logger.info("Created dynamic folder: %s", dynamic_folder_id)
 
         dynamic_file_id = await gdrive.create_file(
-            session, access_token, folder_id, dynamic_filename, "initial content"
+            session, access_token, dynamic_folder_id, dynamic_filename, "initial content"
         )
         all_file_ids.append(dynamic_file_id)
-        expected_paths[dynamic_file_id] = f"/{folder_name}/{dynamic_filename}"
+        expected_paths[dynamic_file_id] = f"/{folder_name}/{dynamic_folder_name}/{dynamic_filename}"
         logger.info("Created dynamic file: %s", dynamic_file_id)
 
         # Create labelset for tagging synced resources
@@ -214,11 +210,15 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
         # Add new file to tracked IDs
         all_file_ids.append(new_file_id)
 
-        # --- Phase 3: Incremental — Delete ---
-        logger.info("Phase 3: Trashing new file")
+        # --- Phase 3: Incremental — Delete + Move Out ---
+        logger.info("Phase 3: Trashing new file and moving dynamic folder outside sync root")
 
         await gdrive.trash_file(session, access_token, new_file_id)
         logger.info("Trashed file: %s", new_file_id)
+
+        # Move the dynamic folder to Drive root (outside the sync root)
+        await gdrive.move_file(session, access_token, dynamic_folder_id, "root", folder_id)
+        logger.info("Moved dynamic folder to root (outside sync root)")
 
         # Wait for Changes API propagation
         await asyncio.sleep(CHANGES_API_PROPAGATION_DELAY)
@@ -231,7 +231,15 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
         )
         assert deleted_resource is None, f"Trashed file {new_file_id} still exists in NucliaDB"
 
-        # Assert: job logs show deletion
+        # Assert: dynamic file no longer exists (its folder moved outside sync root)
+        moved_out_resource = await nucliadb_helpers.get_resource_by_slug(
+            session, zone_url, auth_headers, kb_id, dynamic_file_id
+        )
+        assert (
+            moved_out_resource is None
+        ), f"Dynamic file {dynamic_file_id} still exists after folder moved outside sync root"
+
+        # Assert: job logs show 2 deletions
         logs3 = await css_helpers.get_job_logs(session, zone_url, auth_headers, kb_id, job3_id)
         deleted_logs3 = [
             log
@@ -239,22 +247,100 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
             if "Deleted file" in log.get("message", "")
             or "File was deleted or trashed" in log.get("message", "")
         ]
-        assert len(deleted_logs3) == 1, f"Expected 1 delete log, got {len(deleted_logs3)}"
+        assert len(deleted_logs3) == 2, f"Expected 2 delete logs, got {len(deleted_logs3)}"
 
-        assert_logged_paths(logs3, "Deleted file", {new_file_id: expected_paths[new_file_id]})
+        assert_logged_paths(logs3, "Deleted file", {
+            new_file_id: expected_paths[new_file_id],
+            dynamic_file_id: expected_paths[dynamic_file_id],
+        })
 
-        # Assert: remaining resources still exist (4 fixed + dynamic)
-        remaining_ids = [fid for fid in all_file_ids if fid != new_file_id]
+        # Assert: remaining seed file resources still exist
+        remaining_ids = [fid for fid in all_file_ids if fid not in (new_file_id, dynamic_file_id)]
         for file_id in remaining_ids:
             resource = await nucliadb_helpers.get_resource_by_slug(
                 session, zone_url, auth_headers, kb_id, file_id
             )
             assert resource is not None, f"Resource {file_id} unexpectedly missing after delete sync"
 
-        logger.info("Phase 3 passed: 1 deleted, remaining resources intact")
+        logger.info("Phase 3 passed: 2 deleted, remaining resources intact")
+
+        # --- Phase 4: Move Back In ---
+        logger.info("Phase 4: Moving dynamic folder back into sync root")
+
+        await gdrive.move_file(session, access_token, dynamic_folder_id, folder_id, "root")
+        logger.info("Moved dynamic folder back into sync root")
+
+        # Wait for Changes API propagation
+        await asyncio.sleep(CHANGES_API_PROPAGATION_DELAY)
+
+        job4_id = await run_sync_and_wait(session, zone_url, auth_headers, kb_id, config_id)
+
+        # Assert: dynamic file re-created in NucliaDB with correct labels
+        recreated_resource = await nucliadb_helpers.get_resource_by_slug(
+            session, zone_url, auth_headers, kb_id, dynamic_file_id
+        )
+        assert (
+            recreated_resource is not None
+        ), f"Dynamic file {dynamic_file_id} not re-created after moving folder back"
+        recreated_classifications = recreated_resource.get("usermetadata", {}).get("classifications", [])
+        assert any(
+            c.get("labelset") == expected_label["labelset"] and c.get("label") == expected_label["label"]
+            for c in recreated_classifications
+        ), f"Re-created resource {dynamic_file_id} missing expected label, got {recreated_classifications}"
+
+        # Assert: origin.path is correct
+        origin_path = recreated_resource.get("origin", {}).get("path")
+        assert origin_path == expected_paths[dynamic_file_id], (
+            f"origin.path mismatch: expected {expected_paths[dynamic_file_id]}, got {origin_path}"
+        )
+
+        # Assert: job logs show 1 created file
+        logs4 = await css_helpers.get_job_logs(session, zone_url, auth_headers, kb_id, job4_id)
+        assert_logged_paths(logs4, "Created file", {dynamic_file_id: expected_paths[dynamic_file_id]})
+
+        logger.info("Phase 4 passed: dynamic file re-created")
+
+        # --- Phase 5: Rename Sync Root Folder ---
+        renamed_folder_name = f"{folder_name}_renamed"
+        logger.info("Phase 5: Renaming sync root folder to '%s'", renamed_folder_name)
+
+        await gdrive.rename_file(session, access_token, folder_id, renamed_folder_name)
+        logger.info("Renamed sync root folder")
+
+        # Wait for Changes API propagation
+        await asyncio.sleep(CHANGES_API_PROPAGATION_DELAY)
+
+        job5_id = await run_sync_and_wait(session, zone_url, auth_headers, kb_id, config_id)
+
+        # Update expected paths with the new folder name prefix
+        renamed_expected_paths: dict[str, str] = {
+            fid: path.replace(f"/{folder_name}/", f"/{renamed_folder_name}/", 1)
+            for fid, path in expected_paths.items()
+        }
+
+        # Assert: all remaining resources have updated origin.path
+        active_file_ids = [fid for fid in all_file_ids if fid != new_file_id]
+        for file_id in active_file_ids:
+            resource = await nucliadb_helpers.get_resource_by_slug(
+                session, zone_url, auth_headers, kb_id, file_id
+            )
+            assert resource is not None, f"Resource {file_id} missing after rename sync"
+            origin_path = resource.get("origin", {}).get("path")
+            assert origin_path == renamed_expected_paths[file_id], (
+                f"origin.path not updated for {file_id}: "
+                f"expected {renamed_expected_paths[file_id]}, got {origin_path}"
+            )
+
+        # Assert: job logs show updated entries for all active files
+        logs5 = await css_helpers.get_job_logs(session, zone_url, auth_headers, kb_id, job5_id)
+        assert_logged_paths(
+            logs5, "Updated file metadata", {fid: renamed_expected_paths[fid] for fid in active_file_ids}
+        )
+
+        logger.info("Phase 5 passed: all resources have updated origin.path")
 
     finally:
-        # --- Phase 4: Cleanup (idempotent) ---
+        # --- Cleanup (idempotent) ---
         logger.info("Cleanup: removing test artifacts")
         cleanup_token: str | None = None
         try:
@@ -268,6 +354,13 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901
                 await gdrive.delete_file(session, cleanup_token, folder_id)
             except Exception as e:
                 logger.warning("Failed to delete test folder: %s", e)
+
+        # Delete the dynamic folder if it's still at root (outside the test folder)
+        if dynamic_folder_id and cleanup_token:
+            try:
+                await gdrive.delete_file(session, cleanup_token, dynamic_folder_id)
+            except Exception as e:
+                logger.warning("Failed to delete dynamic folder: %s", e)
 
         # Delete sync config
         if config_id:
