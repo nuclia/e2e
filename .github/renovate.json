@@ -22,5 +22,13 @@
     },
     "poetry": {
         "enabled": false
-    }
+    },
+    "packageRules": [
+        {
+            "matchDepTypes": [
+                "action"
+            ],
+            "pinDigests": true
+        }
+    ]
 }

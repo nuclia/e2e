@@ -6,4 +6,4 @@ on:
 jobs:
   breaking-glass:
     if: github.event.label.name == 'breaking-glass'
-    uses: nuclia/tooling/.github/workflows/_breaking-glass.yaml@main
+    uses: nuclia/tooling/.github/workflows/_breaking-glass.yaml@e3b8787755f131d70b5346b2704b66cd0accb7cb
