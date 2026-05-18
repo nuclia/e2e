@@ -49,6 +49,8 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "claude-4-sonnet": ModelInfo(),
     "claude-4-5-sonnet": ModelInfo(),
     "claude-4-5-haiku": ModelInfo(),
+    "claude-4-6-opus": ModelInfo(),
+    "claude-4-6-sonnet": ModelInfo(),
     "gemini-2.0-flash-lite": ModelInfo(),
     "gemini-2.0-flash": ModelInfo(),
     "gemini-2.5-pro": ModelInfo(),
@@ -90,6 +92,8 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "gcp-claude-3-5-sonnet-v2": ModelInfo(), DISCONTINUED
     "gcp-claude-4-5-sonnet": ModelInfo(),
     "gcp-claude-4-5-haiku": ModelInfo(),
+    "gcp-claude-4-6-sonnet": ModelInfo(),
+    "gcp-claude-4-6-opus": ModelInfo(),
     # AWS claude models are available in all AWS-based regions except aws-il
     "aws-claude-4-sonnet": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
     "aws-claude-4-5-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
