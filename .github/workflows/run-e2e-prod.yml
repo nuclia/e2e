@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: e2e-on-prod
       # Launch NucliaDB in docker
@@ -46,7 +46,7 @@ jobs:
       # Install npm dependencies, cache them correctly and run all Cypress tests
       - name: Cypress run
         id: cypress
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
         with:
           install-command: yarn install
         env:
@@ -60,7 +60,7 @@ jobs:
         # after the test run completes store reports and any screenshots
       - name: Cypress reports
         id: report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
         with:
           name: cypress-reports
@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload Docker Logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: docker-logs
           path: |
@@ -84,7 +84,7 @@ jobs:
           if-no-files-found: ignore
       - name: Slack notification
         id: slack
-        uses: slackapi/slack-github-action@v2.1.1
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
         with:
           webhook-type: incoming-webhook
