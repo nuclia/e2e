@@ -82,14 +82,6 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
       BASE_NUCLIA_DOMAIN=stashify.cloud nuclia kb exports download --export_id {id_from previous start command} --path assets/e2e.financial.mini.export
    ```
 
-4. **Cloud Storage Sync Accounts**
-   - **Google Drive**: Personal account `davidrf@nuclia.com` is set up for Google Drive sync tests.
-   - **Sharepoint**:
-     - Email: `e2e_test_cloud_storage_sync@outlook.com`
-     - Password: `xlQfypnaJvm4G6Dy`
-     - This account is exclusively used for Sharepoint e2e tests.
-   - **Note**: In the future, we want to migrate these to official Progress setup accounts dedicated to testing.
-
 ### Setup testing for a new region
 
 1 - Create a new `pre-existing-kb` in the new zone:

@@ -1,5 +1,15 @@
 # Cloud Storage Sync E2E Tests
 
+## Accounts
+
+- **Google Drive**: Personal account `davidrf@nuclia.com` is set up for Google Drive sync tests.
+- **Sharepoint**:
+  - Email: `e2e_test_cloud_storage_sync@outlook.com`
+  - Password: `xlQfypnaJvm4G6Dy`
+  - This account is exclusively used for Sharepoint e2e tests.
+
+> **Note**: In the future, we want to migrate these to official Nuclia service accounts dedicated to testing.
+
 ## Seed Files
 
 Each provider test has a `seed_files/` directory alongside it that represents the initial file structure to upload during test setup. The test replicates this tree to the remote storage, so you can visualize and modify the initial state without touching the test code.
