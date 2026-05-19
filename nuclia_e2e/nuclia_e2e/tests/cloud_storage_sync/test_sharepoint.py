@@ -1,9 +1,9 @@
 from datetime import datetime
 from nuclia_e2e.settings import settings
 from nuclia_e2e.tests.cloud_storage_sync import css_helpers
+from nuclia_e2e.tests.cloud_storage_sync import nucliadb_helpers
 from nuclia_e2e.tests.cloud_storage_sync import sharepoint_helpers as onedrive
 from nuclia_e2e.tests.cloud_storage_sync.sharepoint_helpers import sanitize_slug
-from nuclia_e2e.tests.cloud_storage_sync import nucliadb_helpers
 from nuclia_e2e.tests.cloud_storage_sync.sync_helpers import assert_logged_paths
 from nuclia_e2e.tests.cloud_storage_sync.sync_helpers import run_sync_and_wait
 from nuclia_e2e.tests.conftest import ZoneConfig
@@ -31,7 +31,7 @@ SEED_FILES_DIR = Path(__file__).parent / "seed_files"
 
 
 @pytest.mark.asyncio_cooperative
-async def test_sharepoint_sync_lifecycle(  # noqa: C901
+async def test_sharepoint_sync_lifecycle(  # noqa: C901, PLR0912
     regional_api_config: ZoneConfig, kb_id: str, aiohttp_session: aiohttp.ClientSession
 ):
     """Full lifecycle: initial → create+update → delete+move-out → move-back → rename root."""
@@ -254,10 +254,14 @@ async def test_sharepoint_sync_lifecycle(  # noqa: C901
         ]
         assert len(deleted_logs3) == 2, f"Expected 2 delete logs, got {len(deleted_logs3)}"
 
-        assert_logged_paths(logs3, "Deleted file", {
-            new_file_id: expected_paths[new_file_id],
-            dynamic_file_id: expected_paths[dynamic_file_id],
-        })
+        assert_logged_paths(
+            logs3,
+            "Deleted file",
+            {
+                new_file_id: expected_paths[new_file_id],
+                dynamic_file_id: expected_paths[dynamic_file_id],
+            },
+        )
 
         # Assert: remaining seed file resources still exist
         remaining_ids = [fid for fid in all_file_ids if fid not in (new_file_id, dynamic_file_id)]
@@ -295,9 +299,9 @@ async def test_sharepoint_sync_lifecycle(  # noqa: C901
 
         # Assert: origin.path is correct
         origin_path = recreated_resource.get("origin", {}).get("path")
-        assert origin_path == expected_paths[dynamic_file_id], (
-            f"origin.path mismatch: expected {expected_paths[dynamic_file_id]}, got {origin_path}"
-        )
+        assert (
+            origin_path == expected_paths[dynamic_file_id]
+        ), f"origin.path mismatch: expected {expected_paths[dynamic_file_id]}, got {origin_path}"
 
         # Assert: job logs show 1 created file
         logs4 = await css_helpers.get_job_logs(session, zone_url, auth_headers, kb_id, job4_id)
