@@ -97,6 +97,44 @@ async def update_file_content(
     resp.raise_for_status()
 
 
+async def move_file(
+    session: aiohttp.ClientSession,
+    access_token: str,
+    file_id: str,
+    new_parent_id: str,
+    old_parent_id: str,
+) -> None:
+    """Move a file or folder to a new parent in Google Drive."""
+    resp = await session.patch(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}",
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        },
+        params={"addParents": new_parent_id, "removeParents": old_parent_id},
+        json={},
+    )
+    resp.raise_for_status()
+
+
+async def rename_file(
+    session: aiohttp.ClientSession,
+    access_token: str,
+    file_id: str,
+    new_name: str,
+) -> None:
+    """Rename a file or folder in Google Drive."""
+    resp = await session.patch(
+        f"https://www.googleapis.com/drive/v3/files/{file_id}",
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        },
+        json={"name": new_name},
+    )
+    resp.raise_for_status()
+
+
 async def trash_file(
     session: aiohttp.ClientSession,
     access_token: str,

@@ -48,7 +48,14 @@ class E2ESettings(BaseSettings):
     google_drive_client_secret: str = ""
     # The refresh token is expected to have the "https://www.googleapis.com/auth/drive" scope
     google_drive_refresh_token: str = ""
-    external_connection_id: str = "00000000-0000-7000-8000-000000000000"
+    google_external_connection_id: str = "00000000-0000-7000-8000-000000000000"
+
+    # Azure / OneDrive
+    azure_client_id: str = "faed035c-a4aa-4e44-8f18-76c0165fece3"
+    azure_client_secret: str = ""
+    # The refresh token is expected to have "Files.ReadWrite.All offline_access" scopes
+    azure_refresh_token: str = ""
+    azure_external_connection_id: str = "00000000-0000-7000-8000-000000000001"
 
     @model_validator(mode="after")
     def validate_env_specific_vars(self) -> Self:
