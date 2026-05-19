@@ -84,6 +84,8 @@ jobs:
           TEST_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
           GOOGLE_DRIVE_CLIENT_SECRET: ${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}
           GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_REFRESH_TOKEN: ${{ secrets.AZURE_REFRESH_TOKEN }}
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
         run: |
           source nuclia_e2e/.venv/bin/activate && TEST_ENV=stage pytest -sxv -r fEs nuclia_e2e/nuclia_e2e/tests \
