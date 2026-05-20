@@ -20,6 +20,8 @@ on:
 jobs:
   benchmark:
     runs-on: nuclia-base
+    permissions:
+      contents: read    # actions/checkout
     strategy:
       fail-fast: false
       matrix:
@@ -33,6 +35,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
@@ -47,6 +51,8 @@ jobs:
           app-id: ${{ vars.GHAPP_NUCLIA_SERVICE_BOT_ID }}
           private-key: ${{ secrets.GHAPP_NUCLIA_SERVICE_BOT_PK }}
           owner: nuclia
+          repositories: core-apps          # scope to single target repo
+          permission-contents: read         # checkout only; no write needed
 
       - name: Checkout core-apps repo
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -54,6 +60,7 @@ jobs:
           repository: nuclia/core-apps
           token: ${{ steps.app-token.outputs.token }}
           path: core-apps
+          persist-credentials: false
 
       - name: Extract vars
         run: |
@@ -96,10 +103,14 @@ jobs:
 
   summarize:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read    # actions/checkout
     needs: benchmark
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
