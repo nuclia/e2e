@@ -40,7 +40,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "chatgpt-azure-5-chat": ModelInfo(
         test_json=False,  # Structured output not working
     ),
-    "chatgpt-azure-5.5": ModelInfo(),
+    "chatgpt-azure-5.5": ModelInfo(zones_re="(?!.*stage).*"),  # Not available in stage
     # "chatgpt-azure-5-nano": ModelInfo(),   EXCLUDED as it is too inconsistent
     # "claude-3": ModelInfo(),               DISCONTINUED
     # "claude-3-fast",                       DISCONTINUED
