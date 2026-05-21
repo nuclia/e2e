@@ -40,6 +40,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "chatgpt-azure-5-chat": ModelInfo(
         test_json=False,  # Structured output not working
     ),
+    "chatgpt-azure-5.5": ModelInfo(),
     # "chatgpt-azure-5-nano": ModelInfo(),   EXCLUDED as it is too inconsistent
     # "claude-3": ModelInfo(),               DISCONTINUED
     # "claude-3-fast",                       DISCONTINUED
@@ -49,6 +50,9 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "claude-4-sonnet": ModelInfo(),
     "claude-4-5-sonnet": ModelInfo(),
     "claude-4-5-haiku": ModelInfo(),
+    "claude-4-6-opus": ModelInfo(),
+    "claude-4-6-sonnet": ModelInfo(),
+    "claude-4-7-opus": ModelInfo(),
     "gemini-2.0-flash-lite": ModelInfo(),
     "gemini-2.0-flash": ModelInfo(),
     "gemini-2.5-pro": ModelInfo(),
@@ -56,6 +60,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "gemini-2.5-flash-lite": ModelInfo(),
     # "gemini-3-pro": ModelInfo(),            DISCONTINUED
     "gemini-3.1-pro": ModelInfo(),
+    "gemini-3.1-flash-lite": ModelInfo(),
     # "mistral": ModelInfo(est_json=False,),  DISCONTINUED
     # "azure-mistral",                       DISCONTINUED
     "chatgpt4o": ModelInfo(),
@@ -76,6 +81,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "chatgpt-5-chat": ModelInfo(
         test_json=False,  # Structured output not working
     ),
+    "chatgpt-5.5": ModelInfo(),
     # "huggingface"                          EXCLUDED as not a model,just a driver, that needs a key to work
     "llama-4-maverick-17b-128e-instruct-maas": ModelInfo(
         test_json=False,  # Json functionality not operational
@@ -83,6 +89,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "llama-4-scout-17b-16e-instruct-maas": ModelInfo(
         test_json=False,  # Json functionality not operational
     ),
+    "gcp-glm-5": ModelInfo(),
     # "deepseek-reasoner",                   DISCONTINUED
     # "deepseek-chat",                       DISCONTINUED
     # "azure-deepseek-r1",                   EXCLUDED as it is too slow
@@ -90,6 +97,9 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "gcp-claude-3-5-sonnet-v2": ModelInfo(), DISCONTINUED
     "gcp-claude-4-5-sonnet": ModelInfo(),
     "gcp-claude-4-5-haiku": ModelInfo(),
+    "gcp-claude-4-6-opus": ModelInfo(),
+    "gcp-claude-4-6-sonnet": ModelInfo(),
+    "gcp-claude-4-7-opus": ModelInfo(),
     # AWS claude models are available in all AWS-based regions except aws-il
     "aws-claude-4-sonnet": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
     "aws-claude-4-5-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
