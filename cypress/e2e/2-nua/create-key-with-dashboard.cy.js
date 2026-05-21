@@ -6,24 +6,34 @@ describe('Create NUA key with the dashboard', () => {
   const authHeader = getAuthHeader();
   ACCOUNT.availableZones.forEach((zone) => {
     beforeEach(() => {
+      // Clean stale NUA clients across ALL zones (getNUAClients aggregates from all zones)
       cy.request({
         method: 'GET',
-        url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_clients`,
+        url: `https://${ACCOUNT.domain}/api/v1/zones`,
         headers: authHeader,
-      }).then((response) => {
-        expect(response.status).to.eq(200);
-        const clients = response.body['clients'] || [];
-        if (clients.length > 1) {
-          clients
-            .filter((client) => !client['title'].includes('e2e'))
-            .forEach((client) => {
-              cy.request({
-                method: 'DELETE',
-                url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_client/${client.client_id}`,
-                headers: authHeader,
-              }).then((patchResponse) => expect(patchResponse.status).to.eq(204));
-            });
-        }
+      }).then((zonesResponse) => {
+        const apiZones = zonesResponse.body || [];
+        apiZones.forEach((apiZone) => {
+          cy.request({
+            method: 'GET',
+            url: `https://${apiZone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_clients`,
+            headers: authHeader,
+            failOnStatusCode: false,
+          }).then((response) => {
+            if (response.status === 200) {
+              const clients = response.body['clients'] || [];
+              clients
+                .filter((client) => !client['title'].includes('e2e'))
+                .forEach((client) => {
+                  cy.request({
+                    method: 'DELETE',
+                    url: `https://${apiZone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_client/${client.client_id}`,
+                    headers: authHeader,
+                  });
+                });
+            }
+          });
+        });
       });
 
       cy.login(zone);
