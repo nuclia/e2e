@@ -28,7 +28,7 @@ jobs:
       # Install npm dependencies, cache them correctly and run all Cypress tests
       - name: Cypress run
         id: cypress
-        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
+        uses: cypress-io/github-action@dace029018fcdf86e0df89a31bc3cfa5b32570d8 # v7.3.0
         with:
           install-command: yarn install
           spec: cypress/e2e/5-ui-starter/ui-starter.cy.js
