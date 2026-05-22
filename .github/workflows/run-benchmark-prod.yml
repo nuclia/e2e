@@ -28,8 +28,7 @@ jobs:
         target: [
           "prod__gke-prod-1",
           "prod__aws-us-east-2-1",
-          "prod__aws-il-central-1-1",
-          "progress__progress-proc-us-east-2-1",
+          "prod__aws-il-central-1-1"
         ]
 
     steps:
