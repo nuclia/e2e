@@ -14,9 +14,13 @@ jobs:
   build-virtual-env:
     runs-on: ubuntu-22.04
     name: Build virtual environment
+    permissions:
+      contents: read    # actions/checkout
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
@@ -33,11 +37,15 @@ jobs:
   pre-checks:
     runs-on: ubuntu-22.04
     name: Python pre-checks
+    permissions:
+      contents: read    # actions/checkout
     needs:
       - build-virtual-env
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Restore venv
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -55,10 +63,13 @@ jobs:
     runs-on: ubuntu-22.04
     name: test-${{ matrix.zone }}_#${{ matrix.shard_index }}
     continue-on-error: true
+    permissions:
+      contents: read    # actions/checkout
+      checks: write     # mikepenz/action-junit-report
     strategy:
       fail-fast: false
       matrix:
-        zone: [gke-prod-1, aws-us-east-2-1, aws-il-central-1-1, aws-eu-central-1-1, aws-me-central-1-1]
+        zone: [gke-prod-1, aws-us-east-2-1, aws-il-central-1-1, aws-eu-central-1-1] # Remove aws-me-central-1-1 due to rocket issue
         shard_index: [0, 1, 2]  # Running tests in 3 parallel shards
     needs:
       - build-virtual-env
@@ -67,6 +78,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Restore venv
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -118,6 +131,7 @@ jobs:
 
   notify:
     runs-on: ubuntu-latest
+    permissions: {}      # no token needed; Slack webhook uses a secret
     needs: test
     if: always()  # Always run to check if any zone failed
     steps:
@@ -151,5 +165,7 @@ jobs:
       - name: Mark workflow as failed if any zone failed
         if: ${{ steps.collect.outputs.failed_zones != '' }}
         run: |
-          echo "One or more test zones failed: ${{ steps.collect.outputs.failed_zones }}"
+          echo "One or more test zones failed: ${STEPS_COLLECT_OUTPUTS_FAILED_ZONES}"
           exit 1
+        env:
+          STEPS_COLLECT_OUTPUTS_FAILED_ZONES: ${{ steps.collect.outputs.failed_zones }}

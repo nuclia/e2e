@@ -16,9 +16,13 @@ jobs:
   build-virtual-env:
     runs-on: ubuntu-22.04
     name: Build virtual environment
+    permissions:
+      contents: read    # actions/checkout
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
@@ -35,11 +39,15 @@ jobs:
   pre-checks:
     runs-on: ubuntu-22.04
     name: Python pre-checks
+    permissions:
+      contents: read    # actions/checkout
     needs:
       - build-virtual-env
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Restore venv
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -56,6 +64,9 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     name: e2e tests
+    permissions:
+      contents: read    # actions/checkout
+      checks: write     # mikepenz/action-junit-report
     strategy:
       fail-fast: false
       matrix:
@@ -67,6 +78,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Restore venv
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -100,6 +113,7 @@ jobs:
 
   notify:
     if: ${{ failure() && github.ref_name == 'main' }}
+    permissions: {}      # no token needed; Slack webhook uses a secret
     needs: test
     runs-on: ubuntu-latest
     steps:

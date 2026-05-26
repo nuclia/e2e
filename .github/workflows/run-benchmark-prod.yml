@@ -20,19 +20,22 @@ on:
 jobs:
   benchmark:
     runs-on: nuclia-base
+    permissions:
+      contents: read    # actions/checkout
     strategy:
       fail-fast: false
       matrix:
         target: [
           "prod__gke-prod-1",
           "prod__aws-us-east-2-1",
-          "prod__aws-il-central-1-1",
-          "progress__progress-proc-us-east-2-1",
+          "prod__aws-il-central-1-1"
         ]
 
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
@@ -47,6 +50,8 @@ jobs:
           app-id: ${{ vars.GHAPP_NUCLIA_SERVICE_BOT_ID }}
           private-key: ${{ secrets.GHAPP_NUCLIA_SERVICE_BOT_PK }}
           owner: nuclia
+          repositories: core-apps          # scope to single target repo
+          permission-contents: read         # checkout only; no write needed
 
       - name: Checkout core-apps repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -54,6 +59,7 @@ jobs:
           repository: nuclia/core-apps
           token: ${{ steps.app-token.outputs.token }}
           path: core-apps
+          persist-credentials: false
 
       - name: Extract vars
         run: |
@@ -96,10 +102,14 @@ jobs:
 
   summarize:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read    # actions/checkout
     needs: benchmark
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
