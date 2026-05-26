@@ -46,15 +46,12 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "claude-3-fast",                       DISCONTINUED
     # "claude-3-5-fast": ModelInfo(),        DISCONTINUED
     # "claude-3-5-small": ModelInfo(),       DISCONTINUED
-    "claude-4-opus": ModelInfo(),
     "claude-4-sonnet": ModelInfo(),
     "claude-4-5-sonnet": ModelInfo(),
     "claude-4-5-haiku": ModelInfo(),
     "claude-4-6-opus": ModelInfo(),
     "claude-4-6-sonnet": ModelInfo(),
     "claude-4-7-opus": ModelInfo(),
-    "gemini-2.0-flash-lite": ModelInfo(),
-    "gemini-2.0-flash": ModelInfo(),
     "gemini-2.5-pro": ModelInfo(),
     "gemini-2.5-flash": ModelInfo(),
     "gemini-2.5-flash-lite": ModelInfo(),
@@ -106,7 +103,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "aws-claude-4-5-haiku": ModelInfo(zones_re="(aws-(?!il|me)).*"),
     "aws-claude-4-6-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     # The opus models are not available in europe
-    "aws-claude-4-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     "aws-claude-4-6-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
