@@ -186,3 +186,94 @@ export function goToManageAccount() {
 export const closeViewer = () => {
   cy.get(nucliaSearchResultsSelector).shadow().find(`${viewerSelector} ${closeButton}`).click();
 };
+
+export const COWORK_STAGE_ACCOUNT = {
+  id: '3b23ef46-00ac-488b-8654-cf4b66e5c4f0',
+  slug: 'e2e-cowork',
+  domain: 'stashify.cloud',
+  coworkDomain: 'rag.stashify.cloud',
+  availableZones: [
+    {
+      slug: ZONES['europe'],
+      title: 'Europe',
+      permanentKb: {
+        name: 'E2E Cowork Permanent',
+        slug: 'e2e-cowork-permanent',
+        id: '036344dd-0afa-441a-92c2-5aafa8c23f06',
+        zone: ZONES['europe'],
+      },
+      emptyKb: {
+        name: 'E2E Cowork Empty',
+        slug: 'e2e-cowork-empty',
+        id: 'acb4a49d-ec46-456b-9a00-a86d5a28d150',
+        zone: ZONES['europe'],
+      },
+    },
+  ],
+};
+
+export const COWORK_PROD_ACCOUNT = {
+  id: 'TODO',
+  slug: 'e2e-cowork-prod',
+  domain: 'nuclia.cloud',
+  coworkDomain: 'rag.nuclia.cloud',
+  availableZones: [
+    {
+      slug: ZONES['europe'],
+      title: 'Europe',
+      permanentKb: {
+        name: 'E2E Cowork Permanent Prod',
+        slug: 'e2e-cowork-permanent-prod',
+        id: 'TODO',
+        zone: ZONES['europe'],
+      },
+      emptyKb: {
+        name: 'E2E Cowork Empty Prod',
+        slug: 'e2e-cowork-empty-prod',
+        id: 'TODO',
+        zone: ZONES['europe'],
+      },
+    },
+  ],
+};
+
+export const COWORK_DEV_ACCOUNT = {
+  id: 'TODO',
+  slug: 'e2e-cowork-dev',
+  domain: 'gcp-global-dev-1.nuclia.io',
+  coworkDomain: 'rag.gcp-global-dev-1.nuclia.io',
+  availableZones: [
+    {
+      slug: ZONES['europe'],
+      title: 'Europe',
+      permanentKb: {
+        name: 'E2E Cowork Permanent Dev',
+        slug: 'e2e-cowork-permanent-dev',
+        id: 'TODO',
+        zone: ZONES['europe'],
+      },
+      emptyKb: {
+        name: 'E2E Cowork Empty Dev',
+        slug: 'e2e-cowork-empty-dev',
+        id: 'TODO',
+        zone: ZONES['europe'],
+      },
+    },
+  ],
+};
+
+const COWORK_ACCOUNTS = {
+  prod: COWORK_PROD_ACCOUNT,
+  dev: COWORK_DEV_ACCOUNT,
+  stage: COWORK_STAGE_ACCOUNT,
+}
+
+export const COWORK_ACCOUNT = COWORK_ACCOUNTS[`${Cypress.env('RUNNING_ENV')}`] || COWORK_STAGE_ACCOUNT;
+
+export function getCoworkAuthHeader(synchronous = true) {
+  const headers = { Authorization: `Bearer ${Cypress.env('COWORK_BEARER_TOKEN')}` };
+  if (synchronous) {
+    headers['x-synchronous'] = true;
+  }
+  return headers;
+}

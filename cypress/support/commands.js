@@ -11,7 +11,6 @@
 function login(kbName) {
   cy.visit(`/`, {
     onBeforeLoad(win) {
-      // Store auth tokens
       win.localStorage.setItem('JWT_KEY', Cypress.env('BEARER_TOKEN'));
       win.localStorage.setItem('NUCLIA_GETTING_STARTED_DONE', 'true');
     },
@@ -23,6 +22,20 @@ function login(kbName) {
 // -- This is a parent command --
 Cypress.Commands.add('login', (zone) => login(zone.permanentKb.name));
 Cypress.Commands.add('loginToEmptyKb', (zone) => login(zone.emptyKb.name));
+
+function loginToCoworkKb(zone, kb) {
+  const { COWORK_ACCOUNT } = require('./common');
+  cy.visit(`https://${COWORK_ACCOUNT.coworkDomain}/at/${COWORK_ACCOUNT.slug}/${zone.slug}/${kb.slug}/simple`, {
+    onBeforeLoad(win) {
+      win.localStorage.setItem('JWT_KEY', Cypress.env('COWORK_BEARER_TOKEN'));
+      win.localStorage.setItem('NUCLIA_GETTING_STARTED_DONE', 'true');
+    },
+  });
+  cy.location('pathname').should('include', '/simple');
+}
+
+Cypress.Commands.add('loginToCoworkKb', (zone) => loginToCoworkKb(zone, zone.permanentKb));
+Cypress.Commands.add('loginToCoworkEmptyKb', (zone) => loginToCoworkKb(zone, zone.emptyKb));
 
 // -- This is a child command --
 // Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })

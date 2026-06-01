@@ -1,4 +1,6 @@
 const { defineConfig } = require('cypress');
+const { waitForSignupEmail } = require('./cypress/support/email-helper');
+const { performCoworkSignup } = require('./cypress/support/cowork-signup');
 
 module.exports = defineConfig({
   reporter: 'cypress-mochawesome-reporter',
@@ -12,13 +14,21 @@ module.exports = defineConfig({
     json: true,
   },
   e2e: {
-    setupNodeEvents(on) {
+    setupNodeEvents(on, config) {
+      // Bridge Cypress env vars to process.env so task code can access them
+      if (config.env) {
+        for (const [key, value] of Object.entries(config.env)) {
+          if (!process.env[key]) process.env[key] = value;
+        }
+      }
       // Enable ability to log to the terminal from the tests
       on('task', {
         log(message) {
           console.log(`    ${message}`);
           return null;
         },
+        waitForEmail: ({ emailAlias, timeout }) => waitForSignupEmail(emailAlias, timeout),
+        performCoworkSignup,
       });
       // Load plugins
       require('cypress-mochawesome-reporter/plugin')(on);
