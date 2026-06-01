@@ -50,10 +50,15 @@ jobs:
         env:
           CYPRESS_BASE_URL: https://stashify.cloud
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          CYPRESS_COWORK_BEARER_TOKEN: ${{ secrets.COWORK_PERSONAL_ACCESS_TOKEN }}
           CYPRESS_NUA_KEY: ${{ secrets.NUA_KEY }}
           CYPRESS_USER_NAME: ${{ secrets.USER_NAME }}
           CYPRESS_USER_PWD: ${{ secrets.USER_PWD }}
           CYPRESS_RUNNING_ENV: stage
+          CYPRESS_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
+          CYPRESS_GLOBAL_RECAPTCHA: ${{ secrets.STAGE_GLOBAL_RECAPTCHA }}
+          CYPRESS_OAUTH_CLIENT_ID: ${{ secrets.STAGE_OAUTH_CLIENT_ID }}
+          CYPRESS_ROOT_PAT_TOKEN: ${{ secrets.STAGE_ROOT_PAT_TOKEN }}
         # after the test run completes store reports and any screenshots
       - name: Cypress reports
         id: report
