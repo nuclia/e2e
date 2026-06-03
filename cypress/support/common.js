@@ -213,24 +213,24 @@ export const COWORK_STAGE_ACCOUNT = {
 };
 
 export const COWORK_PROD_ACCOUNT = {
-  id: 'TODO',
-  slug: 'e2e-cowork-prod',
-  domain: 'nuclia.cloud',
-  coworkDomain: 'rag.nuclia.cloud',
+  id: '6cf4bd83-cc45-4b3c-86b8-fb21b2132917',
+  slug: 'e2e-cowork',
+  domain: 'progress.cloud',
+  coworkDomain: 'rag.progress.cloud',
   availableZones: [
     {
       slug: ZONES['europe'],
       title: 'Europe',
       permanentKb: {
-        name: 'E2E Cowork Permanent Prod',
-        slug: 'e2e-cowork-permanent-prod',
-        id: 'TODO',
+        name: 'E2E Cowork Permanent',
+        slug: 'e2e-cowork-permanent',
+        id: 'f70d9041-e4d3-4b30-8fe5-1db62ff7eebd',
         zone: ZONES['europe'],
       },
       emptyKb: {
-        name: 'E2E Cowork Empty Prod',
-        slug: 'e2e-cowork-empty-prod',
-        id: 'TODO',
+        name: 'E2E Cowork Empty',
+        slug: 'e2e-cowork-empty',
+        id: '4d1aad16-fdec-4292-b617-d01dd1eb6270',
         zone: ZONES['europe'],
       },
     },
@@ -247,14 +247,14 @@ export const COWORK_DEV_ACCOUNT = {
       slug: ZONES['europe'],
       title: 'Europe',
       permanentKb: {
-        name: 'E2E Cowork Permanent Dev',
-        slug: 'e2e-cowork-permanent-dev',
+        name: 'E2E Cowork Permanent',
+        slug: 'e2e-cowork-permanent',
         id: 'TODO',
         zone: ZONES['europe'],
       },
       emptyKb: {
-        name: 'E2E Cowork Empty Dev',
-        slug: 'e2e-cowork-empty-dev',
+        name: 'E2E Cowork Empty',
+        slug: 'e2e-cowork-empty',
         id: 'TODO',
         zone: ZONES['europe'],
       },

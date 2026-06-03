@@ -10,8 +10,6 @@ describe('Content-box Resources', () => {
     let authHeader;
 
     before(() => {
-      if (Cypress.env('RUNNING_ENV') !== 'stage') this.skip();
-
       endpoint = `https://${zone.slug}.${COWORK_ACCOUNT.domain}/api/v1/kb/${zone.permanentKb.id}`;
       authHeader = getCoworkAuthHeader();
 
