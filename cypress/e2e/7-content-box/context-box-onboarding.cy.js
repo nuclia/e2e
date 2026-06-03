@@ -18,13 +18,12 @@ describe('Cowork Onboarding - Full Flow', () => {
   const testSlug = 'cypress-e2e-cowork';
 
   before(function () {
-    if (Cypress.env('RUNNING_ENV') !== 'stage') this.skip();
     // Delete the fixed-slug test account if it exists from a previous interrupted run.
     // failOnStatusCode: false silently skips the 404 when there's nothing to clean up.
     cy.request({
       method: 'DELETE',
       url: `${ACCOUNTS_BASE}/api/manage/@account/${testSlug}`,
-      headers: { Authorization: `Bearer ${Cypress.env('STAGE_ROOT_PAT_TOKEN')}` },
+      headers: { Authorization: `Bearer ${Cypress.env('ROOT_PAT_TOKEN')}` },
       failOnStatusCode: false,
     });
   });

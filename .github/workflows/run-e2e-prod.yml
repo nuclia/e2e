@@ -55,10 +55,15 @@ jobs:
         env:
           CYPRESS_BASE_URL: https://nuclia.cloud
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_PROD }}
+          CYPRESS_COWORK_BEARER_TOKEN: ${{ secrets.COWORK_PERSONAL_ACCESS_TOKEN_PROD }}
           CYPRESS_NUA_KEY_EUROPE: ${{ secrets.NUA_KEY_PROD_EUROPE }}
           CYPRESS_NUA_KEY_USA: ${{ secrets.NUA_KEY_PROD_USA }}
           CYPRESS_USER_NAME: ${{ secrets.USER_NAME_PROD }}
           CYPRESS_USER_PWD: ${{ secrets.USER_PWD_PROD }}
+          CYPRESS_GMAIL_APP_PASSWORD: ${{ secrets.TEST_GMAIL_APP_PASSWORD }}
+          CYPRESS_GLOBAL_RECAPTCHA: ${{ secrets.PROD_GLOBAL_RECAPTCHA }}
+          CYPRESS_OAUTH_CLIENT_ID: ${{ secrets.PROD_OAUTH_CLIENT_ID }}
+          CYPRESS_ROOT_PAT_TOKEN: ${{ secrets.PROD_ROOT_PAT_TOKEN }}
           CYPRESS_RUNNING_ENV: prod
         # after the test run completes store reports and any screenshots
       - name: Cypress reports
