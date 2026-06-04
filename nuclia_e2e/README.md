@@ -57,7 +57,7 @@ There are different ways to authenticate to the services, each one will be used 
 There are a handful of Users, Accounts, and KBs pregenerated that these tests use, so it's important to be aware of them to avoid altering or deleting, to ensure tests work as intended.
 
 1. **Account**
-   - All tests run under the `automated-testing` account, available on both `nuclia.cloud` and `stashify.cloud`.
+   - All tests run under the `automated-testing` account, available on both `progress.cloud` and `stashify.cloud`.
 
 2. **Users**
    - **Nuclia E2E Tests Owner**

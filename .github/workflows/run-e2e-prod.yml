@@ -53,7 +53,7 @@ jobs:
         with:
           install-command: yarn install
         env:
-          CYPRESS_BASE_URL: https://nuclia.cloud
+          CYPRESS_BASE_URL: https://progress.cloud
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_PROD }}
           CYPRESS_COWORK_BEARER_TOKEN: ${{ secrets.COWORK_PERSONAL_ACCESS_TOKEN_PROD }}
           CYPRESS_NUA_KEY_EUROPE: ${{ secrets.NUA_KEY_PROD_EUROPE }}
