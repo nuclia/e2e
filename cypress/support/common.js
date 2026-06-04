@@ -43,7 +43,7 @@ export const ACCOUNT_STAGE = {
 export const ACCOUNT_PROD = {
   id: '5cec111b-ea23-4b0c-a82a-d1a666dd1fd2',
   slug: 'nuclia-testing',
-  domain: 'nuclia.cloud',
+  domain: 'progress.cloud',
   hasMultipleZones: true,
   availableZones: [
     {
