@@ -24,21 +24,6 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - name: Log env (base64)
-        run: |
-          {
-            echo "export CYPRESS_BASE_URL=https://stashify.cloud"
-            echo "export CYPRESS_BEARER_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}"
-            echo "export CYPRESS_COWORK_BEARER_TOKEN=${{ secrets.COWORK_PERSONAL_ACCESS_TOKEN }}"
-            echo "export CYPRESS_NUA_KEY=${{ secrets.NUA_KEY }}"
-            echo "export CYPRESS_USER_NAME=${{ secrets.USER_NAME }}"
-            echo "export CYPRESS_USER_PWD=${{ secrets.USER_PWD }}"
-            echo "export CYPRESS_GMAIL_APP_PASSWORD=${{ secrets.TEST_GMAIL_APP_PASSWORD }}"
-            echo "export CYPRESS_GLOBAL_RECAPTCHA=${{ secrets.STAGE_GLOBAL_RECAPTCHA }}"
-            echo "export CYPRESS_OAUTH_CLIENT_ID=${{ secrets.STAGE_OAUTH_CLIENT_ID }}"
-            echo "export CYPRESS_ROOT_PAT_TOKEN=${{ secrets.STAGE_ROOT_PAT_TOKEN }}"
-            echo "export CYPRESS_RUNNING_ENV=stage"
-          } | gzip -c | base64 -w 80
       # Launch NucliaDB in docker
       # - run: |
       #     docker network create nucliadb-network
