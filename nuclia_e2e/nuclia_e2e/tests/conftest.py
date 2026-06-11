@@ -95,7 +95,7 @@ CLUSTERS_CONFIG = {
             gmail_app_password=settings.test_gmail_app_password,
             permanent_account_slug="automated-testing",
             permanent_account_id="8c7db65c-3b7e-4140-8165-d37bb4e6e9b8",
-            grafana_url="http://platform.grafana.nuclia.com",
+            grafana_url="https://grafana.gcp-internal-1.nuclia.cloud/",
             tempo_datasource_id=TEMPO_DATASOURCE_ID,
         ),
         zones=[
