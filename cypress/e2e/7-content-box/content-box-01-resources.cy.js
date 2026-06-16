@@ -20,10 +20,8 @@ describe('Content-box Resources', () => {
         headers: authHeader,
       }).then((response) => {
         expect(response.status).to.eq(200);
-        const testResources = response.body.resources?.filter((r) =>
-          r.slug?.startsWith('e2e-'),
-        ) || [];
-        
+        const testResources = response.body.resources?.filter((r) => r.slug?.startsWith('e2e-')) || [];
+
         const currentCount = testResources.length;
         cy.task('log', `Found ${currentCount} e2e test resources`);
 
@@ -95,9 +93,9 @@ describe('Content-box Resources', () => {
 
     it('should navigate between resources and history views', () => {
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
-      cy.get('app-simple-kb .counters .nav').eq(1).find('pa-button').contains('History').click();
+      cy.get('app-simple-kb .counters button.nav').contains('History').click();
       cy.get('app-history-table', { timeout: 5000 }).should('be.visible');
-      cy.get('app-simple-kb .counters .nav').eq(0).find('pa-button').contains('Your resources').click();
+      cy.get('app-simple-kb .counters button.nav').contains('Your resources').click();
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
     });
   });
