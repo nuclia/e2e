@@ -45,9 +45,9 @@ describe('Content-box Chat', () => {
 
     it('should navigate to history view and back', () => {
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
-      cy.get('app-simple-kb .counters .nav').eq(1).find('pa-button').contains('History').click();
+      cy.get('app-simple-kb .counters button.nav').contains('History').click();
       cy.get('app-history-table', { timeout: 5000 }).should('be.visible');
-      cy.get('app-simple-kb .counters .nav').eq(0).find('pa-button').contains('Your resources').click();
+      cy.get('app-simple-kb .counters button.nav').contains('Your resources').click();
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
     });
   });

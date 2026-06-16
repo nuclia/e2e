@@ -20,8 +20,8 @@ describe('Content-box History', () => {
 
     it('should display history tab in step 3', () => {
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
-      cy.get('app-simple-kb .counters .nav').should('have.length', 2);
-      cy.get('app-simple-kb .counters .nav').eq(1).find('pa-button').should('contain.text', 'History');
+      cy.get('app-simple-kb .counters button.nav').should('have.length', 2);
+      cy.get('app-simple-kb .counters button.nav').should('contain.text', 'History');
     });
   });
 });
