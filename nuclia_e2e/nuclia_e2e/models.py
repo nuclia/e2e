@@ -46,7 +46,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "claude-3-fast",                       DISCONTINUED
     # "claude-3-5-fast": ModelInfo(),        DISCONTINUED
     # "claude-3-5-small": ModelInfo(),       DISCONTINUED
-    "claude-4-sonnet": ModelInfo(),
+    # "claude-4-sonnet": ModelInfo(),        DISCONTINUED
     "claude-4-5-sonnet": ModelInfo(),
     "claude-4-5-haiku": ModelInfo(),
     "claude-4-6-opus": ModelInfo(),
