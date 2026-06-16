@@ -49,7 +49,7 @@ async def test_summarize_azure_chatgpt(nua_client: AsyncNuaClient):
 async def test_summarize_claude(nua_client: AsyncNuaClient):
     np = AsyncNucliaPredict()
     with skip_on_provider_transient_error():
-        embed = await np.summarize(DATA_COFFEE, model="claude-4-sonnet", nc=nua_client)
+        embed = await np.summarize(DATA_COFFEE, model="claude-4-6-sonnet", nc=nua_client)
     # changed to partial summaries since anthropic is not consistent in the global summary at all
     assert "flat white" in embed.resources["Flat white"].summary.lower()
     assert "macchiato" in embed.resources["Macchiato"].summary.lower()
