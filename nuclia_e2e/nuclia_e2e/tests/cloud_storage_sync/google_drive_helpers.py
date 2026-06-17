@@ -184,7 +184,11 @@ async def upload_local_tree(
         if entry.is_dir():
             subfolder_id = await create_folder(session, access_token, parent_folder_id, entry.name)
             sub_files = await upload_local_tree(
-                session, access_token, subfolder_id, entry, _prefix=f"{rel_path}/",
+                session,
+                access_token,
+                subfolder_id,
+                entry,
+                _prefix=f"{rel_path}/",
                 content_suffix=content_suffix,
             )
             files.update(sub_files)
