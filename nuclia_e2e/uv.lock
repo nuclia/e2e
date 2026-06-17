@@ -667,7 +667,7 @@ wheels = [
 
 [[package]]
 name = "nuclia"
-version = "4.9.18"
+version = "4.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -688,9 +688,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5b/3d/38423ce582393b782af4815c0f91ef56153e124ccf28ec8a5a38c1d5c17a/nuclia-4.9.18.tar.gz", hash = "sha256:8c8ef3d6bf0c1b98eb5d2542bffe1e9fd0a5cb4fd2ec32361773827a4cc7baa3", size = 307316, upload-time = "2026-03-06T10:10:20.18Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/75/7089144d770bb80f132e0928d315f057a2afdb7ff46e8159aabb4e6b9c43/nuclia-4.11.2.tar.gz", hash = "sha256:620ae416cc74cee9db3fc2a1ed347410662a0bc334090e208585c4ba1bd26742", size = 280325, upload-time = "2026-06-09T10:49:15.049Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d1/eb/6d80289cce29f927d3585b091ec4df3984e75f69a2533bdbb6cd8e2cb4df/nuclia-4.9.18-py3-none-any.whl", hash = "sha256:b208d7d8132d07233e53d192afb0074b8f67719517e2addf44981d6b5e5db45c", size = 99837, upload-time = "2026-03-06T10:10:17.287Z" },
+    { url = "https://files.pythonhosted.org/packages/67/fd/c84bfc6aa41ea274682070cdce707d60d562d251e31354f3a738eb9230a5/nuclia-4.11.2-py3-none-any.whl", hash = "sha256:da1b3373cc63860cef8535b59ba1159f8697c16bf8ba800e72f8268d923f561f", size = 117547, upload-time = "2026-06-09T10:49:13.321Z" },
 ]
 
 [[package]]
@@ -738,7 +738,7 @@ requires-dist = [
     { name = "backoff" },
     { name = "mypy", specifier = "==1.15.0" },
     { name = "mypy-extensions", specifier = "==1.0.0" },
-    { name = "nuclia", specifier = ">=4.9.18" },
+    { name = "nuclia", specifier = ">=4.11.2" },
     { name = "nucliadb-protos" },
     { name = "prometheus-client" },
     { name = "pydantic-settings" },
@@ -779,13 +779,13 @@ wheels = [
 
 [[package]]
 name = "nucliadb-models"
-version = "6.9.7.post5558"
+version = "6.15.0.post6555"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/78/3b/3bc81091df2b008e5a76b9843198a2801de7ffe641e7e83137cfe34a0b73/nucliadb_models-6.9.7.post5558-py3-none-any.whl", hash = "sha256:b2b7207abb8534ceb761bf688f26d503698732c5db8376a0dca72b7e0abcbe85", size = 71929, upload-time = "2025-12-17T10:17:04.04Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/3f/49c0710a6c9c61408e9fd7b789620f322f1ebe5a02e26edfec6eb71cc6e9/nucliadb_models-6.15.0.post6555-py3-none-any.whl", hash = "sha256:0b4aff34f961541315432857d42b929c5eb05bb0ac61f5a53c8d53eea36f38f9", size = 81986, upload-time = "2026-06-16T15:16:11.19Z" },
 ]
 
 [[package]]
@@ -803,7 +803,7 @@ wheels = [
 
 [[package]]
 name = "nucliadb-sdk"
-version = "6.7.2.post4862"
+version = "6.15.0.post6555"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -813,7 +813,7 @@ dependencies = [
     { name = "pydantic" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0d/6e/4ac4f2a9a8c69e78673849e980c2f9a7ff45cc87e02cdaded1d4d9399dda/nucliadb_sdk-6.7.2.post4862-py3-none-any.whl", hash = "sha256:5a06705774e4d7b9c7b51ae50225d8e40202c1d2c4880fd76af4a83110f50dff", size = 16761, upload-time = "2025-08-26T10:40:24.782Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/b7/25f05065be23a249779ec0133410071a00abc046d20aeb94889fd1e3f7f4/nucliadb_sdk-6.15.0.post6555-py3-none-any.whl", hash = "sha256:4dea5345fc42882e6c5f3b5baaa02be4a843b85fe36bb60771434d8b07073ca2", size = 18021, upload-time = "2026-06-16T15:16:16.688Z" },
 ]
 
 [[package]]
