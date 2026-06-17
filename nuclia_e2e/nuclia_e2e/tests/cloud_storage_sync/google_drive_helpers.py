@@ -172,6 +172,7 @@ async def upload_local_tree(
     parent_folder_id: str,
     local_dir: Path,
     _prefix: str = "",
+    content_suffix: str = "",
 ) -> dict[str, str]:
     """Recursively upload a local directory tree to Google Drive.
 
@@ -183,11 +184,18 @@ async def upload_local_tree(
         if entry.is_dir():
             subfolder_id = await create_folder(session, access_token, parent_folder_id, entry.name)
             sub_files = await upload_local_tree(
-                session, access_token, subfolder_id, entry, _prefix=f"{rel_path}/"
+                session,
+                access_token,
+                subfolder_id,
+                entry,
+                _prefix=f"{rel_path}/",
+                content_suffix=content_suffix,
             )
             files.update(sub_files)
         else:
             content = entry.read_text()
+            if content_suffix:
+                content = f"{content}\n{content_suffix}"
             fid = await create_file(session, access_token, parent_folder_id, entry.name, content)
             files[fid] = rel_path
     return files

@@ -30,6 +30,10 @@ SEED_FILES_DIR = Path(__file__).parent / "seed_files"
 
 
 @pytest.mark.asyncio_cooperative
+@pytest.mark.skipif(
+    settings.test_env.lower() != "prod",
+    reason="Google Drive OAuth refresh token expires after 7 days on non-prod environments",
+)
 async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
     regional_api_config: ZoneConfig, kb_id: str, aiohttp_session: aiohttp.ClientSession
 ):
@@ -67,7 +71,9 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
         folder_id = await gdrive.create_folder(session, access_token, "root", folder_name)
         logger.info("Created test folder: %s", folder_id)
 
-        uploaded_files = await gdrive.upload_local_tree(session, access_token, folder_id, SEED_FILES_DIR)
+        uploaded_files = await gdrive.upload_local_tree(
+            session, access_token, folder_id, SEED_FILES_DIR, content_suffix=folder_name
+        )
         # Separate excluded files (.ignore extension) from synced files
         excluded_file_ids = [fid for fid, rel in uploaded_files.items() if rel.endswith(".ignore")]
         synced_uploaded = {fid: rel for fid, rel in uploaded_files.items() if not rel.endswith(".ignore")}
@@ -86,7 +92,7 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
         logger.info("Created dynamic folder: %s", dynamic_folder_id)
 
         dynamic_file_id = await gdrive.create_file(
-            session, access_token, dynamic_folder_id, dynamic_filename, "initial content"
+            session, access_token, dynamic_folder_id, dynamic_filename, f"initial content {folder_name}"
         )
         all_file_ids.append(dynamic_file_id)
         expected_paths[dynamic_file_id] = f"/{folder_name}/{dynamic_folder_name}/{dynamic_filename}"
@@ -159,13 +165,13 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
         logger.info("Phase 2: Creating new file and updating dynamic file")
 
         new_file_id = await gdrive.create_file(
-            session, access_token, folder_id, new_filename, "brand new file"
+            session, access_token, folder_id, new_filename, f"brand new file {folder_name}"
         )
         expected_paths[new_file_id] = f"/{folder_name}/{new_filename}"
         logger.info("Created new file: %s", new_file_id)
 
         await gdrive.update_file_content(
-            session, access_token, dynamic_file_id, "updated content with new bytes"
+            session, access_token, dynamic_file_id, f"updated content with new bytes {folder_name}"
         )
         logger.info("Updated dynamic file content")
 
