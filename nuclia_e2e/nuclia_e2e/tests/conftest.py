@@ -429,8 +429,12 @@ async def regional_api(aiohttp_session, global_api_config, regional_api_config):
 @pytest.fixture
 def global_api_config() -> Generator[GlobalConfig, None, None]:
     global_config = TEST_CLUSTER.global_config
-    nuclia.BASE = f"https://{global_config.base_domain}"
-    nuclia.REGIONAL = f"https://{{region}}.{global_config.base_domain}"
+    nuclia.BASE_DOMAIN = global_config.base_domain
+    # regenerate all urls based on the new base domain
+    nuclia.CLOUD_ID = nuclia.BASE_DOMAIN
+    nuclia.REGIONAL = nuclia._regional_template(nuclia.BASE_DOMAIN)
+    nuclia.OAUTH_BASE = nuclia.get_oauth_base(nuclia.BASE_DOMAIN)
+    nuclia.GLOBAL_BASE = nuclia.get_global_base(nuclia.BASE_DOMAIN)
     os.environ["TESTING"] = "True"
     with tempfile.NamedTemporaryFile() as temp_file:
         temp_file.write(b"{}")
