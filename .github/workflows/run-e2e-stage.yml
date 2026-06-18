@@ -45,12 +45,13 @@ jobs:
       #         -e DRIVER=PG \
       #         -e DRIVER_PG_URL="postgresql://nucliadb:nucliadb@pg:5432/nucliadb" \
       #         nucliadb-server &
-      # Install npm dependencies, cache them correctly and run all Cypress tests
+      - name: Install
+        run: |-
+          yarn install --immutable
+          cypress install
       - name: Cypress run
         id: cypress
         uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
-        with:
-          install-command: yarn install --immutable && cypress install
         env:
           CYPRESS_BASE_URL: https://stashify.cloud
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
