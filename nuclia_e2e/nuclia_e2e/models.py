@@ -97,18 +97,18 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "gcp-claude-4-6-opus": ModelInfo(),
     "gcp-claude-4-6-sonnet": ModelInfo(),
     "gcp-claude-4-7-opus": ModelInfo(),
-    # AWS claude models are available in all AWS-based regions except aws-il
-    "aws-claude-4-sonnet": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
+    # AWS claude models are available in all AWS-based regions except aws-il and some aren't available in aus
+    "aws-claude-4-sonnet": ModelInfo(zones_re="(aws-(?!il|ap)|progress-).*"),
     "aws-claude-4-5-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     "aws-claude-4-5-haiku": ModelInfo(zones_re="(aws-(?!il|me)).*"),
     "aws-claude-4-6-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     # The opus models are not available in europe
-    "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
+    "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu|me|ap)|progress-).*"),
     "aws-claude-4-6-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
     "azure-gpt-oss-120b": ModelInfo(test_rephrase=False),
-    "nova-premier": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
-    "nova-pro": ModelInfo(zones_re="(aws-(?!il)|progress-).*"),
+    "nova-premier": ModelInfo(zones_re="(aws-(?!il|eu|me|ap)|progress-).*"),
+    "nova-pro": ModelInfo(zones_re="(aws-(?!il|ap)|progress-).*"),
     # "deepseek-chat-openai-compat"           EXCLUDED as not a model,just a driver, that needs a key to work
 }
 
