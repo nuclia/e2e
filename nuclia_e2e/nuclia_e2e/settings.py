@@ -24,6 +24,7 @@ class E2ESettings(BaseSettings):
     prod_aws_il_central_1_1_nua: str = ""
     prod_aws_eu_central_1_1_nua: str = ""
     prod_aws_me_central_1_1_nua: str = ""
+    prod_aws_ap_southeast_2_1_nua: str = ""
 
     # Stage environment
     stage_global_recaptcha: str = ""
@@ -73,6 +74,7 @@ class E2ESettings(BaseSettings):
                 "prod_aws_il_central_1_1_nua",
                 "prod_aws_eu_central_1_1_nua",
                 "prod_aws_me_central_1_1_nua",
+                "prod_aws_ap_southeast_2_1_nua",
             ]
         elif env == "stage":
             fields = [
