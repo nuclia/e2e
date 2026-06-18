@@ -134,6 +134,13 @@ CLUSTERS_CONFIG = {
                 permanent_kb_slug="pre-existing-kb",
                 permanent_nua_key=settings.prod_aws_me_central_1_1_nua,
             ),
+            ZoneConfig(
+                name="aws-ap-southeast-2-1",
+                zone_slug="aws-ap-southeast-2-1",
+                test_kb_slug="nuclia-e2e-live-aws-ap-southeast-2-1",
+                permanent_kb_slug="pre-existing-kb",
+                permanent_nua_key=settings.prod_aws_ap_southeast_2_1_nua,
+            ),
         ],
     ),
     "stage": ClusterConfig(
