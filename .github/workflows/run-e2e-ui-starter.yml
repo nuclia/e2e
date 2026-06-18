@@ -34,7 +34,7 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
         with:
-          install-command: |-
+          install-command: |
             yarn install --immutable
             cypress install
           spec: cypress/e2e/5-ui-starter/ui-starter.cy.js
