@@ -49,7 +49,7 @@ jobs:
       - name: Install
         run: |-
           yarn install --immutable
-          cypress install
+          node_modules/.bin/cypress install
       - name: Cypress run
         id: cypress
         uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
