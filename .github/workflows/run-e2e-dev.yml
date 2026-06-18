@@ -40,7 +40,9 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
         with:
-          install-command: yarn install --immutable
+          install-command: |-
+            yarn install --immutable
+            cypress install
         env:
           CYPRESS_BASE_URL: https://gcp-global-dev-1.nuclia.io
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_DEV }}
