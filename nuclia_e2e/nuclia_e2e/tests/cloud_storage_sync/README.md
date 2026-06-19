@@ -55,7 +55,7 @@ To generate one using the existing OAuth client:
 1. Open the authorization URL in a browser (replace placeholders):
 
 ```
-https://accounts.google.com/o/oauth2/v2/auth?client_id=CLIENT_ID&redirect_uri=http://localhost:8000/api/auth/external_connection/callback&response_type=code&access_type=offline&prompt=consent&scope=https://www.googleapis.com/auth/drive
+https://accounts.google.com/o/oauth2/v2/auth?client_id=CLIENT_ID&redirect_uri=https://aws-me-central-1-1.rag.progress.cloud/api/auth/external_connection/callback&response_type=code&access_type=offline&prompt=consent&scope=https://www.googleapis.com/auth/drive
 ```
 
 2. Consent with the Google account that owns the test Drive files.
@@ -69,7 +69,7 @@ curl -s -X POST https://oauth2.googleapis.com/token \
   -d "code=AUTHORIZATION_CODE" \
   -d "client_id=CLIENT_ID" \
   -d "client_secret=CLIENT_SECRET" \
-  -d "redirect_uri=http://localhost:8000/api/auth/external_connection/callback" \
+  -d "redirect_uri=https://aws-me-central-1-1.rag.progress.cloud/api/auth/external_connection/callback" \
   -d "grant_type=authorization_code" | jq .
 ```
 
