@@ -16,9 +16,9 @@ jobs:
 
     - name: Set up secret file
       env:
-        PROD_AWS_AP_SOUTHEAST_2_1_NUA: ${{ secrets.PROD_AWS_AP_SOUTHEAST_2_1_NUA }}
+        GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
       run: |
-        echo $PROD_AWS_AP_SOUTHEAST_2_1_NUA >> secrets.txt
+        echo $GOOGLE_DRIVE_REFRESH_TOKEN >> secrets.txt
 
     - name: Run tmate
       uses: mxschmitt/action-tmate@v2
