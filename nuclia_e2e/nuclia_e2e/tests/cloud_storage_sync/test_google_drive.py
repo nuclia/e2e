@@ -30,10 +30,6 @@ SEED_FILES_DIR = Path(__file__).parent / "seed_files"
 
 
 @pytest.mark.asyncio_cooperative
-@pytest.mark.skipif(
-    settings.test_env.lower() != "prod",
-    reason="Google Drive OAuth refresh token expires after 7 days on non-prod environments",
-)
 async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
     regional_api_config: ZoneConfig, kb_id: str, aiohttp_session: aiohttp.ClientSession
 ):

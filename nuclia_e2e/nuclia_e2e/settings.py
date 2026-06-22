@@ -45,7 +45,7 @@ class E2ESettings(BaseSettings):
     core_apps_repo_path: str = "/tmp/core-apps"
 
     # Cloud Storage Sync
-    google_drive_client_id: str = "687895873226-3gd1euiov317l5i7rh9iliaobe95onv4.apps.googleusercontent.com"
+    google_drive_client_id: str = "212524434512-rj4vke2c755iqt44b46k5m6v1lsl8s88.apps.googleusercontent.com"
     google_drive_client_secret: str = ""
     # The refresh token is expected to have the "https://www.googleapis.com/auth/drive" scope
     google_drive_refresh_token: str = ""
