@@ -165,7 +165,7 @@ CLUSTERS_CONFIG = {
                 permanent_nua_key=settings.stage_gcp_europe1_nua,
             )
         ],
-    )
+    ),
 }
 
 TEST_CLUSTER = CLUSTERS_CONFIG[TEST_ENV.lower()]
