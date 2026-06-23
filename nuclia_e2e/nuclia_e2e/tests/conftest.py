@@ -165,30 +165,7 @@ CLUSTERS_CONFIG = {
                 permanent_nua_key=settings.stage_gcp_europe1_nua,
             )
         ],
-    ),
-    "progress": ClusterConfig(
-        global_config=GlobalConfig(
-            name="progress",
-            base_domain="syntha.progress.com",
-            recaptcha=settings.progress_global_recaptcha,
-            root_pat_token=settings.progress_root_pat_token,
-            permanent_account_owner_pat_token=settings.progress_permament_account_owner_pat_token,
-            gmail_app_password=settings.test_gmail_app_password,
-            permanent_account_slug="automated-testing",
-            permanent_account_id="0e515342-3b5c-4778-acf0-0723a71eafa3",
-            grafana_url="http://progress-global-us-east-2-1.grafana.nuclia.com",
-            tempo_datasource_id=TEMPO_DATASOURCE_ID,
-        ),
-        zones=[
-            ZoneConfig(
-                name="progress-proc-us-east-2-1",
-                zone_slug="progress-proc-us-east-2-1",
-                test_kb_slug="nuclia-e2e-live-progress-proc-us-east-2-1",
-                permanent_kb_slug="pre-existing-kb",
-                permanent_nua_key=settings.progress_aws_proc_us_east_2_1_nua,
-            ),
-        ],
-    ),
+    )
 }
 
 TEST_CLUSTER = CLUSTERS_CONFIG[TEST_ENV.lower()]
