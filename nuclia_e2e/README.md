@@ -87,6 +87,7 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
 1 - Create a new `pre-existing-kb` in the new zone:
    - Account: `automated-testing`
    - KB name `{PROVIDER} {REGION} pre-existing-kb` (to easily distinguish in the dashboard, but keep the slugs the same).
+   - On the KB > Advanded > Settings, disable the "Hide resources without matching security group" toggle.
    - Add user `testing_sdk@nuclia.com` as owner on the KB.
 2 - Upload the `roasted-chicken.txt` and `omelette.txt` files in the [assets folder](nuclia_e2e/assets) to the kb. 
 3 - Wait for the files to be processed and assign this security groups:
