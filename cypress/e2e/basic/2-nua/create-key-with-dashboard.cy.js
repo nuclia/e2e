@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, getAuthHeader, goTo, goToManageAccount } from '../../support/common';
+import { ACCOUNT, getAuthHeader, goTo, goToManageAccount } from '../../../support/common';
 
 describe('Create NUA key with the dashboard', () => {
   const authHeader = getAuthHeader();

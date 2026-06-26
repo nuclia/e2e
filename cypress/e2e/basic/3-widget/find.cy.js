@@ -12,8 +12,8 @@ import {
   searchResultLiSelector,
   secondQuery,
   searchResultTitle,
-} from '../selectors/widget-selectors';
-import { ACCOUNT } from '../../support/common';
+} from '../../selectors/widget-selectors';
+import { ACCOUNT } from '../../../support/common';
 
 describe('Find', () => {
   ACCOUNT.availableZones.forEach((zone) => {

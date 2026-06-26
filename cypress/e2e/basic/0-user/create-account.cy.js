@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-const { ACCOUNT } = require('../../support/common');
+const { ACCOUNT } = require('../../../support/common');
 
 describe('Create a new account', () => {
   it('allows to go to account creation', () => {

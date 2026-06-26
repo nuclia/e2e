@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, getAuthHeader, goTo, onlyPermanentKb } from '../../support/common';
+import { ACCOUNT, getAuthHeader, goTo, onlyPermanentKb } from '../../../support/common';
 
 describe('Resources', () => {
   ACCOUNT.availableZones.forEach((zone) => {

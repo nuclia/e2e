@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, user } from '../../support/common';
+import { ACCOUNT, user } from '../../../support/common';
 
 describe('User Login', () => {
   it('should redirect unauthenticated user to login page', function () {

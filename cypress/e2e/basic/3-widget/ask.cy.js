@@ -15,8 +15,8 @@ import {
   nucliaSearchResultsSelector,
   searchBarInputSelector,
   secondQuestion,
-} from '../selectors/widget-selectors';
-import { ACCOUNT } from '../../support/common';
+} from '../../selectors/widget-selectors';
+import { ACCOUNT } from '../../../support/common';
 
 describe('Ask', () => {
   ACCOUNT.availableZones.forEach((zone) => {

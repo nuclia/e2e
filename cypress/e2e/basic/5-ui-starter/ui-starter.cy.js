@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { UI_STARTER } from '../../support/common';
+import { UI_STARTER } from '../../../support/common';
 
 describe('UI Starter', () => {
   it('should build UI Starter', () => {

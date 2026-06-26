@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-const { COWORK_ACCOUNT } = require('../../support/common');
+const { COWORK_ACCOUNT } = require('../../../support/common');
 
 describe('Cowork Onboarding - Full Flow', () => {
   const ACCOUNTS_BASE = `https://accounts.${COWORK_ACCOUNT.domain}`;
