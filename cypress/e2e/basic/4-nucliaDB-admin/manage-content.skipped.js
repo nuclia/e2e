@@ -1,4 +1,4 @@
-import { goTo, STANDALONE_HEADER, STANDALONE_KB_NAME } from '../../support/common';
+import { goTo, STANDALONE_HEADER, STANDALONE_KB_NAME } from '../../../support/common';
 
 describe('NucliaDB admin – Manage content', () => {
   before(() => {

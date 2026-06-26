@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, getAuthHeader, goTo } from '../../support/common';
+import { ACCOUNT, getAuthHeader, goTo } from '../../../support/common';
 
 function checkResourceWasAdded(endpoint, resourceTitle) {
   cy.request({

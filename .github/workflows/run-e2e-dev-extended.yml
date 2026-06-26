@@ -1,5 +1,5 @@
-name: run-e2e-dev
-run-name: Running Cypress e2e tests on Dev
+name: run-e2e-dev-extended
+run-name: Running Extended Cypress e2e tests on Dev
 on:
   workflow_dispatch:
 concurrency:
@@ -15,26 +15,6 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      # Launch NucliaDB in docker
-      - run: |
-          docker network create nucliadb-network
-          docker run -it -d --name pg --network nucliadb-network \
-            -p 5432:5432 \
-            -e POSTGRES_USER=nucliadb \
-            -e POSTGRES_PASSWORD=nucliadb \
-            -e POSTGRES_DB=nucliadb \
-            postgres:latest
-          docker pull nuclia/nucliadb:latest
-          docker build -t nucliadb-server .
-          docker run --network nucliadb-network \
-              -p 8080:8080 \
-              -v nucliadb-standalone:/data \
-              -e NUCLIA_PUBLIC_URL="https://{zone}.gcp-global-dev-1.nuclia.io" \
-              -e NUA_API_KEY=${{ secrets.NUA_KEY_DEV }} \
-              -e NUA_ZONE=gcp-dev-1 \
-              -e DRIVER=PG \
-              -e DRIVER_PG_URL="postgresql://nucliadb:nucliadb@pg:5432/nucliadb" \
-              nucliadb-server &
       - name: Install
         run: |-
           yarn install --immutable
@@ -43,7 +23,7 @@ jobs:
         id: cypress
         uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
         with:
-          spec: cypress/e2e/basic/**/*.cy.js
+          spec: cypress/e2e/extended/**/*.cy.js
         env:
           CYPRESS_BASE_URL: https://gcp-global-dev-1.nuclia.io
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_DEV }}
@@ -69,5 +49,5 @@ jobs:
           webhook: ${{ secrets.SLACK_HOOK_URL }}
           payload: |
             {
-              "text": "⚠️ Cypress E2E failed on Dev\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
+              "text": "⚠️ Extended Cypress E2E failed on Dev\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
             }

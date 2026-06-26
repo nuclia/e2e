@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, goTo, goToManageAccount, onlyPermanentKb } from '../../support/common';
+import { ACCOUNT, goTo, goToManageAccount, onlyPermanentKb } from '../../../support/common';
 
 describe('RAO creation flow', () => {
   ACCOUNT.availableZones.forEach((zone) => {

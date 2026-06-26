@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { COWORK_ACCOUNT, getCoworkAuthHeader } from '../../support/common';
+import { COWORK_ACCOUNT, getCoworkAuthHeader } from '../../../support/common';
 
 describe('Content-box History', () => {
   const zone = COWORK_ACCOUNT.availableZones[0];
