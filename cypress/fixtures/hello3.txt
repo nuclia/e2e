@@ -1,0 +1,1 @@
+Natural language processing enables machines to understand and generate human language with remarkable accuracy. Applications range from document summarization to conversational agents.
