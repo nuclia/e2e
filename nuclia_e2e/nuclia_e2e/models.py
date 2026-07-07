@@ -98,7 +98,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "gcp-claude-4-6-sonnet": ModelInfo(),
     "gcp-claude-4-7-opus": ModelInfo(),
     # AWS claude models are available in all AWS-based regions except aws-il and some aren't available in aus
-    "aws-claude-4-sonnet": ModelInfo(zones_re="(aws-(?!il|ap)|progress-).*"),
     "aws-claude-4-5-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     "aws-claude-4-5-haiku": ModelInfo(zones_re="(aws-(?!il|me)).*"),
     "aws-claude-4-6-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
