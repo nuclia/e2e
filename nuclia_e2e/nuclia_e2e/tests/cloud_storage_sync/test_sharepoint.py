@@ -107,6 +107,11 @@ async def test_sharepoint_sync_lifecycle(  # noqa: C901, PLR0912
         )
         logger.info("Created labelset: %s", labelset_name)
 
+        # Clean up any leftover sync config from a previous crashed run
+        await css_helpers.cleanup_sync_configs_for_connection(
+            session, zone_url, auth_headers, kb_id, external_connection_id
+        )
+
         # Create sync config
         sync_config = await css_helpers.create_sync_config(
             session,

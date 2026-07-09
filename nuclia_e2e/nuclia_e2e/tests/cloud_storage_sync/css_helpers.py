@@ -1,9 +1,50 @@
 """Helpers for interacting with the Cloud Storage Sync (CSS) service."""
 
 import aiohttp
+import logging
+
+logger = logging.getLogger(__name__)
 
 JOB_POLL_INTERVAL = 5  # seconds between job status checks
 JOB_POLL_TIMEOUT = 300  # max seconds to wait for a sync job to complete
+
+
+async def list_sync_configs(
+    session: aiohttp.ClientSession,
+    zone_url: str,
+    auth_headers: dict[str, str],
+    kb_id: str,
+) -> list[dict]:
+    """List all sync configs for a KB."""
+    url = f"{zone_url}/api/v1/kb/{kb_id}/sync_configs"
+    resp = await session.get(url, headers=auth_headers)
+    resp.raise_for_status()
+    data = await resp.json()
+    return data.get("items", data) if isinstance(data, dict) else data
+
+
+async def cleanup_sync_configs_for_connection(
+    session: aiohttp.ClientSession,
+    zone_url: str,
+    auth_headers: dict[str, str],
+    kb_id: str,
+    external_connection_id: str,
+) -> None:
+    """Delete any existing sync configs that use the given external_connection_id.
+
+    This prevents UniqueViolation errors when a previous test run crashed
+    and left a stale sync config behind.
+    """
+    configs = await list_sync_configs(session, zone_url, auth_headers, kb_id)
+    for config in configs:
+        if config["external_connection"]["id"] == external_connection_id:
+            config_id = config["id"]
+            logger.warning(
+                "Found leftover sync config %s using external_connection_id %s — deleting",
+                config_id,
+                external_connection_id,
+            )
+            await delete_sync_config(session, zone_url, auth_headers, kb_id, config_id)
 
 
 async def create_sync_config(
