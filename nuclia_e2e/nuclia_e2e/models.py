@@ -41,6 +41,10 @@ ALL_LLMS: dict[str, ModelInfo] = {
         test_json=False,  # Structured output not working
     ),
     "chatgpt-azure-5.5": ModelInfo(zones_re="(?!.*stage).*"),  # Not available in stage
+    "chatgpt-azure-5.4-mini": ModelInfo(zones_re=".*(stage|aws-us).*"),
+    "chatgpt-azure-5.6-sol": ModelInfo(),
+    "chatgpt-azure-5.6-terra": ModelInfo(),
+    "chatgpt-azure-5.6-luna": ModelInfo(),
     # "chatgpt-azure-5-nano": ModelInfo(),   EXCLUDED as it is too inconsistent
     # "claude-3": ModelInfo(),               DISCONTINUED
     # "claude-3-fast",                       DISCONTINUED
@@ -80,6 +84,10 @@ ALL_LLMS: dict[str, ModelInfo] = {
         test_json=False,  # Structured output not working
     ),
     "chatgpt-5.5": ModelInfo(),
+    "chatgpt-5.4-mini": ModelInfo(zones_re=".*(stage|aws-us).*"),
+    "chatgpt-5.6-sol": ModelInfo(),
+    "chatgpt-5.6-terra": ModelInfo(),
+    "chatgpt-5.6-luna": ModelInfo(),
     # "huggingface"                          EXCLUDED as not a model,just a driver, that needs a key to work
     "llama-4-maverick-17b-128e-instruct-maas": ModelInfo(
         test_json=False,  # Json functionality not operational
