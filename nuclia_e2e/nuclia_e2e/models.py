@@ -56,6 +56,9 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "claude-4-6-opus": ModelInfo(),
     "claude-4-6-sonnet": ModelInfo(),
     "claude-4-7-opus": ModelInfo(),
+    "claude-4-8-opus": ModelInfo(),
+    "claude-5-sonnet": ModelInfo(),
+    "claude-5-fable": ModelInfo(),
     "gemini-2.5-pro": ModelInfo(),
     "gemini-2.5-flash": ModelInfo(),
     "gemini-2.5-flash-lite": ModelInfo(),
@@ -106,6 +109,8 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "gcp-claude-4-6-opus": ModelInfo(),
     "gcp-claude-4-6-sonnet": ModelInfo(),
     "gcp-claude-4-7-opus": ModelInfo(),
+    "gcp-claude-4-8-opus": ModelInfo(),
+    "gcp-claude-5-sonnet": ModelInfo(),
     # AWS claude models are available in all AWS-based regions except aws-il and some aren't available in aus
     "aws-claude-4-5-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     "aws-claude-4-5-haiku": ModelInfo(zones_re="(aws-(?!il|me)).*"),
@@ -113,6 +118,11 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # The opus models are not available in europe
     "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu|me|ap)|progress-).*"),
     "aws-claude-4-6-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
+    "aws-claude-4-7-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
+    "aws-claude-4-8-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
+    "aws-claude-5-sonnet": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
+    "aws-claude-5-fable": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
+    # "aws-claude-5-pro"                      EXCLUDED as it is
     # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
     "azure-gpt-oss-120b": ModelInfo(test_rephrase=False),
     "nova-premier": ModelInfo(zones_re="(aws-(?!il|eu|me|ap)|progress-).*"),
