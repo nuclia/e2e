@@ -178,9 +178,13 @@ export const goTo = (navbarItemSelector, popup = false) => {
   }
 };
 
-export function goToManageAccount() {
-  cy.get('app-user-menu').click();
-  cy.get('[data-cy="go-to-manage-account"]').click();
+export function openUserMenu() {
+  cy.get('[data-cy="user-menu"] .user-menu-trigger').click();
+}
+
+export function goToAccountSection(dataCy) {
+  openUserMenu();
+  cy.get(`[data-cy="${dataCy}"]`).click();
 }
 
 export const closeViewer = () => {
