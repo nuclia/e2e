@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, goTo, goToManageAccount, onlyPermanentKb } from '../../../support/common';
+import { ACCOUNT, goToAccountSection, onlyPermanentKb } from '../../../support/common';
 
 describe('KB creation flow', () => {
   ACCOUNT.availableZones.forEach((zone) => {
@@ -13,8 +13,7 @@ describe('KB creation flow', () => {
       cy.login(zone);
 
       // creation test
-      goToManageAccount();
-      goTo('go-to-account-kbs');
+      goToAccountSection('go-to-account-kbs');
       cy.get('[data-cy="add-kb"]').click();
       // Zones are loaded asynchronously, and we noticed some flakiness on prod because cypress selected the zone before angular was totally ready
       // So we check the controls visibility first to make sure cycle detection will work when cypress clicks on the zone
@@ -29,8 +28,7 @@ describe('KB creation flow', () => {
       cy.get('app-kb-switch').should('contain', newKbName);
 
       // Deletion test
-      goToManageAccount();
-      goTo('go-to-account-kbs');
+      goToAccountSection('go-to-account-kbs');
       cy.get(`[data-cy="${newKbName}-link"]`).contains(newKbName);
       cy.get(`[data-cy="${newKbName}-delete"]`).click();
       cy.get('[qa="confirmation-dialog-confirm-button"]').click();

@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, goTo, goToManageAccount, onlyPermanentKb } from '../../../support/common';
+import { ACCOUNT, goToAccountSection, onlyPermanentKb } from '../../../support/common';
 
 describe('RAO creation flow', () => {
   ACCOUNT.availableZones.forEach((zone) => {
@@ -11,8 +11,7 @@ describe('RAO creation flow', () => {
       cy.login(zone);
 
       // creation
-      goToManageAccount();
-      goTo('go-to-retrieval-agents');
+      goToAccountSection('go-to-retrieval-agents');
       cy.get('[data-cy="add-arag"]').click();
       // Zones are loaded asynchronously, and we noticed some flakiness on prod because cypress selected the zone before angular was totally ready
       // So we check the controls visibility first to make sure cycle detection will work when cypress clicks on the zone
@@ -33,10 +32,9 @@ describe('RAO creation flow', () => {
       // TODO: fix the right panel open/collapse behavior, it is broken under Cypress
 
       // Deletion test
-      goToManageAccount();
-      goTo('go-to-retrieval-agents');
+      goToAccountSection('go-to-retrieval-agents');
       cy.get(`[data-cy="${newAragName}-link"]`).contains(newAragName);
-      cy.get(`.account-arag-content pa-button`).click();
+      cy.get(`[data-cy="${newAragName}-link"]`).closest('pa-table-row').find('pa-button[icon="more-vertical"]').click();
       cy.get(`.account-arag-content pa-option[icon="trash"]`).click();
       cy.get('[qa="confirmation-dialog-confirm-button"]').click();
       cy.get('.account-arag-content nsi-info-card', { timeout: 10000 }).should('be.visible');
