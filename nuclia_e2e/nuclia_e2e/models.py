@@ -37,9 +37,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
     ),
     "chatgpt-azure-5": ModelInfo(),
     "chatgpt-azure-5-mini": ModelInfo(),
-    "chatgpt-azure-5-chat": ModelInfo(
-        test_json=False,  # Structured output not working
-    ),
     "chatgpt-azure-5.5": ModelInfo(zones_re="(?!.*stage).*"),  # Not available in stage
     "chatgpt-azure-5.4-mini": ModelInfo(zones_re=".*(stage|aws-us).*"),
     "chatgpt-azure-5.6-sol": ModelInfo(),
@@ -83,9 +80,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "chatgpt-5": ModelInfo(),
     "chatgpt-5-mini": ModelInfo(),
     # "chatgpt-5-nano": ModelInfo(),         EXCLUDED as it is too inconsistent
-    "chatgpt-5-chat": ModelInfo(
-        test_json=False,  # Structured output not working
-    ),
     "chatgpt-5.5": ModelInfo(),
     "chatgpt-5.4-mini": ModelInfo(zones_re=".*(stage|aws-us).*"),
     "chatgpt-5.6-sol": ModelInfo(),
