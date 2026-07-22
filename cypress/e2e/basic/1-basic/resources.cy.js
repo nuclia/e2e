@@ -64,7 +64,7 @@ describe('Resources', () => {
 
       it('should display status', () => {
         cy.login(zone);
-        cy.get('[data-cy="total-resources"]').should('contain', '2');
+        cy.get('.resources-card pa-table-row').should('have.length', 2);
       });
 
       describe('Resources list', () => {

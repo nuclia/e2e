@@ -16,7 +16,7 @@ function login(kbName) {
     },
   });
   cy.contains(kbName).click();
-  cy.get(`.kb-details .title-xxs`).should('contain', 'Knowledge Box status');
+  cy.get(`.knowledge-box-home`).should('exist');
 }
 
 // -- This is a parent command --
