@@ -145,7 +145,7 @@ export function onlyPermanentKb(mode) {
   ACCOUNT.availableZones.forEach((zone) => {
     cy.request({
       method: 'GET',
-      url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kbs${mode ? '?mode=' + mode : ''}`,
+      url: `https://${zone.slug}.dp.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kbs${mode ? '?mode=' + mode : ''}`,
       headers: authHeader,
     }).then((response) => {
       expect(response.status).to.eq(200);
@@ -156,7 +156,7 @@ export function onlyPermanentKb(mode) {
           if (!kb.slug.includes('permanent')) {
             cy.request({
               method: 'DELETE',
-              url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kb/${kb.id}`,
+              url: `https://${zone.slug}.dp.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kb/${kb.id}`,
               headers: authHeader,
             }).then((deleteResponse) => {
               expect(deleteResponse.status).to.eq(204);
@@ -270,7 +270,7 @@ const COWORK_ACCOUNTS = {
   prod: COWORK_PROD_ACCOUNT,
   dev: COWORK_DEV_ACCOUNT,
   stage: COWORK_STAGE_ACCOUNT,
-}
+};
 
 export const COWORK_ACCOUNT = COWORK_ACCOUNTS[`${Cypress.env('RUNNING_ENV')}`] || COWORK_STAGE_ACCOUNT;
 

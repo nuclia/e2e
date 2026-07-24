@@ -18,7 +18,7 @@ describe('Manage content', () => {
   const authHeader = getAuthHeader();
 
   ACCOUNT.availableZones.forEach((zone) => {
-    const endpoint = `https://${zone.slug}.${ACCOUNT.domain}/api/v1/kb/${zone.emptyKb.id}`;
+    const endpoint = `https://${zone.slug}.dp.${ACCOUNT.domain}/api/v1/kb/${zone.emptyKb.id}`;
 
     before(() => {
       // clean up resources
