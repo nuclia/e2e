@@ -7,7 +7,7 @@ const WIDGET_SLUG = 'test-widget';
 describe('Widgets page', () => {
   ACCOUNT.availableZones.forEach((zone) => {
     before(() => {
-      const endpoint = `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kb/${zone.permanentKb.id}`;
+      const endpoint = `https://${zone.slug}.dp.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kb/${zone.permanentKb.id}`;
       const authHeader = getAuthHeader();
 
       // clean up widgets

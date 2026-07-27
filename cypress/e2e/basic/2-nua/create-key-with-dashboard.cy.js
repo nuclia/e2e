@@ -8,7 +8,7 @@ describe('Create NUA key with the dashboard', () => {
     beforeEach(() => {
       cy.request({
         method: 'GET',
-        url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_clients`,
+        url: `https://${zone.slug}.dp.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_clients`,
         headers: authHeader,
       }).then((response) => {
         expect(response.status).to.eq(200);
@@ -19,7 +19,7 @@ describe('Create NUA key with the dashboard', () => {
             .forEach((client) => {
               cy.request({
                 method: 'DELETE',
-                url: `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_client/${client.client_id}`,
+                url: `https://${zone.slug}.dp.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/nua_client/${client.client_id}`,
                 headers: authHeader,
               }).then((patchResponse) => expect(patchResponse.status).to.eq(204));
             });

@@ -6,7 +6,7 @@ describe('Change KB settings', () => {
   const authHeader = getAuthHeader();
 
   ACCOUNT.availableZones.forEach((zone) => {
-    const endpoint = `https://${zone.slug}.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kb/${zone.emptyKb.id}`;
+    const endpoint = `https://${zone.slug}.dp.${ACCOUNT.domain}/api/v1/account/${ACCOUNT.id}/kb/${zone.emptyKb.id}`;
 
     before(() => {
       cy.request({
@@ -27,7 +27,7 @@ describe('Change KB settings', () => {
       goTo('go-to-settings');
       cy.get('[data-cy="save-kb-settings"]').get('button').should('be.disabled');
       cy.get(`[formcontrolname="description"] textarea`).type(
-        '\nWhy did you say that? Now I feel like I want to delete this kb.\n'
+        '\nWhy did you say that? Now I feel like I want to delete this kb.\n',
       );
       cy.get('[data-cy="save-kb-settings"]').click();
       cy.get('.pa-toast-wrapper').should('contain', 'The new settings have been saved successfully');

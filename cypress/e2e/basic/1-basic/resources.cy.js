@@ -8,7 +8,7 @@ describe('Resources', () => {
       before(() => {
         onlyPermanentKb();
 
-        const endpoint = `https://${zone.slug}.${ACCOUNT.domain}/api/v1/kb/${zone.permanentKb.id}`;
+        const endpoint = `https://${zone.slug}.dp.${ACCOUNT.domain}/api/v1/kb/${zone.permanentKb.id}`;
         const authHeader = getAuthHeader();
 
         // keep only permanent labels on resources
