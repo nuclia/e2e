@@ -55,7 +55,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "claude-4-7-opus": ModelInfo(),
     "claude-4-8-opus": ModelInfo(),
     "claude-5-sonnet": ModelInfo(),
-    "claude-5-fable": ModelInfo(),
+    # "claude-5-fable": ModelInfo(),         EXCLUDED due to costs
     "gemini-2.5-pro": ModelInfo(),
     "gemini-2.5-flash": ModelInfo(),
     "gemini-2.5-flash-lite": ModelInfo(),
@@ -115,7 +115,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "aws-claude-4-7-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     "aws-claude-4-8-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     "aws-claude-5-sonnet": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
-    "aws-claude-5-fable": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
+    # "aws-claude-5-fable": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),  EXCLUDED due to costs
     # "aws-claude-5-pro"                      EXCLUDED as it is
     # "openai-compatible",                   EXCLUDED as not a model,just a driver, that needs a key to work
     "azure-gpt-oss-120b": ModelInfo(test_rephrase=False),
