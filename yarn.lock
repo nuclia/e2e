@@ -1988,9 +1988,9 @@ __metadata:
   linkType: hard
 
 "postal-mime@npm:^2.7.4":
-  version: 2.7.4
-  resolution: "postal-mime@npm:2.7.4::__archiveUrl=https%3A%2F%2Fpkg.harness.io%2Fpkg%2Fct8onj8YTdaXtKaFsYCRLg%2Forg-nuclia-npm%2Fnpm%2Fpostal-mime%2F-%2F2.7.4%2Fpostal-mime-2.7.4.tgz"
-  checksum: 10/ba75fd12ab05dd44de5d87f3a7865078d94a41ea2ad22f028ee0aa7f934dd6a339db4c7877fae7abe5eefdfd7728d52d22b9d981adc465bebaca0a30481bd948
+  version: 2.7.6
+  resolution: "postal-mime@npm:2.7.6"
+  checksum: 10/192001ce0b6256c15e67840651a9a032ccfecf4071800e03d9f3517e4b4e5a1cc9cdacdbc6711c5e4ed184f4791061e5232b3a1f6c278b3e97b889d6a24a9686
   languageName: node
   linkType: hard
 
