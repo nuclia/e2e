@@ -21,9 +21,7 @@ describe('RAO creation flow', () => {
       cy.get('[data-cy="new-arag-save-button"] button').should('be.enabled').click();
       cy.get(`[data-cy="${newAragName}-link"]`, { timeout: 20000 }).should('contain', newAragName);
       cy.get(`[data-cy="${newAragName}-link"]`).click();
-      cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${zone.slug}/arag/${newAragName}/workflows`);
-      cy.get('app-kb-switch').should('contain', newAragName);
-      cy.get('.pa-table-grid--cell').contains('default').click();
+      cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${zone.slug}/arag/${newAragName}/workflows/default`);
     });
 
     it(`should allow to create a new RAO workflow and then delete it on ${zone.slug}`, () => {
