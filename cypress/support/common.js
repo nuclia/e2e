@@ -178,13 +178,18 @@ export const goTo = (navbarItemSelector, popup = false) => {
   }
 };
 
-export function openUserMenu() {
-  cy.get('[data-cy="user-menu"] .user-menu-trigger').click();
+// `admin` app lives on its own subdomain — visit it directly with JWT injected,
+// since Cypress can't follow the in-app menu click across origins.
+export function getAdminOrigin() {
+  return `https://admin.${ACCOUNT.domain}`;
 }
 
-export function goToAccountSection(dataCy) {
-  openUserMenu();
-  cy.get(`[data-cy="${dataCy}"]`).click();
+export function visitAdminSection(path) {
+  cy.visit(`${getAdminOrigin()}/at/${ACCOUNT.slug}/${path}`, {
+    onBeforeLoad(win) {
+      win.localStorage.setItem('JWT_KEY', Cypress.env('BEARER_TOKEN'));
+    },
+  });
 }
 
 export const closeViewer = () => {
