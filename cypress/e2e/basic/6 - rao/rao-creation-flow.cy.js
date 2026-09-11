@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, goToAccountSection, onlyPermanentKb } from '../../../support/common';
+import { ACCOUNT, visitAdminSection, onlyPermanentKb } from '../../../support/common';
 
 describe('RAO creation flow', () => {
   ACCOUNT.availableZones.forEach((zone) => {
@@ -11,8 +11,8 @@ describe('RAO creation flow', () => {
       cy.login(zone);
 
       // creation
-      goToAccountSection('go-to-retrieval-agents');
-      cy.get('[data-cy="add-arag"]').click();
+      visitAdminSection('administration/retrieval-agents');
+      cy.get('[data-cy="add-arag"]', { timeout: 15000 }).click();
       // Zones are loaded asynchronously, and we noticed some flakiness on prod because cypress selected the zone before angular was totally ready
       // So we check the controls visibility first to make sure cycle detection will work when cypress clicks on the zone
       cy.get('[formcontrolname="name"] input', { timeout: 10000 }).type(newAragName);
@@ -20,8 +20,11 @@ describe('RAO creation flow', () => {
       cy.get('[formcontrolname="zone"] pa-radio').contains(zone.title).click();
       cy.get('[data-cy="new-arag-save-button"] button').should('be.enabled').click();
       cy.get(`[data-cy="${newAragName}-link"]`, { timeout: 20000 }).should('contain', newAragName);
-      cy.get(`[data-cy="${newAragName}-link"]`).click();
-      cy.location('pathname').should('equal', `/at/${ACCOUNT.slug}/${zone.slug}/arag/${newAragName}/workflows/default`);
+
+      // link navigates cross-origin into the dashboard app; visit directly instead of
+      // clicking through (cross-app navigation itself is covered by kb-creation-flow)
+      cy.visit(`/at/${ACCOUNT.slug}/${zone.slug}/arag/${newAragName}/workflows/default`);
+      cy.get('.agent-dashboard-toolbar', { timeout: 20000 }).should('be.visible');
     });
 
     it(`should allow to create a new RAO workflow and then delete it on ${zone.slug}`, () => {
@@ -30,8 +33,8 @@ describe('RAO creation flow', () => {
       // TODO: fix the right panel open/collapse behavior, it is broken under Cypress
 
       // Deletion test
-      goToAccountSection('go-to-retrieval-agents');
-      cy.get(`[data-cy="${newAragName}-link"]`).contains(newAragName);
+      visitAdminSection('administration/retrieval-agents');
+      cy.get(`[data-cy="${newAragName}-link"]`, { timeout: 15000 }).contains(newAragName);
       cy.get(`[data-cy="${newAragName}-link"]`).closest('pa-table-row').find('pa-button[icon="more-vertical"]').click();
       cy.get(`.account-arag-content pa-option[icon="trash"]`).click();
       cy.get('[qa="confirmation-dialog-confirm-button"]').click();

@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { ACCOUNT, getAuthHeader, goToAccountSection } from '../../../support/common';
+import { ACCOUNT, getAuthHeader, visitAdminSection } from '../../../support/common';
 
 describe('Create NUA key with the dashboard', () => {
   const authHeader = getAuthHeader();
@@ -31,7 +31,7 @@ describe('Create NUA key with the dashboard', () => {
 
     describe(`on ${zone.slug}`, () => {
       it('creates and deletes key', () => {
-        goToAccountSection('go-to-nua-keys');
+        visitAdminSection('configuration/nua');
         // Create NUA key
         cy.get('[data-cy="open-create-nua-key-dialog"]').click();
         cy.get('pa-modal-advanced').should('be.visible');
