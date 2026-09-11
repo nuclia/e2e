@@ -36,6 +36,8 @@ jobs:
       - name: Cypress run
         id: cypress
         uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
+        with:
+          spec: cypress/e2e/basic/5-ui-starter/ui-starter.cy.js
         env:
           CYPRESS_BASE_URL: https://stashify.cloud
           CYPRESS_BEARER_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
