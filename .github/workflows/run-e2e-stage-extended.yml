@@ -56,3 +56,34 @@ jobs:
             {
               "text": "⚠️ Extended Cypress E2E failed on Stage\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
             }
+
+      - name: Generate a token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.NUCLIA_EXTERNAL_GHAPP_ID }}
+          private-key: ${{ secrets.NUCLIA_EXTERNAL_GHAPP_PK }}
+          owner: nuclia
+          repositories: tooling
+          permission-contents: read
+
+      - name: Checkout tooling repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: nuclia/tooling
+          ref: main
+          path: tooling
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+
+      - name: Microsoft Teams notification
+        id: teams
+        uses: ./tooling/.github/actions/notify-microsoft-teams
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
+        with:
+          webhook-url: ${{ secrets.MS_TEAMS_WEBHOOK_URL_E2E }}
+          title: "⚠️ Extended Cypress E2E failed on Stage"
+          message: |
+            Triggered by ${{ github.triggering_actor }}
+            Run #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Cypress report: ${{ steps.report.outputs.artifact-url }}
