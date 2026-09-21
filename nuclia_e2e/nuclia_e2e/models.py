@@ -27,8 +27,6 @@ class ModelInfo(BaseModel):
 ALL_LLMS: dict[str, ModelInfo] = {
     # "generative-multilingual-2023",        EXCLUDED because it's a legacy model, not available anymore
     # "chatgpt-azure-4-turbo",               DISCONTINUED
-    "chatgpt-azure-4o": ModelInfo(),
-    "chatgpt-azure-4o-mini": ModelInfo(),
     # "chatgpt-azure-o1-preview",            DISCONTINUED
     # "chatgpt-azure-o1-mini",               DISCONTINUED
     # "chatgpt-azure-o1",                    EXCLUDED because it almost always fails with timeouts
@@ -48,7 +46,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "claude-3-5-fast": ModelInfo(),        DISCONTINUED
     # "claude-3-5-small": ModelInfo(),       DISCONTINUED
     # "claude-4-sonnet": ModelInfo(),        DISCONTINUED
-    "claude-4-5-sonnet": ModelInfo(),
     "claude-4-5-haiku": ModelInfo(),
     "claude-4-6-opus": ModelInfo(),
     "claude-4-6-sonnet": ModelInfo(),

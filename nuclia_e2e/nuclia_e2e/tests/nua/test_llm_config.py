@@ -31,6 +31,6 @@ async def test_llm_config_nua(nua_client: AsyncNuaClient, kb_id: str):
 
         assert config.resource_labelers_models is None
         assert config.ner_model == "multilingual"
-        assert config.generative_model == "chatgpt-azure-4o"
+        assert config.generative_model == "chatgpt-azure-5.6-terra"
     finally:
         await delete_config_if_present(np, kb_id, nua_client)

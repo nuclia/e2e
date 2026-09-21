@@ -35,7 +35,7 @@ async def test_llm_chat(nua_client: AsyncNuaClient):
     )
     generated = await np.generate(
         text=chat_model,
-        model="chatgpt-azure-4o",
+        model="chatgpt-azure-5.6-terra",
         nc=nua_client,
     )
     # Check that system + user prompt worked

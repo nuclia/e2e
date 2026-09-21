@@ -126,7 +126,7 @@ async def test_query_with_json_output(nua_client: AsyncNuaClient):
                 },
             },
         ),
-        model="chatgpt-azure-4o-mini",
+        model="chatgpt-azure-5.6-luna",
     )
 
     assert "eggs" in response.object["ingredients"]
