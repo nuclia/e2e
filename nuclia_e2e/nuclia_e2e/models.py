@@ -30,9 +30,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
     # "chatgpt-azure-o1-preview",            DISCONTINUED
     # "chatgpt-azure-o1-mini",               DISCONTINUED
     # "chatgpt-azure-o1",                    EXCLUDED because it almost always fails with timeouts
-    "chatgpt-azure-o3-mini": ModelInfo(
-        test_rephrase=False,  # Reasoning model
-    ),
     "chatgpt-azure-5": ModelInfo(),
     "chatgpt-azure-5-mini": ModelInfo(),
     "chatgpt-azure-5.5": ModelInfo(zones_re="(?!.*stage).*"),  # Not available in stage

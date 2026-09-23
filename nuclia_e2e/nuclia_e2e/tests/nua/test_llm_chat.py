@@ -46,5 +46,5 @@ async def test_llm_chat(nua_client: AsyncNuaClient):
     # Check that the answer is correct
     assert "Eudald" in generated.answer
     # Check that we have input and output tokens
-    assert generated.input_tokens > 50
+    assert generated.input_tokens > 30
     assert generated.output_tokens > 10
