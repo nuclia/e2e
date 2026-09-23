@@ -74,16 +74,36 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
     def resource_is_processed(rid):
         @wraps(resource_is_processed)
         async def condition() -> tuple[bool, Any]:
-            resource = await kb.resource.get(rid=rid, ndb=ndb)
-            return (
-                resource.metadata.status == ResourceProcessingStatus.PROCESSED,
-                None,
+            resource = await kb.resource.get(
+                rid=rid,
+                ndb=ndb,
+                show=["values", "error", "extracted"],
             )
+            file = resource.data.files.get("file")
+            search = await kb.search.find(
+                ndb=ndb,
+                features=["keyword"],
+                reranker="noop",
+                query="Michiko",
+            )
+            state = {
+                "resource_status": resource.metadata.status,
+                "file_status": file.status if file is not None else None,
+                "file_errors": file.errors if file is not None else None,
+                "has_extracted_text": bool(
+                    file is not None
+                    and file.extracted is not None
+                    and file.extracted.text is not None
+                    and file.extracted.text.text
+                ),
+                "indexed": bool(search.resources),
+            }
+            return resource.metadata.status == ResourceProcessingStatus.PROCESSED, state
 
         return condition
 
-    success, _ = await wait_for(resource_is_processed(rid), max_wait=180, interval=10, logger=logger)
-    assert success, "File was not processed in time, PROCESSED status not found in resource"
+    success, last_state = await wait_for(resource_is_processed(rid), max_wait=180, interval=10, logger=logger)
+    assert success, f"File was not processed in time; last_state={last_state}"
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
     # the paragraph we're looking for contains
