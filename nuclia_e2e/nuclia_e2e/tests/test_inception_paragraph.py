@@ -43,7 +43,7 @@ async def test_inception_paragraph_type_is_generated(regional_api_config: ZoneCo
             resource = await kb.resource.get(
                 rid=rid,
                 ndb=async_ndb,
-                show=["values", "error", "extracted"],
+                show=["values", "errors", "extracted"],
             )
             file = resource.data.files.get("file")
             state = {
