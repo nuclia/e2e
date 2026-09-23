@@ -40,16 +40,32 @@ async def test_inception_paragraph_type_is_generated(regional_api_config: ZoneCo
     def resource_is_processed(rid):
         @wraps(resource_is_processed)
         async def condition() -> tuple[bool, Any]:
-            resource = await kb.resource.get(rid=rid, ndb=async_ndb)
-            return (
-                resource.metadata.status == ResourceProcessingStatus.PROCESSED,
-                None,
+            resource = await kb.resource.get(
+                rid=rid,
+                ndb=async_ndb,
+                show=["values", "error", "extracted"],
             )
+            file = resource.data.files.get("file")
+            state = {
+                "resource_status": resource.metadata.status,
+                "file_status": file.status if file is not None else None,
+                "file_errors": file.errors if file is not None else None,
+                "has_extracted_text": bool(
+                    file is not None
+                    and file.extracted is not None
+                    and file.extracted.text is not None
+                    and file.extracted.text.text
+                ),
+                "has_extracted_metadata": bool(
+                    file is not None and file.extracted is not None and file.extracted.metadata is not None
+                ),
+            }
+            return resource.metadata.status == ResourceProcessingStatus.PROCESSED, state
 
         return condition
 
-    success, _ = await wait_for(resource_is_processed(rid), max_wait=180, interval=10)
-    assert success, "File was not processed in time, PROCESSED status not found in resource"
+    success, last_state = await wait_for(resource_is_processed(rid), max_wait=180, interval=10)
+    assert success, f"File was not processed in time; last_state={last_state}"
 
     resource = await kb.resource.get(rid=rid, ndb=async_ndb, show="extracted")
     assert "cat" in resource.data.files["file"].extracted.text.text
