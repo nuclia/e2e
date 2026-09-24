@@ -30,7 +30,7 @@ async def test_ask_with_json_output(regional_api_config: ZoneConfig, kb_id: str)
                 ChatOptions.RELATIONS,
             ],
             query="how to cook an omelette?",
-            generative_model="chatgpt-azure-4o-mini",
+            generative_model="chatgpt-azure-5.6-luna",
             prompt=dedent(
                 """
             Answer the following question based **only** on the provided context. Do **not** use any outside

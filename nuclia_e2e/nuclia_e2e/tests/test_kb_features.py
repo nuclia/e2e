@@ -156,7 +156,7 @@ async def run_test_da_ask_worker(regional_api_config, ndb: AsyncNucliaDBClient, 
                     )
                 )
             ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
         ),
     )
     return tr.id
@@ -269,7 +269,7 @@ async def run_test_create_da_labeller(regional_api_config, ndb: AsyncNucliaDBCli
                     )
                 )
             ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
         ),
     )
 
@@ -369,7 +369,7 @@ async def run_test_create_da_labeller_with_label_filter(
                     )
                 )
             ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
         ),
     )
 
@@ -562,7 +562,7 @@ async def run_test_ask(ndb: AsyncNucliaDBClient):
         reranker="predict",
         features=["keyword", "semantic", "relations"],
         query=TEST_CHOCO_QUESTION,
-        generative_model="chatgpt-azure-4o-mini",
+        generative_model="chatgpt-azure-5.6-luna",
         prompt=dedent(
             """
             Answer the following question based **only** on the provided context. Do **not** use any outside
@@ -592,7 +592,7 @@ async def run_test_ask(ndb: AsyncNucliaDBClient):
             {"author": "NUCLIA", "text": ask_result.answer.decode()},
         ],
         query=TEST_CHOCO_ASK_MORE,
-        generative_model="chatgpt-azure-4o-mini",
+        generative_model="chatgpt-azure-5.6-luna",
     )
     # It increased the price of its permanent collection of chocolate bars
     # from $13 to $14 and raised the price of its bonbons by 7%-8%.
@@ -612,7 +612,7 @@ async def run_test_ask_query_image(ndb: AsyncNucliaDBClient):
         reranker="predict",
         features=["keyword", "semantic", "relations"],
         query="Why are prices for this item high?",
-        generative_model="chatgpt-azure-4o-mini",
+        generative_model="chatgpt-azure-5.6-luna",
         prompt=dedent(
             """
             Answer the following question based **only** on the provided context and image.
@@ -934,7 +934,7 @@ async def test_kb_usage(
         reranker="predict",
         features=["keyword", "semantic", "relations"],
         query=TEST_CHOCO_QUESTION,
-        generative_model="chatgpt-azure-4o-mini",
+        generative_model="chatgpt-azure-5.6-luna",
     )
 
     # ⚠️⚠️⚠️ WARNING

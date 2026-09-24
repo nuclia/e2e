@@ -326,7 +326,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                     )
                 )
             ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
         ),
         validate_output=validate_labeler_output,
     ),
@@ -390,7 +390,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                 on=ApplyTo.FIELD,
                 filter=Filter(),
                 operations=[Operation(prompt_guard=GuardOperation(enabled=True))],
-                llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+                llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
             ),
             validate_output=validate_prompt_guard_output,
         ),
@@ -407,7 +407,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                 on=ApplyTo.FIELD,
                 filter=Filter(),
                 operations=[Operation(llama_guard=GuardOperation(enabled=True))],
-                llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+                llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
             ),
             validate_output=validate_llama_guard_output,
         ),
@@ -431,7 +431,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                     )
                 )
             ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
         ),
         validate_output=validate_ask_output,
     ),
@@ -443,7 +443,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
             on=ApplyTo.FIELD,
             filter=Filter(),
             operations=[Operation(qa=QAOperation())],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
         ),
         validate_output=validate_synthetic_questions_output,
     ),
@@ -480,7 +480,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                     )
                 )
             ],
-            llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+            llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
         ),
         validate_output=validate_labeler_output_text_block,
     ),
@@ -493,7 +493,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                 on=ApplyTo.TEXT_BLOCK,
                 filter=Filter(),
                 operations=[Operation(prompt_guard=GuardOperation(enabled=True))],
-                llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+                llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
             ),
             validate_output=validate_prompt_guard_output_text_block,
         ),
@@ -510,7 +510,7 @@ DA_TEST_INPUTS: list[TaskTestInput | ParameterSet] = [
                 on=ApplyTo.TEXT_BLOCK,
                 filter=Filter(),
                 operations=[Operation(llama_guard=GuardOperation(enabled=True))],
-                llm=LLMConfig(model="chatgpt-azure-4o-mini"),
+                llm=LLMConfig(model="chatgpt-azure-5.6-luna"),
             ),
             validate_output=validate_llama_guard_output_text_block,
         ),
