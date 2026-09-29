@@ -117,7 +117,7 @@ async def test_agentic_ask_with_nucliadb_source(regional_api: RegionalAPI, kb_id
             f"{regional_api.base_url}/api/v1/kb/{kb_id}/ask",
             headers=headers,
             json={
-                "query": "What is the main ingredient used to cook an omelette?",
+                "query": "According to the omelette recipe, what do you crack and whisk in step 1?",
                 "agentic_config_id": config_id,
             },
         ) as response:
