@@ -634,7 +634,10 @@ async def run_test_ask_query_image(ndb: AsyncNucliaDBClient):
             b64encoded=image_data,
         ),
     )
-    assert "climate change" in ask_result.answer.decode().lower()
+    answer = ask_result.answer.decode().lower()
+    assert "cocoa" in answer
+    assert "35%" in answer
+    assert "45%" in answer
 
 
 async def run_test_activity_log(regional_api_config, ndb, logger):
