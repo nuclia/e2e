@@ -5,11 +5,11 @@ on:
     branches:
       - e2e-on-prod
     paths:
-      - '.github/workflows/run-e2e-prod.yml'
+      - ".github/workflows/run-e2e-prod.yml"
   workflow_dispatch:
   schedule:
     # Run at minute 45 past every 3rd hour on every day-of-week from Sunday through Saturday.
-    - cron: '45 */3 * * 0-6'
+    - cron: "45 */3 * * 0-6"
   repository_dispatch:
     types: [trigger_e2e]
 concurrency:
@@ -102,3 +102,35 @@ jobs:
             {
               "text": "‼️️Cypress E2E failed on PROD ‼️\nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
             }
+
+      - name: Generate a token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
+        with:
+          app-id: ${{ secrets.NUCLIA_EXTERNAL_GHAPP_ID }}
+          private-key: ${{ secrets.NUCLIA_EXTERNAL_GHAPP_PK }}
+          owner: nuclia
+          repositories: tooling
+          permission-contents: read
+
+      - name: Checkout tooling repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
+        with:
+          repository: nuclia/tooling
+          ref: main
+          path: tooling
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+
+      - name: Microsoft Teams notification
+        id: teams
+        uses: ./tooling/.github/actions/notify-microsoft-teams
+        if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
+        with:
+          webhook-url: ${{ secrets.MS_TEAMS_WEBHOOK_URL_E2E }}
+          title: "⚠️ Cypress E2E failed on PROD"
+          message: |
+            Run #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Cypress report: ${{ steps.report.outputs.artifact-url }}
