@@ -53,24 +53,24 @@ async def create_rao_with_agents(
     preprocess = [
         {
             "module": "rephrase",
-            "model": "chatgpt-azure-4o-mini",
+            "model": "chatgpt-azure-5.6-luna",
         }
     ]
     context = [
         {
             "module": "basic_ask",
             "sources": ["nucliadb-driver"],
-            "generative_model": "chatgpt-azure-4o-mini",
-            "summarize_model": "chatgpt-azure-4o-mini",
+            "generative_model": "chatgpt-azure-5.6-luna",
+            "summarize_model": "chatgpt-azure-5.6-luna",
             "title": "agent",
-            "rephrase_model": "chatgpt-azure-4o-mini",
+            "rephrase_model": "chatgpt-azure-5.6-luna",
         }
     ]
     generation = [
         {
             "module": "summarize",
             "title": "agent",
-            "model": "chatgpt-azure-4o-mini",
+            "model": "chatgpt-azure-5.6-luna",
         }
     ]
     postprocess = [{"module": "remi", "title": "agent", "max_retries": 1}]
