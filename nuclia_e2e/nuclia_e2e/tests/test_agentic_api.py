@@ -1,6 +1,7 @@
 from nuclia_e2e.tests.conftest import RegionalAPI
 from uuid import uuid4
 
+import asyncio
 import pytest
 
 
@@ -74,6 +75,8 @@ async def test_agentic_source_and_config_lifecycle(regional_api: RegionalAPI, kb
         ) as response:
             assert response.status == 204, await response.text()
 
+        # Config caches are per pod and keyed in five-second buckets.
+        await asyncio.sleep(6)
         async with regional_api.session.get(
             f"{regional_api.base_url}{config_path}",
             headers=regional_api.auth_headers,
