@@ -70,7 +70,7 @@ describe('Cowork Onboarding - Full Flow', () => {
       cy.get('nus-embedding-model-step pa-button[kind="primary"]').click();
 
       cy.url({ timeout: 120000 }).should('include', '/simple');
-      cy.get('app-simple-kb', { timeout: 15000 }).should('be.visible');
+      cy.get('app-context-box-page', { timeout: 15000 }).should('be.visible');
     });
   });
 
