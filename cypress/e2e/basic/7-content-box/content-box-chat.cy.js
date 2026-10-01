@@ -11,7 +11,7 @@ describe('Content-box Chat', () => {
     });
 
     it('should render chat widget in step 3', () => {
-      cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
+      cy.get('.footer pa-button').contains('Your resources').should('be.visible');
       cy.get('.preview nuclia-chat', { timeout: 5000 }).should('exist');
 
       cy.get('.preview nuclia-chat').then(($chat) => {
@@ -35,12 +35,11 @@ describe('Content-box Chat', () => {
       cy.get('.preview nuclia-chat').shadow().find('button').should('be.visible');
     });
 
-    it('should navigate to history view and back', () => {
-      cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
-      cy.get('app-simple-kb .counters button.nav').contains('History').click();
+    it('should open and close the history modal from the chat view', () => {
+      cy.get('.footer pa-button').contains('History').click();
       cy.get('app-history-table', { timeout: 5000 }).should('be.visible');
-      cy.get('app-simple-kb .counters button.nav').contains('Your resources').click();
-      cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
+      cy.get('.pa-close-button').click();
+      cy.get('.preview nuclia-chat', { timeout: 5000 }).should('exist');
     });
   });
 });
