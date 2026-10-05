@@ -104,7 +104,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "aws-claude-4-5-haiku": ModelInfo(zones_re="(aws-(?!il|me)).*"),
     "aws-claude-4-6-sonnet": ModelInfo(zones_re="(aws-(?!il|me)|progress-).*"),
     # The opus models are not available in europe
-    "aws-claude-4-1-opus": ModelInfo(zones_re="(aws-(?!il|eu|me|ap)|progress-).*"),
     "aws-claude-4-6-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     "aws-claude-4-7-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
     "aws-claude-4-8-opus": ModelInfo(zones_re="(aws-(?!il|eu|me)|progress-).*"),
