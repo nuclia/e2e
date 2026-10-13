@@ -581,11 +581,11 @@ __metadata:
   linkType: hard
 
 "cypress-real-events@npm:^1.10.0":
-  version: 1.13.0
-  resolution: "cypress-real-events@npm:1.13.0::__archiveUrl=https%3A%2F%2Fpkg.harness.io%2Fpkg%2Fct8onj8YTdaXtKaFsYCRLg%2Forg-nuclia-npm%2Fnpm%2Fcypress-real-events%2F-%2F1.13.0%2Fcypress-real-events-1.13.0.tgz"
+  version: 1.15.1
+  resolution: "cypress-real-events@npm:1.15.1"
   peerDependencies:
-    cypress: ^4.x || ^5.x || ^6.x || ^7.x || ^8.x || ^9.x || ^10.x || ^11.x || ^12.x || ^13.x
-  checksum: 10/085e2e4f456fdf4173fd07fc2602ce44d661256628a5b40e89092e9792533f46b808f97106d9f9ea0272279b5c10db4eef3f0606e3705d3638d552d0999425de
+    cypress: ^4.x || ^5.x || ^6.x || ^7.x || ^8.x || ^9.x || ^10.x || ^11.x || ^12.x || ^13.x || ^14.x || ^15.x || ^16.x
+  checksum: 10/8b7a6351fb04642c0cde07da45bd564cfcaf08ffa67a020b8986f24272bdd622413083c3b96b631d3fa79ed04a86d81cd4eb2bd098640ebf0766acebb0df6b50
   languageName: node
   linkType: hard
 
