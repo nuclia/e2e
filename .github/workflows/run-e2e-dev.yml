@@ -41,7 +41,7 @@ jobs:
           node_modules/.bin/cypress install
       - name: Cypress run
         id: cypress
-        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
+        uses: cypress-io/github-action@c541a95ea92d9239347a2355f2e895cd4b3f8060 # v7.4.6
         with:
           spec: cypress/e2e/basic/**/*.cy.js
         env:
