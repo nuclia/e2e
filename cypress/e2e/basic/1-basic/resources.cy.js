@@ -70,7 +70,7 @@ describe('Resources', () => {
       describe('Resources list', () => {
         beforeEach(() => {
           cy.login(zone);
-          goTo('go-to-resources');
+          goTo('go-to-data');
         });
 
         it('should list existing resources', () => {
