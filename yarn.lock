@@ -564,8 +564,8 @@ __metadata:
   linkType: hard
 
 "cypress-mochawesome-reporter@npm:^3.6.0":
-  version: 3.8.2
-  resolution: "cypress-mochawesome-reporter@npm:3.8.2::__archiveUrl=https%3A%2F%2Fpkg.harness.io%2Fpkg%2Fct8onj8YTdaXtKaFsYCRLg%2Forg-nuclia-npm%2Fnpm%2Fcypress-mochawesome-reporter%2F-%2F3.8.2%2Fcypress-mochawesome-reporter-3.8.2.tgz"
+  version: 3.8.4
+  resolution: "cypress-mochawesome-reporter@npm:3.8.4"
   dependencies:
     commander: "npm:^10.0.1"
     fs-extra: "npm:^10.0.1"
@@ -576,7 +576,7 @@ __metadata:
     cypress: ">=6.2.0"
   bin:
     generate-mochawesome-report: cli.js
-  checksum: 10/9e53c7e8f62cef895eec351172d28709c330ee7fd0b72901207259d00e84dfd77a94fa76e80abf20544904706e26af063312868235138759fc2f98ef6e831076
+  checksum: 10/61305b01bc6bcfdd7b2b5960985ef1364b0904dc1f3a93e3b315253923824926e4d039fb93d211cbcf5969aeaa830cd4b59388d1b897a090be534b2aea5e13b7
   languageName: node
   linkType: hard
 
