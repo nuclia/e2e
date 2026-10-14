@@ -12,7 +12,7 @@ on:
     - cron: "25 4 * * *"
 jobs:
   build-virtual-env:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     name: Build virtual environment
     permissions:
       contents: read # actions/checkout
@@ -35,7 +35,7 @@ jobs:
           key: venv-${{ github.sha }}
 
   pre-checks:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     name: Python pre-checks
     permissions:
       contents: read # actions/checkout
@@ -60,7 +60,7 @@ jobs:
           make -C nuclia_e2e/ lint format-check
 
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     name: test-${{ matrix.zone }}_#${{ matrix.shard_index }}
     continue-on-error: true
     permissions:
