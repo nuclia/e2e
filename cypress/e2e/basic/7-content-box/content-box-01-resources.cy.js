@@ -59,16 +59,22 @@ describe('Content-box Resources', () => {
     });
 
     it('should display resources table with uploaded file', () => {
+      cy.get('.footer pa-button').contains('Your resources').click();
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
       cy.get('app-resource-table pa-table-row').should('have.length.at.least', 1);
       cy.get('app-resource-table').should('contain', 'Ready');
     });
 
-    it('should navigate between resources and history views', () => {
+    it('should open resources and history modals in sequence', () => {
+      cy.get('.footer pa-button').contains('Your resources').click();
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
-      cy.get('app-simple-kb .counters button.nav').contains('History').click();
+      cy.get('.pa-close-button').click();
+
+      cy.get('.footer pa-button').contains('History').click();
       cy.get('app-history-table', { timeout: 5000 }).should('be.visible');
-      cy.get('app-simple-kb .counters button.nav').contains('Your resources').click();
+      cy.get('.pa-close-button').click();
+
+      cy.get('.footer pa-button').contains('Your resources').click();
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
     });
   });

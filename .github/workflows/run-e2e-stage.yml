@@ -21,7 +21,7 @@ jobs:
       contents: read # actions/checkout
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       # Launch NucliaDB in docker
@@ -51,7 +51,7 @@ jobs:
           node_modules/.bin/cypress install
       - name: Cypress run
         id: cypress
-        uses: cypress-io/github-action@f790eee7a50d9505912f50c2095510be7de06aa7 # v6.10.9
+        uses: cypress-io/github-action@c541a95ea92d9239347a2355f2e895cd4b3f8060 # v7.4.6
         with:
           spec: cypress/e2e/basic/**/*.cy.js
         env:
@@ -69,7 +69,7 @@ jobs:
         # after the test run completes store reports and any screenshots
       - name: Cypress reports
         id: report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ failure() && steps.cypress.conclusion == 'failure' }}
         with:
           name: cypress-reports
@@ -93,7 +93,7 @@ jobs:
       #     if-no-files-found: ignore
       - name: Slack notification
         id: slack
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
         if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
         with:
           webhook-type: incoming-webhook
@@ -105,7 +105,7 @@ jobs:
 
       - name: Generate a token
         id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
         with:
           app-id: ${{ secrets.NUCLIA_EXTERNAL_GHAPP_ID }}

@@ -1,6 +1,7 @@
 from nuclia_e2e.tests.conftest import RegionalAPI
 from uuid import uuid4
 
+import asyncio
 import pytest
 
 
@@ -74,6 +75,8 @@ async def test_agentic_source_and_config_lifecycle(regional_api: RegionalAPI, kb
         ) as response:
             assert response.status == 204, await response.text()
 
+        # Config caches are per pod and keyed in five-second buckets.
+        await asyncio.sleep(6)
         async with regional_api.session.get(
             f"{regional_api.base_url}{config_path}",
             headers=regional_api.auth_headers,
@@ -117,7 +120,7 @@ async def test_agentic_ask_with_nucliadb_source(regional_api: RegionalAPI, kb_id
             f"{regional_api.base_url}/api/v1/kb/{kb_id}/ask",
             headers=headers,
             json={
-                "query": "What is the main ingredient used to cook an omelette?",
+                "query": "According to the omelette recipe, what do you crack and whisk in step 1?",
                 "agentic_config_id": config_id,
             },
         ) as response:

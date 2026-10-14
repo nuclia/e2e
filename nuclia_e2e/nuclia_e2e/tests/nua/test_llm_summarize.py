@@ -40,7 +40,7 @@ async def test_summarize_chatgpt(nua_client: AsyncNuaClient):
 @pytest.mark.asyncio_cooperative
 async def test_summarize_azure_chatgpt(nua_client: AsyncNuaClient):
     np = AsyncNucliaPredict()
-    embed = await np.summarize(DATA, model="chatgpt-azure-4o", nc=nua_client)
+    embed = await np.summarize(DATA, model="chatgpt-azure-5.6-terra", nc=nua_client)
     assert "Manresa" in embed.summary
     assert "Barcelona" in embed.summary
 

@@ -9,7 +9,7 @@ dependencies = [
     "nucliadb-sdk<6.13.1",  # 6.13.1 introduced a breaking change incompatible with nuclia.py (nuclia/nucliadb#3687)
     "nucliadb-protos",
     "pytest-timeout",
-    "pytest==9.0.3",
+    "pytest==9.1.1",
     "pydantic-settings",
     "backoff",
     "aiohttp",
@@ -21,10 +21,10 @@ dependencies = [
     "pyyaml",
     "tenacity",
     # Lint and format
-    "ruff==0.8.1",
+    "ruff==0.17.0",
     # Typing
-    "mypy==1.15.0",
-    "mypy-extensions==1.0.0",
+    "mypy==1.20.2",
+    "mypy-extensions==1.1.0",
     "types-colorama",
     "types-deprecated",
     "types-docutils",

@@ -45,7 +45,7 @@ async def test_kb_auth(
                 query=question,
                 reranker=RerankerName.PREDICT_RERANKER,
                 rephrase=False,
-                generative_model="chatgpt-azure-4o-mini",
+                generative_model="chatgpt-azure-5.6-luna",
                 features=[ChatOptions.SEMANTIC],
                 security=RequestSecurity(groups=security_groups) if security_groups is not None else None,
             ),

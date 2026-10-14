@@ -39,6 +39,7 @@ describe('Content-box Upload', () => {
     it('should upload a file when selected', () => {
       cy.get('input[type="file"]').attachFile('hello.txt');
       cy.wait(2000);
+      cy.get('.footer pa-button').contains('Your resources').click();
       cy.get('app-resource-table pa-table-row').should('have.length.at.least', 1);
       cy.get('app-resource-table').should('contain', 'hello');
     });
@@ -46,6 +47,7 @@ describe('Content-box Upload', () => {
     it('should open delete confirmation modal when clicking delete button', () => {
       cy.get('input[type="file"]').attachFile('hello2.txt');
       cy.wait(2000);
+      cy.get('.footer pa-button').contains('Your resources').click();
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
       cy.get('app-resource-table pa-button[icon="trash"]').first().click();
       cy.get('pa-confirmation-dialog').should('be.visible');
@@ -56,12 +58,17 @@ describe('Content-box Upload', () => {
     it('should remove resource from table after confirming delete', () => {
       cy.get('input[type="file"]').attachFile('hello3.txt');
       cy.wait(2000);
+      cy.get('.footer pa-button').contains('Your resources').click();
       cy.get('app-resource-table', { timeout: 5000 }).should('be.visible');
+
+      cy.get('app-resource-table nsi-skeleton').should('not.exist');
+      cy.get('app-resource-table').should('contain', 'hello');
       cy.get('app-resource-table pa-table-row').then(($rows) => {
         const initialCount = $rows.length;
         cy.get('app-resource-table pa-button[icon="trash"]').first().click();
         cy.get('pa-confirmation-dialog [qa="confirmation-dialog-confirm-button"]').click();
         cy.wait(2000);
+        cy.get('app-resource-table nsi-skeleton').should('not.exist');
         cy.get('app-resource-table pa-table-row').should('have.length', initialCount - 1);
       });
     });
