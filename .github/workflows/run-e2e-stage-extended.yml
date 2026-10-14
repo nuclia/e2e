@@ -62,7 +62,7 @@ jobs:
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
         with:
-          app-id: ${{ secrets.NUCLIA_EXTERNAL_GHAPP_ID }}
+          client-id: ${{ secrets.NUCLIA_EXTERNAL_GHAPP_ID }}
           private-key: ${{ secrets.NUCLIA_EXTERNAL_GHAPP_PK }}
           owner: nuclia
           repositories: tooling

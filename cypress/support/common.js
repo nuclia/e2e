@@ -6,11 +6,6 @@ const ZONES = {
   dev: 'gcp-dev-1',
 };
 
-export const STANDALONE_KB_NAME = `${Cypress.env('STANDALONE_KB_NAME')}`;
-export const STANDALONE_HEADER = {
-  'X-NUCLIADB-ROLES': 'MANAGER',
-};
-
 export const ACCOUNT_STAGE = {
   id: '23d9209a-34be-4648-8ef0-5b522f9976be',
   slug: 'testing',
