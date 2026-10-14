@@ -6,19 +6,21 @@
 
 ```
 yarn install
+yarn cypress install
 ```
 
 ## Run manually
 
-- run all the tests from the terminal: `cypress run`
-- run a specific spec file: `cypress run --spec "cypress/e2e/3-widget/find.cy.js"`
-- or open cypress dashboard to run them one by one and debug: `cypress open`
+Ask a supervisor to give you `cypress.env.json` file and place it on the root folder of your workspace.
 
-By default, tests are running on stage (thanks to `baseUrl` set in `cypress.config.js`).
+- run all the tests from the terminal: `CYPRESS_BASE_URL=https://stashify.cloud yarn cypress run`
+- run a specific spec file: `CYPRESS_BASE_URL=https://stashify.cloud yarn cypress run --spec "cypress/e2e/basic/3-widget/find.cy.js"`
+- or open cypress dashboard to run them one by one and debug: `CYPRESS_BASE_URL=https://stashify.cloud yarn cypress open`
+
 To run the tests in your local environment:
 
 ```shell
-CYPRESS_BASE_URL=http://localhost:4200  cypress open
+CYPRESS_BASE_URL=http://localhost:4200  yarn cypress open
 ```
 
 ## Run with Docker

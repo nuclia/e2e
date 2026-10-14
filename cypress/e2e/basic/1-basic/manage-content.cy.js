@@ -80,12 +80,13 @@ describe('Manage content', () => {
 
       it(`should upload content from the UI`, () => {
         cy.loginToEmptyKb(zone);
-        goTo('go-to-upload');
+        goTo('go-to-data');
 
         // Upload file
         cy.task('log', 'Upload file');
 
-        cy.get('stf-upload-option[icon="file"]').click();
+        cy.get('stf-upload-button button').should('be.visible').click({ scrollBehavior: false });
+        cy.get('pa-option[icon="file"]').click();
 
         cy.get('#upload-file-chooser').attachFile('nuclia-logo.png');
         cy.get('app-upload-files').contains('Add').click();
@@ -95,19 +96,21 @@ describe('Manage content', () => {
         cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
         cy.location('pathname').should(
           'equal',
-          `/at/${ACCOUNT.slug}/${zone.emptyKb.zone}/${zone.emptyKb.slug}/resources/pending`,
+          `/at/${ACCOUNT.slug}/${zone.emptyKb.zone}/${zone.emptyKb.slug}/data/resources/all`,
         );
 
         cy.task('log', 'Upload link');
-        goTo('go-to-upload');
-        cy.get('stf-upload-option[icon="link"]').click();
+        goTo('go-to-data');
+        cy.get('stf-upload-button button').should('be.visible').click({ scrollBehavior: false });
+        cy.get('pa-option[icon="link"]').click();
         cy.get('app-create-link pa-input input:first').type('https://nuclia.com/contact/');
         cy.get('app-create-link button').contains('Add').click();
         cy.get('.pa-toast-wrapper').should('contain', 'Upload successful');
         cy.location('pathname').should(
           'equal',
-          `/at/${ACCOUNT.slug}/${zone.emptyKb.zone}/${zone.emptyKb.slug}/resources/pending`,
+          `/at/${ACCOUNT.slug}/${zone.emptyKb.zone}/${zone.emptyKb.slug}/data/resources/all`,
         );
+        cy.get('app-create-link', {timeout: 5000}).should('not.exist');
 
         checkResourceWasAdded(endpoint, 'nuclia-logo.png');
         checkResourceWasAdded(endpoint, 'https://nuclia.com/contact/');
