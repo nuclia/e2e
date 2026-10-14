@@ -7,7 +7,7 @@
         "cheerio": "^1.2.0",
         "cypress": "13.17.0",
         "cypress-file-upload": "^5.0.8",
-        "cypress-mochawesome-reporter": "^3.6.0"
+        "cypress-mochawesome-reporter": "^5.0.0"
     },
     "dependencies": {
         "cypress-real-events": "^1.10.0",
