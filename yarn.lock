@@ -87,14 +87,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@zone-eu/mailsplit@npm:5.4.16":
-  version: 5.4.16
-  resolution: "@zone-eu/mailsplit@npm:5.4.16"
+"@zone-eu/mailsplit@npm:5.4.19":
+  version: 5.4.19
+  resolution: "@zone-eu/mailsplit@npm:5.4.19"
   dependencies:
-    libbase64: "npm:1.3.0"
-    libmime: "npm:5.4.3"
-    libqp: "npm:2.1.1"
-  checksum: 10/b5460773ff929b8a9650ee9ebb5262f2cd682863c96558eabf16c4de06de5713dee1bd930c0408ca6ba7c9edfff16ed390cbbc851c9bd944686832d1a0699797
+    libbase64: "npm:1.3.1"
+    libmime: "npm:5.4.6"
+    libqp: "npm:2.1.2"
+  checksum: 10/ef6f0ff7e570a45e103d080ffcfff1b82bfe6036e5b24da4b18469c2bd83f54f7c6f12f13f6fdd31b657c054deeedfd61729fd5cacc4fc740cf49a4fa9ffb45b
   languageName: node
   linkType: hard
 
@@ -765,7 +765,7 @@ __metadata:
     cypress-file-upload: "npm:^5.0.8"
     cypress-mochawesome-reporter: "npm:^3.6.0"
     cypress-real-events: "npm:^1.10.0"
-    imapflow: "npm:^1.3.5"
+    imapflow: "npm:^2.0.0"
     postal-mime: "npm:^2.7.4"
   languageName: unknown
   linkType: soft
@@ -787,10 +787,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"encoding-japanese@npm:2.3.0":
-  version: 2.3.0
-  resolution: "encoding-japanese@npm:2.3.0"
-  checksum: 10/52c8d3ec5db94c7478e309d6f02197b937be3f90cf849fd56c66a4386487e41ebb04c4daa32c972ae018907f83bb657eb179eee24ac40490b2605519698ca2b0
+"encoding-japanese@npm:2.4.0":
+  version: 2.4.0
+  resolution: "encoding-japanese@npm:2.4.0"
+  checksum: 10/710d920f2b6ca1be0a7e876766a29b4a6c437ceadeff8fcea1a641a687e967d70b7467c35c9623d80c214008684d43458f0a507bc2612f084517fe970ce7f5a5
   languageName: node
   linkType: hard
 
@@ -1304,19 +1304,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"imapflow@npm:^1.3.5":
-  version: 1.7.8
-  resolution: "imapflow@npm:1.7.8"
+"imapflow@npm:^2.0.0":
+  version: 2.1.2
+  resolution: "imapflow@npm:2.1.2"
   dependencies:
-    "@zone-eu/mailsplit": "npm:5.4.16"
-    encoding-japanese: "npm:2.3.0"
+    "@zone-eu/mailsplit": "npm:5.4.19"
+    encoding-japanese: "npm:2.4.0"
     iconv-lite: "npm:0.7.3"
-    libbase64: "npm:1.3.0"
-    libmime: "npm:5.4.3"
-    libqp: "npm:2.1.1"
+    libbase64: "npm:1.3.1"
+    libmime: "npm:5.4.6"
+    libqp: "npm:2.1.2"
     pino: "npm:10.3.1"
-    socks: "npm:2.8.9"
-  checksum: 10/e03678a8061042410cffae64b1ac9cc7084c52d20aced8e72f900bca731ecb866e87cb57bea5106308608b2b592835984c9a7d918a4d0662b31319f51a803e89
+    socks: "npm:2.8.10"
+  checksum: 10/c5e007b3d6851ba32a10132390ddf04a4fa7f923e875ad57d39d834eb3780360f12355f49c5be2201651c837319d380282a15c3485ef7590eb6fc7f612e582ae
   languageName: node
   linkType: hard
 
@@ -1489,29 +1489,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"libbase64@npm:1.3.0":
-  version: 1.3.0
-  resolution: "libbase64@npm:1.3.0::__archiveUrl=https%3A%2F%2Fpkg.harness.io%2Fpkg%2Fct8onj8YTdaXtKaFsYCRLg%2Forg-nuclia-npm%2Fnpm%2Flibbase64%2F-%2F1.3.0%2Flibbase64-1.3.0.tgz"
-  checksum: 10/e90f06c7c7af754521d254c53ef847bab8ca354ee38f4c5d866c3fc77b4cb7a2ab77aa220c0df433f8d17abd0e884cf322b2771d84c2f65760e22012dfecaa67
+"libbase64@npm:1.3.1":
+  version: 1.3.1
+  resolution: "libbase64@npm:1.3.1"
+  checksum: 10/3c6506d5d0d5bcb8ef9d927f56f0b4dfbf7e03d9da403c66783245b230ec9cd3394019a904a89d67930979e314724e86f4817ea74f71d85a04f90072bf7f676e
   languageName: node
   linkType: hard
 
-"libmime@npm:5.4.3":
-  version: 5.4.3
-  resolution: "libmime@npm:5.4.3"
+"libmime@npm:5.4.6":
+  version: 5.4.6
+  resolution: "libmime@npm:5.4.6"
   dependencies:
-    encoding-japanese: "npm:2.3.0"
+    encoding-japanese: "npm:2.4.0"
     iconv-lite: "npm:0.7.3"
-    libbase64: "npm:1.3.0"
-    libqp: "npm:2.1.1"
-  checksum: 10/fb734926f1b54543d4a49ef9e3c65f5fec19f1af5928cd4ea1b228d6efd7b81d7f81fd41d78c2fbd9ae3bef54e5d4cf237c511394cc32cbb230e468476c2a283
+    libbase64: "npm:1.3.1"
+    libqp: "npm:2.1.2"
+  checksum: 10/77afda4abb462819a0ec1d0a1591b4a404dc9a85d434ecac6c1935edcf9775d88fe1d875e02b0713abc0e15418af4ee22178a7ff16f009006cb4069c6158e890
   languageName: node
   linkType: hard
 
-"libqp@npm:2.1.1":
-  version: 2.1.1
-  resolution: "libqp@npm:2.1.1::__archiveUrl=https%3A%2F%2Fpkg.harness.io%2Fpkg%2Fct8onj8YTdaXtKaFsYCRLg%2Forg-nuclia-npm%2Fnpm%2Flibqp%2F-%2F2.1.1%2Flibqp-2.1.1.tgz"
-  checksum: 10/cc59bd6ea61604b0505651fa79b722ff69d39b1fc609dad3ad4a20a51c6eb904babc0d1a59699a55a628063f31540232845bab471910d92c8b607120f563089e
+"libqp@npm:2.1.2":
+  version: 2.1.2
+  resolution: "libqp@npm:2.1.2"
+  checksum: 10/ba4d81470be90cd3977380bbe908fceea9e06ee21d2191693158c2a0c7b3c1d511166a0272c9146cb533fa97bff386a4b5aa2f5da4d493597296e51dc4ea8258
   languageName: node
   linkType: hard
 
@@ -2237,13 +2237,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"socks@npm:2.8.9":
-  version: 2.8.9
-  resolution: "socks@npm:2.8.9::__archiveUrl=https%3A%2F%2Fpkg.harness.io%2Fpkg%2Fct8onj8YTdaXtKaFsYCRLg%2Forg-nuclia-npm%2Fnpm%2Fsocks%2F-%2F2.8.9%2Fsocks-2.8.9.tgz"
+"socks@npm:2.8.10":
+  version: 2.8.10
+  resolution: "socks@npm:2.8.10"
   dependencies:
     ip-address: "npm:^10.1.1"
     smart-buffer: "npm:^4.2.0"
-  checksum: 10/8675e6b023faeaa5c2511664b106fd21f5d5ecb403584412e0efae58a76e0c0661c0c18ca340988f6cb398232308dae85fb710f847c9c6e0a6af33b07e4cd33a
+  checksum: 10/05ea32c55a4428babaab97f5419e130d2aec4836bc36a1505cd2d5c36ecf447609f5bbe95243b5e0cba46b4b2fea9d8d2b5031cc13005b3146da53f86b5e1128
   languageName: node
   linkType: hard
 
