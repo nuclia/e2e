@@ -9,8 +9,8 @@ describe('Cowork Onboarding - Full Flow', () => {
   const REDIRECT_URI = `${APP_BASE}/user/callback`;
 
   const timestamp = Date.now();
-  const testAlias = `cowork-e2e-${timestamp}`;
-  const testEmail = `nucliaemailvalidation+${testAlias}@gmail.com`;
+  const testEmailPrefix = 'nucliaemailvalidation+cowork-e2e';
+  const testEmail = `${testEmailPrefix}-${timestamp}@gmail.com`;
   const testPassword = `E2Etest!${timestamp}`;
   // Fixed name — clearly automated, no real user would create this.
   // Slug is deterministic so we can delete it by known slug before each run.
@@ -18,13 +18,26 @@ describe('Cowork Onboarding - Full Flow', () => {
   const testSlug = 'cypress-e2e-cowork';
 
   before(function () {
-    // Delete the fixed-slug test account if it exists from a previous interrupted run.
-    // failOnStatusCode: false silently skips the 404 when there's nothing to clean up.
+    const rootHeaders = { Authorization: `Bearer ${Cypress.env('ROOT_PAT_TOKEN')}` };
+
     cy.request({
       method: 'DELETE',
       url: `${ACCOUNTS_BASE}/api/manage/@account/${testSlug}`,
-      headers: { Authorization: `Bearer ${Cypress.env('ROOT_PAT_TOKEN')}` },
+      headers: rootHeaders,
       failOnStatusCode: false,
+    });
+
+    cy.request({ url: `${ACCOUNTS_BASE}/api/manage/@users`, headers: rootHeaders }).then(({ body }) => {
+      body
+        .filter((user) => user.name === 'Cypress E2E' && user.email.startsWith(testEmailPrefix))
+        .forEach((user) => {
+          cy.request({
+            method: 'DELETE',
+            url: `${ACCOUNTS_BASE}/api/manage/@user/${user.id}`,
+            headers: rootHeaders,
+            failOnStatusCode: false,
+          });
+        });
     });
   });
 
