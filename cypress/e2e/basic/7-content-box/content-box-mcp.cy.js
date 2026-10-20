@@ -34,7 +34,7 @@ describe('Content-box MCP', () => {
 
     it('should show MCP endpoint URL in modal', () => {
       openMcpModal();
-      cy.get('pa-modal-dialog pre code').should('be.visible').invoke('text').should('match', /https:\/\/.*\/api\/v1\/kb\/.*\/mcp/);
+      cy.get('pa-modal-dialog pre code').should('be.visible').invoke('text').should('match', /https:\/\/.*\/api\/v1\/agent\/.*\/mcp/);
     });
   });
 });
