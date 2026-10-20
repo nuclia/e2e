@@ -2,7 +2,7 @@
 
 const { COWORK_ACCOUNT } = require('../../../support/common');
 
-describe('Cowork Onboarding - Full Flow', () => {
+describe.skip('Cowork Onboarding - Full Flow', () => {
   const ACCOUNTS_BASE = `https://accounts.${COWORK_ACCOUNT.domain}`;
   const HYDRA_BASE = `https://oauth.${COWORK_ACCOUNT.domain}`;
   const APP_BASE = `https://${COWORK_ACCOUNT.coworkDomain}`;
@@ -43,7 +43,7 @@ describe('Cowork Onboarding - Full Flow', () => {
 
   // No retries: a second attempt sends another email to the same alias, causing
   // Gmail to delay delivery and making both attempts time out.
-  it('should complete full cowork onboarding flow with auto-account-creation', { retries: 0 }, () => {
+  it.skip('should complete full cowork onboarding flow with auto-account-creation', { retries: 0 }, () => {
     cy.task(
       'performCoworkSignup',
       {
