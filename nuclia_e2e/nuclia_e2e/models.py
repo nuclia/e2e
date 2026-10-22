@@ -86,7 +86,7 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "llama-4-scout-17b-16e-instruct-maas": ModelInfo(
         test_json=False,  # Json functionality not operational
     ),
-    "gcp-glm-5": ModelInfo(),
+    # "gcp-glm-5": ModelInfo(),              DISCONTINUED
     # "deepseek-reasoner",                   DISCONTINUED
     # "deepseek-chat",                       DISCONTINUED
     # "azure-deepseek-r1",                   EXCLUDED as it is too slow
