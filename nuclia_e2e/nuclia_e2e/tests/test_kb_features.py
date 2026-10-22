@@ -495,9 +495,9 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         new_embedding_model_available(), max_wait=200, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
-    assert (
-        search_returned_results is True
-    ), "expected to be able to search with the new embedding model but nucliadb didn't return resources"
+    assert search_returned_results is True, (
+        "expected to be able to search with the new embedding model but nucliadb didn't return resources"
+    )
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)
@@ -671,7 +671,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
 
         return condition
 
-    success, logs = await wait_for(activity_log_is_stored(), max_wait=180, logger=logger)
+    success, _logs = await wait_for(activity_log_is_stored(), max_wait=180, logger=logger)
     assert success, "Activity logs didn't get stored in time"
 
     def search_log_is_stored():

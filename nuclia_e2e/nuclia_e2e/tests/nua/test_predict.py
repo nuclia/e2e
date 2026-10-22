@@ -27,7 +27,7 @@ def assert_decision_usage_and_consumption(response):
     assert response.usage.output_tokens >= 0
     assert response.usage.total_tokens == response.usage.input_tokens + response.usage.output_tokens
 
-    if  response.model not in NO_CONSUMPTION_MODELS:
+    if response.model not in NO_CONSUMPTION_MODELS:
         assert response.consumption is not None
         normalized = response.consumption.normalized_tokens
         assert normalized.input >= 0
