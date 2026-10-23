@@ -93,7 +93,7 @@ describe('Resources', () => {
           // It is not ideal because if for some reason the menu is really not visible, this test will not
           // reveal the problem. But at least we do test the feature a bit…
           cy.get('pa-checkbox').contains('Labels').click({ force: true });
-          cy.get('pa-button').contains('Display full labels').click();
+          cy.get('button').contains('Display full labels').click();
           cy.get('pa-chip-closeable').should('contain', 'permanent');
         });
       });
