@@ -10,7 +10,7 @@ dependencies = [
     "nucliadb-sdk>=7.1.0.post7089",
     "nucliadb-protos",
     "pytest-timeout",
-    "pytest==9.1.1",
+    "pytest==9.2.0",
     "pydantic-settings",
     "backoff",
     "aiohttp",
