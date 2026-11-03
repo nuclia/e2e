@@ -11,9 +11,9 @@ on:
     # Run every day at 04:25
     - cron: "25 4 * * *"
 jobs:
-  build-virtual-env:
+  pre-checks:
     runs-on: ubuntu-22.04
-    name: Build virtual environment
+    name: Python pre-checks
     permissions:
       contents: read # actions/checkout
     steps:
@@ -24,35 +24,13 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
-
-      - name: Install venv
-        run: uv sync --project nuclia_e2e
-
-      - name: Upload virtualenv to cache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: nuclia_e2e/.venv
-          key: venv-${{ github.sha }}
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "nuclia_e2e/uv.lock"
 
-  pre-checks:
-    runs-on: ubuntu-22.04
-    name: Python pre-checks
-    permissions:
-      contents: read # actions/checkout
-    needs:
-      - build-virtual-env
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Restore venv
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: nuclia_e2e/.venv
-          key: venv-${{ github.sha }}
-          fail-on-cache-miss: true
+      - name: Install dependencies
+        run: uv sync --frozen --project nuclia_e2e
 
       - name: Run pre-checks
         run: |
@@ -78,7 +56,6 @@ jobs:
           ] # Remove aws-me-central-1-1 due to rocket issue
         shard_index: [0, 1, 2] # Running tests in 3 parallel shards
     needs:
-      - build-virtual-env
       - pre-checks
 
     steps:
@@ -87,12 +64,15 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Restore venv
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          path: nuclia_e2e/.venv
-          key: venv-${{ github.sha }}
-          fail-on-cache-miss: true
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "nuclia_e2e/uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --frozen --project nuclia_e2e
 
       - name: "Run tests"
         env: # Or as an environment variable
