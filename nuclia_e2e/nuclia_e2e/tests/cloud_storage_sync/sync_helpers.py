@@ -55,11 +55,11 @@ def assert_logged_paths(
 ) -> None:
     """Assert that each (file_id -> file_path) in `expected` appears in matching log entries."""
     actual = log_paths_by_file_id(logs, message_substring)
-    assert len(actual) == len(
-        expected
-    ), f"Expected {len(expected)} '{message_substring}' logs, got {len(actual)}"
+    assert len(actual) == len(expected), (
+        f"Expected {len(expected)} '{message_substring}' logs, got {len(actual)}"
+    )
     for file_id, file_path in expected.items():
         assert file_id in actual, f"file_id {file_id} not found in '{message_substring}' logs"
-        assert (
-            actual[file_id] == file_path
-        ), f"file_path mismatch for {file_id}: expected {file_path}, got {actual[file_id]}"
+        assert actual[file_id] == file_path, (
+            f"file_path mismatch for {file_id}: expected {file_path}, got {actual[file_id]}"
+        )

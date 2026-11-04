@@ -91,7 +91,7 @@ async def default_model_with_bedrock_assume_role():
 
 
 @pytest.mark.asyncio_cooperative
-async def test_account_models(
+async def test_account_models(  # noqa: PLR0917
     request: pytest.FixtureRequest,
     kb_id: str,
     zone: str,

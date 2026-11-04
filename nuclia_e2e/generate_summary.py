@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     for env_zone in sorted(timings_data):
         row = [env_zone] + [
-            f'{timings_data[env_zone].get(k, "-"):.3f}' if k in timings_data[env_zone] else "-"
+            f"{timings_data[env_zone].get(k, '-'):.3f}" if k in timings_data[env_zone] else "-"
             for k in timing_keys
         ]
         timing_rows.append(row)

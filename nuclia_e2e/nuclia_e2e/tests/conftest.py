@@ -514,7 +514,7 @@ class EmailUtil:
         mail.select("inbox")
 
         # Search for emails targeted to the specific email variant
-        status, messages = await asyncio.to_thread(partial(mail.search, None, "TO", f'"{test_address}"'))
+        _status, messages = await asyncio.to_thread(partial(mail.search, None, "TO", f'"{test_address}"'))
         mail_ids = messages[0].split()
         if not mail_ids:
             return None  # No emails found

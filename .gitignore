@@ -49,6 +49,7 @@ yarn-error.log
 testem.log
 /typings
 .python-version
+!nuclia_e2e/.python-version
 
 # System Files
 .DS_Store

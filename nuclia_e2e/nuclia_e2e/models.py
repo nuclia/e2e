@@ -5,6 +5,7 @@
 # WARNING: some of them are excluded from the original, commented down here on purpose.
 # Try to keep the original order to make diffs more useful
 # Also delete only the model if it has been deleted on the original
+from collections.abc import Mapping
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -117,8 +118,19 @@ ALL_LLMS: dict[str, ModelInfo] = {
 }
 
 
-def model_zone_check(model: str, zone: str):
-    if not ALL_LLMS[model].match_zone(zone):
+ALL_DECISION_MODELS: dict[str, ModelInfo] = {
+    "jev-1.13.0": ModelInfo(),
+    "gpt-6-luna-decisions": ModelInfo(),
+    "progress-decision-1.0": ModelInfo(zones_re="^aws-us-east-2-1$"),
+}
+
+
+def model_zone_check(
+    model: str,
+    zone: str,
+    models: Mapping[str, ModelInfo] = ALL_LLMS,
+):
+    if not models[model].match_zone(zone):
         pytest.skip(f"Model {model} is not available in zone {zone}.")
 
 
