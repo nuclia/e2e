@@ -68,9 +68,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
         test_json=False,  # EXCLUDED because it almost always fails with timeouts
         test_rephrase=False,  # Reasoning model
     ),
-    "chatgpt-o3-mini": ModelInfo(
-        test_rephrase=False,  # Reasoning model
-    ),
     "chatgpt-4.1": ModelInfo(),
     "chatgpt-5": ModelInfo(),
     "chatgpt-5-mini": ModelInfo(),
