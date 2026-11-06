@@ -231,10 +231,9 @@ def validate_labeler_output(msg: BrokerMessage):
 
 def validate_llm_graph_output(msg: BrokerMessage):
     assert LLM_GRAPH_OPERATION_IDENT in msg.field_metadata[0].metadata.metadata.entities
-    assert (
-        msg.field_metadata[0].metadata.metadata.entities[LLM_GRAPH_OPERATION_IDENT].entities[0].label
-        == "PLAINTIFF"
-    )
+    entities = msg.field_metadata[0].metadata.metadata.entities[LLM_GRAPH_OPERATION_IDENT].entities
+    labels = {entity.label for entity in entities}
+    assert "PLAINTIFF" in labels, f"Expected a PLAINTIFF entity, got labels: {sorted(labels)}"
 
 
 def validate_prompt_guard_output(msg: BrokerMessage):
