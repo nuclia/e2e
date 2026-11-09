@@ -14,7 +14,7 @@ export const ACCOUNT_STAGE = {
   availableZones: [
     {
       slug: ZONES['europe'],
-      title: 'Europe',
+      title: 'Europe (Google)',
       permanentKb: {
         name: 'permanent',
         slug: 'permanent',
