@@ -64,10 +64,6 @@ ALL_LLMS: dict[str, ModelInfo] = {
     "chatgpt4o-mini": ModelInfo(),
     # "chatgpt-o1-preview",                  DISCONTINUED
     # "chatgpt-o1-mini",                     DISCONTINUED
-    "chatgpt-o1": ModelInfo(
-        test_json=False,  # EXCLUDED because it almost always fails with timeouts
-        test_rephrase=False,  # Reasoning model
-    ),
     "chatgpt-4.1": ModelInfo(),
     "chatgpt-5": ModelInfo(),
     "chatgpt-5-mini": ModelInfo(),
