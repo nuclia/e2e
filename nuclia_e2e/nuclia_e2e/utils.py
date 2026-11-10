@@ -227,7 +227,7 @@ def get_async_kb_ndb_client(
     user_token: str | None = None,
     service_account_token: str | None = None,
 ) -> AsyncNucliaDBClient:
-    from nuclia import REGIONAL
+    from nuclia import REGIONAL  # noqa: PLC0415
 
     assert any((user_token, service_account_token)), "One of user_token or service_account_token must be set"
 
@@ -253,7 +253,7 @@ def get_sync_kb_ndb_client(
     user_token: str | None = None,
     service_account_token: str | None = None,
 ) -> NucliaDBClient:
-    from nuclia import REGIONAL
+    from nuclia import REGIONAL  # noqa: PLC0415
 
     assert any((user_token, service_account_token)), "One of user_token or service_account_token must be set"
 

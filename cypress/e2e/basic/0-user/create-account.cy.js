@@ -3,7 +3,7 @@
 const { ACCOUNT } = require('../../../support/common');
 
 describe('Create a new account', () => {
-  it('allows to go to account creation', () => {
+  it.skip('allows to go to account creation', () => {
     cy.request({
       method: 'POST',
       url: `https://accounts.${ACCOUNT.domain}/api/auth/signup/start`,

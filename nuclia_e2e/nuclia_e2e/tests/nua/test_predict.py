@@ -1,14 +1,38 @@
 from nuclia.lib.nua import AsyncNuaClient
 from nuclia.lib.nua_responses import ChatModel
 from nuclia.sdk.predict import AsyncNucliaPredict
+from nuclia_e2e.models import ALL_DECISION_MODELS
 from nuclia_e2e.models import ALL_ENCODERS
 from nuclia_e2e.models import model_zone_check
 from nuclia_e2e.models import REPHRASE_TEST_LLMS
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import skip_on_provider_transient_error
+from nuclia_models.predict.decisions import ChoiceAnswer
+from nuclia_models.predict.decisions import DecisionRequest
+from nuclia_models.predict.decisions import NoulAnswer
+from nuclia_models.predict.decisions import OpenAIChoiceAnswer
+from nuclia_models.predict.decisions import OpenAIDecisionRequest
+from nuclia_models.predict.decisions import OpenAIPredicateAnswer
+from nuclia_models.predict.decisions import OpenAIScoreAnswer
+from nuclia_models.predict.decisions import ScoreAnswer
 from nuclia_models.predict.remi import RemiRequest
 
 import pytest
+
+NO_CONSUMPTION_MODELS = ["progress-decision-1.0"]
+
+
+def assert_decision_usage_and_consumption(response):
+    assert response.usage.input_tokens > 0
+    assert response.usage.output_tokens >= 0
+    assert response.usage.total_tokens == response.usage.input_tokens + response.usage.output_tokens
+
+    if response.model not in NO_CONSUMPTION_MODELS:
+        assert response.consumption is not None
+        normalized = response.consumption.normalized_tokens
+        assert normalized.input >= 0
+        assert normalized.output >= 0
+        assert normalized.image >= 0
 
 
 @pytest.mark.asyncio_cooperative
@@ -93,6 +117,138 @@ async def test_predict_remi(nua_client: AsyncNuaClient):
 
     assert results.context_relevance[1] < 2
     assert results.groundedness[1] < 2
+
+
+@pytest.mark.asyncio_cooperative
+@pytest.mark.parametrize("model", ALL_DECISION_MODELS.keys())
+async def test_predict_decision_system_one_account(
+    nua_client: AsyncNuaClient,
+    regional_api_config: ZoneConfig,
+    model: str,
+):
+    model_zone_check(model, regional_api_config.name, ALL_DECISION_MODELS)
+    request = DecisionRequest.model_validate(
+        {
+            "model": model,
+            "state": "Paris is the capital of France.",
+            "questions": {
+                "is_correct": {
+                    "type": "noul",
+                    "instructions": "Is the statement factually correct?",
+                },
+                "capital": {
+                    "type": "choice",
+                    "instructions": "Which city does the statement identify as the capital of France?",
+                    "criteria": {
+                        "paris": "Paris",
+                        "berlin": "Berlin",
+                    },
+                },
+                "accuracy": {
+                    "type": "score",
+                    "instructions": "Score the factual accuracy of the statement.",
+                    "criteria": [
+                        "The statement is factually incorrect.",
+                        "The statement is factually correct.",
+                    ],
+                },
+            },
+        }
+    )
+
+    predict = AsyncNucliaPredict()
+    with skip_on_provider_transient_error():
+        response = await predict.decision_system_one(
+            request,
+            show_consumption=True,
+            nc=nua_client,
+        )
+    assert response.model == model
+    assert response.model == model
+
+    noul = response.answers["is_correct"]
+    assert isinstance(noul, NoulAnswer)
+    assert noul.noul > 0.5
+
+    choice = response.answers["capital"]
+    assert isinstance(choice, ChoiceAnswer)
+    assert choice.choice == "paris"
+    assert choice.probabilities["paris"] > choice.probabilities["berlin"]
+
+    score = response.answers["accuracy"]
+    assert isinstance(score, ScoreAnswer)
+    assert score.score > 0.5
+
+    assert_decision_usage_and_consumption(response)
+
+
+@pytest.mark.asyncio_cooperative
+@pytest.mark.parametrize("model", ALL_DECISION_MODELS.keys())
+async def test_predict_decision_openai_account(
+    nua_client: AsyncNuaClient,
+    regional_api_config: ZoneConfig,
+    model: str,
+):
+    model_zone_check(model, regional_api_config.name, ALL_DECISION_MODELS)
+    request = OpenAIDecisionRequest.model_validate(
+        {
+            "model": model,
+            "input": "Paris is the capital of France.",
+            "questions": [
+                {
+                    "type": "predicate",
+                    "name": "is_correct",
+                    "instructions": "Is the statement factually correct?",
+                },
+                {
+                    "type": "choice",
+                    "name": "correct",
+                    "instructions": "Is the statement correct?",
+                    "choices": [
+                        {"value": False, "description": "The statement is incorrect."},
+                        {"value": True, "description": "The statement is correct."},
+                    ],
+                },
+                {
+                    "type": "score",
+                    "name": "accuracy",
+                    "instructions": "Score the factual accuracy of the statement.",
+                    "levels": [
+                        {"label": "incorrect", "description": "The statement is incorrect."},
+                        {"label": "correct", "description": "The statement is correct."},
+                    ],
+                },
+            ],
+        }
+    )
+
+    predict = AsyncNucliaPredict()
+    with skip_on_provider_transient_error():
+        response = await predict.decision(
+            request,
+            show_consumption=True,
+            nc=nua_client,
+        )
+
+    assert response.model == model
+    answers = {answer.name: answer for answer in response.answers}
+
+    predicate = answers["is_correct"]
+    assert isinstance(predicate, OpenAIPredicateAnswer)
+    assert predicate.probability > 0.5
+
+    choice = answers["correct"]
+    assert isinstance(choice, OpenAIChoiceAnswer)
+    assert choice.choice is True
+    true_probability = next(item.probability for item in choice.probabilities if item.value is True)
+    false_probability = next(item.probability for item in choice.probabilities if item.value is False)
+    assert true_probability > false_probability
+
+    score = answers["accuracy"]
+    assert isinstance(score, OpenAIScoreAnswer)
+    assert score.score > 0.5
+
+    assert_decision_usage_and_consumption(response)
 
 
 @pytest.mark.asyncio_cooperative

@@ -14,7 +14,7 @@ export const ACCOUNT_STAGE = {
   availableZones: [
     {
       slug: ZONES['europe'],
-      title: 'Europe',
+      title: 'Europe (Google)',
       permanentKb: {
         name: 'permanent',
         slug: 'permanent',
@@ -124,8 +124,6 @@ export const user = {
   email: `${Cypress.env('USER_NAME')}`,
   password: `${Cypress.env('USER_PWD')}`,
 };
-
-export const UI_STARTER = !!Cypress.env('UI_STARTER');
 
 export function getAuthHeader(synchronous = true) {
   const headers = { Authorization: `Bearer ${Cypress.env('BEARER_TOKEN')}` };
