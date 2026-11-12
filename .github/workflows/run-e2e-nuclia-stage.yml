@@ -130,7 +130,8 @@ jobs:
         id: teams
         uses: ./tooling/.github/actions/notify-microsoft-teams
         with:
-          webhook-url: ${{ secrets.MS_TEAMS_WEBHOOK_URL_E2E }}
+          client-secret: ${{ secrets.PDPBOT_CLIENT_SECRET }}
+          channel-id: ${{ vars.MS_TEAMS_CHANNEL_E2E_NOTIFICATIONS }}
           title: "⚠️ NUA E2E STAGE tests failed"
           message: |
             Tests failed on STAGE
