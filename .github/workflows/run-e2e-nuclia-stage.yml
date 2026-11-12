@@ -93,20 +93,10 @@ jobs:
 
   notify:
     if: ${{ failure() && github.ref_name == 'main' }}
-    permissions: {}      # no token needed; Slack webhook uses a secret
+    permissions: {}      # no GITHUB_TOKEN needed; the notification steps authenticate with secrets
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Send Slack notification
-        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
-        with:
-          webhook-type: incoming-webhook
-          webhook: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
-          payload: |
-            {
-              "text": "⚠️ Tests failed on STAGE\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            }
-
       - name: Generate a token
         id: app-token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0

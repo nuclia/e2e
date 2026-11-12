@@ -45,18 +45,6 @@ jobs:
           name: cypress-reports
           path: cypress/reports
           if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
-      - name: Slack notification
-        id: slack
-        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
-        if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
-        with:
-          webhook-type: incoming-webhook
-          webhook: ${{ secrets.SLACK_HOOK_URL }}
-          payload: |
-            {
-              "text": "⚠️ Extended Cypress E2E failed on Stage\nTriggered by ${{ github.triggering_actor }} \nRun #${{ github.run_number }}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nCypress report: ${{ steps.report.outputs.artifact-url }}"
-            }
-
       - name: Generate a token
         id: app-token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
