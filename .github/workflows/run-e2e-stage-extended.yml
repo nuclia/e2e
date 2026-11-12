@@ -83,7 +83,8 @@ jobs:
         uses: ./tooling/.github/actions/notify-microsoft-teams
         if: ${{ failure() && steps.cypress.conclusion == 'failure' && github.ref_name == 'main' }}
         with:
-          webhook-url: ${{ secrets.MS_TEAMS_WEBHOOK_URL_E2E }}
+          client-secret: ${{ secrets.PDPBOT_CLIENT_SECRET }}
+          channel-id: ${{ vars.MS_TEAMS_CHANNEL_E2E_NOTIFICATIONS }}
           title: "⚠️ Extended Cypress E2E failed on Stage"
           message: |
             Triggered by ${{ github.triggering_actor }}
