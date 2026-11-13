@@ -117,7 +117,7 @@ jobs:
 
   notify:
     runs-on: ubuntu-latest
-    permissions: {} # no token needed; Slack webhook uses a secret
+    permissions: {} # no GITHUB_TOKEN needed; the notification steps authenticate with secrets
     needs: test
     if: always() # Always run to check if any zone failed
     steps:
@@ -135,17 +135,6 @@ jobs:
           else
             echo "failed_zones=" >> $GITHUB_OUTPUT
           fi
-
-      - name: Send Slack Notification
-        if: ${{ steps.collect.outputs.failed_zones != '' && github.ref_name == 'main' }}
-        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
-        with:
-          webhook-type: incoming-webhook
-          webhook: ${{ secrets.NUA_E2E_SLACK_WEBHOOK }}
-          payload: |
-            {
-              "text": "⚠️ Tests failed in zones: ${{ steps.collect.outputs.failed_zones }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            }
 
       - name: Generate a token
         id: app-token
