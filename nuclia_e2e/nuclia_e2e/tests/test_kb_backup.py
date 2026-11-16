@@ -40,8 +40,11 @@ async def restore_backup_when_creation_slot_is_available(
     backup_id: uuid.UUID,
     restore: BackupRestore,
     zone: str,
+    account_id: str,
 ):
-    return await sdk.AsyncNucliaBackup().restore(restore=restore, backup_id=backup_id, zone=zone)
+    return await sdk.AsyncNucliaBackup().restore(
+        restore=restore, backup_id=backup_id, zone=zone, account_id=account_id
+    )
 
 
 @pytest.mark.asyncio_cooperative
@@ -51,8 +54,7 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
 
     zone = regional_api_config.zone_slug
     assert regional_api_config.global_config is not None
-    account_slug = regional_api_config.global_config.permanent_account_slug
-    sdk.NucliaAccounts().default(account_slug)
+    account_id = regional_api_config.global_config.permanent_account_id
 
     # Create an extract configuration for the source KB
     auth = get_async_auth()
@@ -62,12 +64,12 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     # Create Backup
     async with as_default_generative_model_for_kb(kb_id, zone, auth, generative_model="chatgpt4o"):
         backup_create = await sdk.AsyncNucliaBackup().create(
-            backup=BackupCreate(kb_id=uuid.UUID(kb_id)), zone=zone
+            backup=BackupCreate(kb_id=uuid.UUID(kb_id)), zone=zone, account_id=account_id
         )
 
         # Wait till backup is finished
         async def check_backup_finished() -> tuple[bool, BackupResponse]:
-            backups = await sdk.AsyncNucliaBackup().list(zone=zone)
+            backups = await sdk.AsyncNucliaBackup().list(zone=zone, account_id=account_id)
             backup_list = [b for b in backups if b.id == backup_create.id]
             assert len(backup_list) == 1
             backup_object = backup_list[0]
@@ -78,19 +80,20 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     new_kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_backup"
 
     # Make sure the kb used for this test is deleted, as the slug is reused:
-    old_kbid = await get_kbid_from_slug(regional_api_config.zone_slug, new_kb_slug)
+    old_kbid = await get_kbid_from_slug(regional_api_config, new_kb_slug)
     if old_kbid is not None:
-        await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
+        await AsyncNucliaKBS().delete(zone=zone, id=old_kbid, account_id=account_id)
 
     # Restore Backup
     new_kb = await restore_backup_when_creation_slot_is_available(
         restore=BackupRestore(slug=new_kb_slug, title="Test E2E Backup (can be deleted)"),
         backup_id=backup_create.id,
         zone=zone,
+        account_id=account_id,
     )
     # Check a new KB is created
     kbs = AsyncNucliaKBS()
-    kb_get = await kbs.get(id=new_kb.id)
+    kb_get = await kbs.get(id=new_kb.id, zone=zone, account_id=account_id)
     assert kb_get is not None
 
     # Wait restore is completed
@@ -110,13 +113,13 @@ async def test_kb_backup(request: pytest.FixtureRequest, regional_api_config: Zo
     assert any(config["name"] == "strategy1" for config in extract_strategies.values())
 
     # Delete the restored KB
-    await kbs.delete(id=new_kb.id, zone=zone)
+    await kbs.delete(id=new_kb.id, zone=zone, account_id=account_id)
     with pytest.raises(Exception) as exc_info:  # noqa: PT011
-        _ = await kbs.get(id=new_kb.id, zone=zone)
+        _ = await kbs.get(id=new_kb.id, zone=zone, account_id=account_id)
     assert exc_info.value.args[0]["status"] == 404
 
     # Delete backup
-    await sdk.AsyncNucliaBackup().delete(id=backup_create.id, zone=zone)
-    backups = await sdk.AsyncNucliaBackup().list(zone=zone)
+    await sdk.AsyncNucliaBackup().delete(id=backup_create.id, zone=zone, account_id=account_id)
+    backups = await sdk.AsyncNucliaBackup().list(zone=zone, account_id=account_id)
     backup_list = [b for b in backups if b.id == backup_create.id]
     assert len(backup_list) == 0

@@ -135,7 +135,7 @@ async def test_rao_basic(
     """
     test_slug = f"{regional_api_config.test_kb_slug}-rao-e2e-test"
     # Cleanup any previous test RAO
-    agent_id = await get_agent_from_slug(regional_api_config.zone_slug, test_slug)
+    agent_id = await get_agent_from_slug(regional_api_config, test_slug)
     if agent_id is not None:
         await delete_test_agent(regional_api_config, agent_id=agent_id, agent_slug=test_slug)
     assert regional_api_config.global_config is not None

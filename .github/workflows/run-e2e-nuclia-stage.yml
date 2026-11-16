@@ -38,6 +38,7 @@ jobs:
         run: |
           source nuclia_e2e/.venv/bin/activate
           make -C nuclia_e2e/ lint format-check
+          pytest -q nuclia_e2e/unit_tests
 
   test:
     runs-on: ubuntu-22.04

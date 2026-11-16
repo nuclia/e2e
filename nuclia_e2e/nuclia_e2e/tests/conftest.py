@@ -25,6 +25,7 @@ from nuclia_e2e.settings import settings  # noqa: E402
 from nuclia_e2e.tests.utils import _tasks_to_delete  # noqa: E402
 from nuclia_e2e.tests.utils import clean_ask_test_tasks  # noqa: E402
 from nuclia_e2e.utils import get_async_kb_ndb_client  # noqa: E402
+from nuclia_e2e.utils import require_test_account  # noqa: E402
 from nuclia_e2e.utils import Retriable  # noqa: E402
 
 import aiohttp  # noqa: E402
@@ -56,7 +57,6 @@ class GlobalConfig:
     root_pat_token: str
     permanent_account_owner_pat_token: str
     gmail_app_password: str
-    permanent_account_slug: str
     permanent_account_id: str
     grafana_url: str
     tempo_datasource_id: str
@@ -80,7 +80,7 @@ class ClusterConfig:
 
 
 # All tests that needs some existing account will use the one configured in
-# the global "permanent_account_slug" with some predefined user credentials without expiration:
+# the global "permanent_account_id" with some predefined user credentials without expiration:
 # "permanent_account_owner_pat": PAT token for `testing_sdk@nuclia.com` on the suitable account
 
 
@@ -93,7 +93,6 @@ CLUSTERS_CONFIG = {
             root_pat_token=settings.prod_root_pat_token,
             permanent_account_owner_pat_token=settings.prod_permament_account_owner_pat_token,
             gmail_app_password=settings.test_gmail_app_password,
-            permanent_account_slug="automated-testing",
             permanent_account_id="8c7db65c-3b7e-4140-8165-d37bb4e6e9b8",
             grafana_url="https://grafana.gcp-internal-1.nuclia.cloud/",
             tempo_datasource_id=TEMPO_DATASOURCE_ID,
@@ -151,7 +150,6 @@ CLUSTERS_CONFIG = {
             root_pat_token=settings.stage_root_pat_token,
             permanent_account_owner_pat_token=settings.stage_permament_account_owner_pat_token,
             gmail_app_password=settings.test_gmail_app_password,
-            permanent_account_slug="automated-testing",
             permanent_account_id="f2edd58e-431f-4197-be76-6fc611082fe8",
             grafana_url="https://grafana.gcp-internal-1.nuclia.cloud",
             tempo_datasource_id=TEMPO_DATASOURCE_ID,
@@ -174,7 +172,6 @@ CLUSTERS_CONFIG = {
             root_pat_token=settings.progress_root_pat_token,
             permanent_account_owner_pat_token=settings.progress_permament_account_owner_pat_token,
             gmail_app_password=settings.test_gmail_app_password,
-            permanent_account_slug="automated-testing",
             permanent_account_id="0e515342-3b5c-4778-acf0-0723a71eafa3",
             grafana_url="http://progress-global-us-east-2-1.grafana.nuclia.com",
             tempo_datasource_id=TEMPO_DATASOURCE_ID,
@@ -457,7 +454,9 @@ async def regional_api_config(request: pytest.FixtureRequest, global_api_config:
     auth = get_async_auth()
     config = get_config()
     await auth.set_user_token(global_api_config.permanent_account_owner_pat_token)
-    config.set_default_account(global_api_config.permanent_account_slug)
+    require_test_account(
+        await auth.accounts(), global_api_config.permanent_account_id, global_api_config.name
+    )
     config.set_default_zone(zone_config.zone_slug)
     # Store a reference for convenience
     zone_config.global_config = global_api_config
@@ -631,7 +630,7 @@ def auth() -> AsyncNucliaAuth:
 @pytest.fixture(autouse=True)
 async def account_id(regional_api_config: ZoneConfig) -> str:
     """
-    Fixture to provide the account slug for the tests.
+    Fixture to provide the account ID for the tests.
     """
     assert regional_api_config.global_config is not None
     return regional_api_config.global_config.permanent_account_id

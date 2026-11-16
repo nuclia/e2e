@@ -57,7 +57,18 @@ There are different ways to authenticate to the services, each one will be used 
 There are a handful of Users, Accounts, and KBs pregenerated that these tests use, so it's important to be aware of them to avoid altering or deleting, to ensure tests work as intended.
 
 1. **Account**
-   - All tests run under the `automated-testing` account, available on both `progress.cloud` and `stashify.cloud`.
+   - API tests select their permanent account by its UUID, configured in `CLUSTERS_CONFIG` in `nuclia_e2e/tests/conftest.py`:
+     - Production: `8c7db65c-3b7e-4140-8165-d37bb4e6e9b8`
+     - Stage: `f2edd58e-431f-4197-be76-6fc611082fe8`
+     - Progress: `0e515342-3b5c-4778-acf0-0723a71eafa3`
+   - Account names and slugs can change. Do not use a hard-coded slug or an SDK default account for API operations; pass the configured account ID explicitly, including during cleanup.
+   - `test_account_slug_resolution` discovers the current slug by UUID and verifies that the SDK's slug-based lookup resolves the expected account and permanent KB. A rename should not break unrelated API tests; a slug-resolution regression must still fail this dedicated test.
+   - A missing account or lost test-user access is an error, not a reason to select another account or skip coverage. Coordinate account access, entitlement, and budget changes with the E2E maintainers.
+
+   Offline account-identity regression checks run in the Python CI pre-checks and can be run locally without environment credentials:
+   ```
+   nuclia_e2e/.venv/bin/pytest -q nuclia_e2e/unit_tests
+   ```
 
 2. **Users**
    - **Nuclia E2E Tests Owner**
@@ -85,7 +96,7 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
 ### Setup testing for a new region
 
 1 - Create a new `pre-existing-kb` in the new zone:
-   - Account: `automated-testing`
+   - Account: the permanent account UUID for the target environment (listed above).
    - KB name `{PROVIDER} {REGION} pre-existing-kb` (to easily distinguish in the dashboard, but keep the slugs the same).
    - On the KB > Advanded > Settings, disable the "Hide resources without matching security group" toggle.
    - Add user `testing_sdk@nuclia.com` as owner on the KB.
@@ -93,7 +104,7 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
 3 - Wait for the files to be processed and assign this security groups:
   - `omelette.txt`: apprentices
   - `roasted-chicken.txt`: apprentices, chefs (one per line)
-4 - Create a new Nua key from the "Manage Account" of `automated-testing`. Name it `nuclia-e2e` with the proper configuration:
+4 - Create a new Nua key from the "Manage Account" of the target environment's permanent account. Name it `nuclia-e2e` with the proper configuration:
   - Select the correct zone
   - No webhook
   - No allow management of kbs

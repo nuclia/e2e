@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from nuclia.sdk.kbs import AsyncNucliaKBS
 from nuclia_e2e.tests.conftest import RegionalAPI
 from nuclia_e2e.tests.conftest import ZoneConfig
 from nuclia_e2e.utils import create_test_kb
@@ -24,9 +23,9 @@ async def test_kb_vectorsets(
     kb_slug = f"{regional_api_config.test_kb_slug}-test_kb_vectorsets"
 
     # Make sure the kb used for this test is deleted, as the slug is reused:
-    old_kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    old_kbid = await get_kbid_from_slug(regional_api_config, kb_slug)
     if old_kbid is not None:
-        await AsyncNucliaKBS().delete(zone=regional_api_config.zone_slug, id=old_kbid)
+        await delete_test_kb(regional_api_config, old_kbid, kb_slug, logger)
 
     # Creates a brand new kb that will be used troughout this test
     kb_id = await create_test_kb(regional_api_config, kb_slug, logger)

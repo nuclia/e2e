@@ -1,12 +1,14 @@
 from collections.abc import Awaitable
 from collections.abc import Callable
+from collections.abc import Sequence
 from contextlib import contextmanager
 from functools import wraps
+from nuclia.config import Account
+from nuclia.data import get_async_auth
 from nuclia.exceptions import NuaAPIException
 from nuclia.lib.kb import AsyncNucliaDBClient
 from nuclia.lib.kb import Environment
 from nuclia.lib.kb import NucliaDBClient
-from nuclia.sdk.agents import AsyncNucliaAgents
 from nuclia.sdk.kbs import AsyncNucliaKBS
 from pathlib import Path
 from tenacity import retry
@@ -37,6 +39,14 @@ Logger = Callable[[str], None]
 
 
 T = TypeVar("T")
+
+
+def require_test_account(accounts: Sequence[Account], account_id: str, environment: str) -> Account:
+    for account in accounts:
+        if account.id == account_id:
+            return account
+    msg = f"Configured test account '{account_id}' is not accessible in environment '{environment}'"
+    raise ValueError(msg)
 
 
 def get_asset_file_path(file: str):
@@ -73,13 +83,15 @@ async def create_test_kb(
     regional_api_config, kb_slug, logger: Logger = print, semantic_model: str | None = None
 ) -> str:
     kbs = AsyncNucliaKBS()
+    assert regional_api_config.global_config is not None
     new_kb = await kbs.add(
+        account_id=regional_api_config.global_config.permanent_account_id,
         zone=regional_api_config.zone_slug,
         slug=kb_slug,
         learning_configuration={"semantic_model": semantic_model} if semantic_model is not None else None,
     )
 
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    kbid = await get_kbid_from_slug(regional_api_config, kb_slug)
     assert kbid is not None
     logger(f"Created kb {new_kb['id']}")
     return kbid
@@ -88,9 +100,14 @@ async def create_test_kb(
 async def delete_test_kb(regional_api_config, kbid, kb_slug, logger=print):
     kbs = AsyncNucliaKBS()
     logger(f"Deleting kb {kbid}")
-    await kbs.delete(zone=regional_api_config.zone_slug, id=kbid)
+    assert regional_api_config.global_config is not None
+    await kbs.delete(
+        zone=regional_api_config.zone_slug,
+        id=kbid,
+        account_id=regional_api_config.global_config.permanent_account_id,
+    )
 
-    kbid = await get_kbid_from_slug(regional_api_config.zone_slug, kb_slug)
+    kbid = await get_kbid_from_slug(regional_api_config, kb_slug)
     assert kbid is None
 
 
@@ -111,17 +128,25 @@ async def wait_for(
     return success, data
 
 
-async def get_kbid_from_slug(zone: str, slug: str) -> str | None:
-    kbs = AsyncNucliaKBS()
-    all_kbs = await kbs.list()
+async def get_kbid_from_slug(regional_api_config, slug: str) -> str | None:
+    assert regional_api_config.global_config is not None
+    all_kbs = await get_async_auth().kbs(
+        regional_api_config.global_config.permanent_account_id,
+        zone=regional_api_config.zone_slug,
+        cached=False,
+    )
     kbids_by_slug = {kb.slug: kb.id for kb in all_kbs}
     kbid = kbids_by_slug.get(slug)
     return kbid
 
 
-async def get_agent_from_slug(zone: str, slug: str) -> str | None:
-    agents = AsyncNucliaAgents()
-    all_agents = await agents.list()
+async def get_agent_from_slug(regional_api_config, slug: str) -> str | None:
+    assert regional_api_config.global_config is not None
+    all_agents = await get_async_auth().agents(
+        regional_api_config.global_config.permanent_account_id,
+        zone=regional_api_config.zone_slug,
+        cached=False,
+    )
     agentids_by_slug = {agent.slug: agent.id for agent in all_agents}
     agentid = agentids_by_slug.get(slug)
     return agentid
@@ -131,7 +156,12 @@ async def delete_test_agent(regional_api_config, agent_id, agent_slug, logger=pr
     # Via kbs since AsyncNucliaAgents doesn't have delete method yet
     agents = AsyncNucliaKBS()
     logger(f"Deleting agent {agent_id}")
-    await agents.delete(zone=regional_api_config.zone_slug, id=agent_id)
+    assert regional_api_config.global_config is not None
+    await agents.delete(
+        zone=regional_api_config.zone_slug,
+        id=agent_id,
+        account_id=regional_api_config.global_config.permanent_account_id,
+    )
 
 
 class Retriable(Generic[T]):
