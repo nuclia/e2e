@@ -57,7 +57,7 @@ There are different ways to authenticate to the services, each one will be used 
 There are a handful of Users, Accounts, and KBs pregenerated that these tests use, so it's important to be aware of them to avoid altering or deleting, to ensure tests work as intended.
 
 1. **Account**
-   - All tests run under the `automated-testing` account, available on both `progress.cloud` and `stashify.cloud`.
+   - All tests run under the `prgs-adp-automated-testing` account, available on both `progress.cloud` and `stashify.cloud`.
 
 2. **Users**
    - **Nuclia E2E Tests Owner**
@@ -85,7 +85,7 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
 ### Setup testing for a new region
 
 1 - Create a new `pre-existing-kb` in the new zone:
-   - Account: `automated-testing`
+   - Account: `prgs-adp-automated-testing`
    - KB name `{PROVIDER} {REGION} pre-existing-kb` (to easily distinguish in the dashboard, but keep the slugs the same).
    - On the KB > Advanded > Settings, disable the "Hide resources without matching security group" toggle.
    - Add user `testing_sdk@nuclia.com` as owner on the KB.
@@ -93,7 +93,7 @@ There are a handful of Users, Accounts, and KBs pregenerated that these tests us
 3 - Wait for the files to be processed and assign this security groups:
   - `omelette.txt`: apprentices
   - `roasted-chicken.txt`: apprentices, chefs (one per line)
-4 - Create a new Nua key from the "Manage Account" of `automated-testing`. Name it `nuclia-e2e` with the proper configuration:
+4 - Create a new Nua key from the "Manage Account" of `prgs-adp-automated-testing`. Name it `nuclia-e2e` with the proper configuration:
   - Select the correct zone
   - No webhook
   - No allow management of kbs
