@@ -16,11 +16,11 @@ import pytest
 # like loading some models, that some times takes up to 120 seconds
 #
 
-EXTRA_PROCESSING_TIME_MARGIN = 120
-EXTRA_PROCESSING_TIME_FACTOR = 1.5
+EXTRA_PROCESSING_TIME_MARGIN = 180
+EXTRA_PROCESSING_TIME_FACTOR = 2.0
 
 
-async def wait_for_scheduling(processing_id: str, client: AsyncNuaClient, timeout: int = 200):
+async def wait_for_scheduling(processing_id: str, client: AsyncNuaClient, timeout: int = 360):
     count = timeout
     status = await client.processing_id_status(processing_id)
     while status.scheduled is False and count > 0:

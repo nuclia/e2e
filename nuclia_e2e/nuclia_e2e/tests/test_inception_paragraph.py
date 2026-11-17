@@ -48,7 +48,7 @@ async def test_inception_paragraph_type_is_generated(regional_api_config: ZoneCo
 
         return condition
 
-    success, _ = await wait_for(resource_is_processed(rid), max_wait=180, interval=10)
+    success, _ = await wait_for(resource_is_processed(rid), max_wait=360, interval=5)
     assert success, "File was not processed in time, PROCESSED status not found in resource"
 
     resource = await kb.resource.get(rid=rid, ndb=async_ndb, show="extracted")

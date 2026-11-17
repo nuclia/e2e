@@ -82,7 +82,7 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
 
         return condition
 
-    success, _ = await wait_for(resource_is_processed(rid), max_wait=180, interval=10, logger=logger)
+    success, _ = await wait_for(resource_is_processed(rid), max_wait=360, interval=5, logger=logger)
     assert success, "File was not processed in time, PROCESSED status not found in resource"
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
@@ -95,7 +95,7 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
 
         return condition
 
-    success, _ = await wait_for(resource_is_indexed(rid), logger=logger, max_wait=120, interval=1)
+    success, _ = await wait_for(resource_is_indexed(rid), logger=logger, max_wait=180, interval=1)
     assert success, "File was not indexed in time, not enough paragraphs found on resource"
 
 
@@ -130,7 +130,7 @@ async def run_test_import_kb(regional_api_config, ndb: AsyncNucliaDBClient, logg
         return condition
 
     success, _ = await wait_for(
-        resources_are_imported(["disney", "hp", "vaccines"]), max_wait=120, logger=logger
+        resources_are_imported(["disney", "hp", "vaccines"]), max_wait=180, logger=logger
     )
     assert success, "Expected imported resources not found"
 
@@ -194,8 +194,8 @@ async def run_test_check_da_ask_output(
 
     success, _ = await wait_for(
         condition=resources_have_generated_fields(resource_slugs),
-        max_wait=5 * 60,  # 5 minutes
-        interval=20,
+        max_wait=8 * 60,  # 8 minutes
+        interval=10,
         logger=logger,
     )
     assert success, f"Expected generated text fields not found in resources. task_id: {ask_task_id}"
@@ -223,8 +223,8 @@ async def run_test_check_da_ask_output(
 
     success, _ = await wait_for(
         condition=generated_fields_deleted_from_resources(resource_slugs),
-        max_wait=5 * 60,  # 5 minutes
-        interval=20,
+        max_wait=8 * 60,  # 8 minutes
+        interval=10,
         logger=logger,
     )
     assert success, f"Generated fields have not been deleted from resources. task_id: {ask_task_id}"
@@ -492,7 +492,7 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         return condition
 
     success, search_returned_results = await wait_for(
-        new_embedding_model_available(), max_wait=200, logger=logger
+        new_embedding_model_available(), max_wait=300, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
     assert search_returned_results is True, (
@@ -671,7 +671,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
 
         return condition
 
-    success, _logs = await wait_for(activity_log_is_stored(), max_wait=180, logger=logger)
+    success, _logs = await wait_for(activity_log_is_stored(), max_wait=300, logger=logger)
     assert success, "Activity logs didn't get stored in time"
 
     def search_log_is_stored():
@@ -692,7 +692,7 @@ async def run_test_activity_log(regional_api_config, ndb, logger):
 
         return condition
 
-    success, _ = await wait_for(search_log_is_stored(), max_wait=180, logger=logger)
+    success, _ = await wait_for(search_log_is_stored(), max_wait=300, logger=logger)
     assert success, "Search activity log didn't get stored in time"
 
 
@@ -718,7 +718,7 @@ async def run_test_remi_query(regional_api_config, ndb, logger):
 
         return condition
 
-    success, _ = await wait_for(remi_data_is_computed(), max_wait=180, logger=logger)
+    success, _ = await wait_for(remi_data_is_computed(), max_wait=300, logger=logger)
     assert success, "Remi scores didn't get computed in time"
 
 

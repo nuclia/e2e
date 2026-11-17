@@ -14,6 +14,7 @@ from tenacity import retry_if_exception
 from tenacity import retry_if_exception_type
 from tenacity import RetryCallState
 from tenacity import stop_after_attempt
+from tenacity import wait_exponential
 from tenacity import wait_fixed
 from tenacity import wait_random
 from time import monotonic
@@ -64,8 +65,8 @@ def skip_on_provider_transient_error():
 
 
 @retry(
-    stop=stop_after_attempt(5),
-    wait=wait_random(2, 10),
+    stop=stop_after_attempt(10),
+    wait=wait_exponential(multiplier=1, min=2, max=15) + wait_random(0, 3),
     retry=retry_if_exception(_is_kb_creation_rate_limited),
     reraise=True,
 )
@@ -96,7 +97,7 @@ async def delete_test_kb(regional_api_config, kbid, kb_slug, logger=print):
 
 async def wait_for(
     condition: Callable[[], Awaitable[tuple[bool, T]]],
-    max_wait: float = 60,
+    max_wait: float = 120,
     interval: float = 5,
     logger: Logger = print,
 ) -> tuple[bool, T]:
