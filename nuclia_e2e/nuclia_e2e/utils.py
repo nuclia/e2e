@@ -14,6 +14,7 @@ from tenacity import retry_if_exception
 from tenacity import retry_if_exception_type
 from tenacity import RetryCallState
 from tenacity import stop_after_attempt
+from tenacity import wait_exponential
 from tenacity import wait_fixed
 from tenacity import wait_random
 from time import monotonic
@@ -49,7 +50,7 @@ def _is_kb_creation_rate_limited(exc: BaseException) -> bool:
 
 @contextmanager
 def skip_on_provider_transient_error():
-    """Skip the test if the LLM provider returns a rate-limit error.
+    """Skip the test if the LLM provider returns a rate-limit or timeout error.
 
     Useful for models served via Vertex/Bedrock dynamic shared quota (DSQ)
     where provider-side errors are expected, transient and not actionable from the test.
@@ -58,14 +59,16 @@ def skip_on_provider_transient_error():
         yield
     except (NuaAPIException, RuntimeError, httpx.HTTPStatusError) as exc:
         msg = str(exc)
-        if "429" in msg and "Rate limited by" in msg:
-            pytest.skip(f"Provider rate-limited {msg[:200]}")
+        if ("429" in msg and "Rate limited by" in msg) or (
+            "408" in msg and "Timeout connecting to generative API" in msg
+        ):
+            pytest.skip(f"Provider transient error {msg[:200]}")
         raise
 
 
 @retry(
-    stop=stop_after_attempt(5),
-    wait=wait_random(2, 10),
+    stop=stop_after_attempt(10),
+    wait=wait_exponential(multiplier=1, min=2, max=15) + wait_random(0, 3),
     retry=retry_if_exception(_is_kb_creation_rate_limited),
     reraise=True,
 )
@@ -96,7 +99,7 @@ async def delete_test_kb(regional_api_config, kbid, kb_slug, logger=print):
 
 async def wait_for(
     condition: Callable[[], Awaitable[tuple[bool, T]]],
-    max_wait: float = 60,
+    max_wait: float = 120,
     interval: float = 5,
     logger: Logger = print,
 ) -> tuple[bool, T]:

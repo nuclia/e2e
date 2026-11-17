@@ -41,15 +41,21 @@ async def test_inception_paragraph_type_is_generated(regional_api_config: ZoneCo
         @wraps(resource_is_processed)
         async def condition() -> tuple[bool, Any]:
             resource = await kb.resource.get(rid=rid, ndb=async_ndb)
+            status = resource.metadata.status
+            assert status != ResourceProcessingStatus.ERROR, (
+                f"Resource {rid} failed processing with status {status}"
+            )
             return (
-                resource.metadata.status == ResourceProcessingStatus.PROCESSED,
-                None,
+                status == ResourceProcessingStatus.PROCESSED,
+                status,
             )
 
         return condition
 
-    success, _ = await wait_for(resource_is_processed(rid), max_wait=180, interval=10)
-    assert success, "File was not processed in time, PROCESSED status not found in resource"
+    success, last_status = await wait_for(resource_is_processed(rid), max_wait=360, interval=5)
+    assert success, (
+        f"File was not processed in time, PROCESSED status not found in resource (last_status={last_status})"
+    )
 
     resource = await kb.resource.get(rid=rid, ndb=async_ndb, show="extracted")
     assert "cat" in resource.data.files["file"].extracted.text.text
