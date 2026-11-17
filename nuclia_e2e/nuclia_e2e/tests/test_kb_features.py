@@ -86,9 +86,7 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
 
         return condition
 
-    success, last_status = await wait_for(
-        resource_is_processed(rid), max_wait=360, interval=5, logger=logger
-    )
+    success, last_status = await wait_for(resource_is_processed(rid), max_wait=360, interval=5, logger=logger)
     assert success, (
         f"File was not processed in time, PROCESSED status not found in resource (last_status={last_status})"
     )
