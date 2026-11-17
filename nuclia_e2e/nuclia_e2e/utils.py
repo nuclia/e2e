@@ -50,7 +50,7 @@ def _is_kb_creation_rate_limited(exc: BaseException) -> bool:
 
 @contextmanager
 def skip_on_provider_transient_error():
-    """Skip the test if the LLM provider returns a rate-limit error.
+    """Skip the test if the LLM provider returns a rate-limit or timeout error.
 
     Useful for models served via Vertex/Bedrock dynamic shared quota (DSQ)
     where provider-side errors are expected, transient and not actionable from the test.
@@ -59,8 +59,10 @@ def skip_on_provider_transient_error():
         yield
     except (NuaAPIException, RuntimeError, httpx.HTTPStatusError) as exc:
         msg = str(exc)
-        if "429" in msg and "Rate limited by" in msg:
-            pytest.skip(f"Provider rate-limited {msg[:200]}")
+        if ("429" in msg and "Rate limited by" in msg) or (
+            "408" in msg and "Timeout connecting to generative API" in msg
+        ):
+            pytest.skip(f"Provider transient error {msg[:200]}")
         raise
 
 

@@ -75,15 +75,23 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
         @wraps(resource_is_processed)
         async def condition() -> tuple[bool, Any]:
             resource = await kb.resource.get(rid=rid, ndb=ndb)
+            status = resource.metadata.status
+            assert status != ResourceProcessingStatus.ERROR, (
+                f"Resource {rid} failed processing with status {status}"
+            )
             return (
-                resource.metadata.status == ResourceProcessingStatus.PROCESSED,
-                None,
+                status == ResourceProcessingStatus.PROCESSED,
+                status,
             )
 
         return condition
 
-    success, _ = await wait_for(resource_is_processed(rid), max_wait=360, interval=5, logger=logger)
-    assert success, "File was not processed in time, PROCESSED status not found in resource"
+    success, last_status = await wait_for(
+        resource_is_processed(rid), max_wait=360, interval=5, logger=logger
+    )
+    assert success, (
+        f"File was not processed in time, PROCESSED status not found in resource (last_status={last_status})"
+    )
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
     # the paragraph we're looking for contains
