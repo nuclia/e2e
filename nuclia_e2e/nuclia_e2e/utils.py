@@ -56,6 +56,8 @@ def skip_on_provider_transient_error():
     """
     try:
         yield
+    except httpx.TimeoutException as exc:
+        pytest.skip(f"Provider timeout {type(exc).__name__}: {str(exc)[:200]}")
     except (NuaAPIException, RuntimeError, httpx.HTTPStatusError) as exc:
         msg = str(exc)
         if "429" in msg and "Rate limited by" in msg:
