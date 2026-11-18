@@ -359,8 +359,9 @@ class RegionalAPI:
     @backoff.on_exception(
         backoff.expo,
         aiohttp.ClientResponseError,
-        max_tries=6,
-        max_time=120,
+        max_tries=15,
+        max_value=15,
+        max_time=180,
         giveup=lambda exc: not (isinstance(exc, aiohttp.ClientResponseError) and exc.status == 429),
     )
     async def create_rao(self, account_id: str, slug: str, mode: str = "agent_no_memory") -> dict:
