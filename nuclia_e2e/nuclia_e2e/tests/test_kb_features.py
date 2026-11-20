@@ -76,9 +76,9 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
         async def condition() -> tuple[bool, Any]:
             resource = await kb.resource.get(rid=rid, ndb=ndb)
             status = resource.metadata.status
-            assert status != ResourceProcessingStatus.ERROR, (
-                f"Resource {rid} failed processing with status {status}"
-            )
+            assert (
+                status != ResourceProcessingStatus.ERROR
+            ), f"Resource {rid} failed processing with status {status}"
             return (
                 status == ResourceProcessingStatus.PROCESSED,
                 status,
@@ -87,9 +87,9 @@ async def run_test_upload_and_process(regional_api_config, ndb: AsyncNucliaDBCli
         return condition
 
     success, last_status = await wait_for(resource_is_processed(rid), max_wait=360, interval=5, logger=logger)
-    assert success, (
-        f"File was not processed in time, PROCESSED status not found in resource (last_status={last_status})"
-    )
+    assert (
+        success
+    ), f"File was not processed in time, PROCESSED status not found in resource (last_status={last_status})"
 
     # Wait for resource to be indexed by searching for a resource based on a content that just
     # the paragraph we're looking for contains
@@ -501,9 +501,9 @@ async def run_test_check_embedding_model_migration(ndb: AsyncNucliaDBClient, tas
         new_embedding_model_available(), max_wait=300, logger=logger
     )
     assert success is True, "embedding migration task did not finish on time"
-    assert search_returned_results is True, (
-        "expected to be able to search with the new embedding model but nucliadb didn't return resources"
-    )
+    assert (
+        search_returned_results is True
+    ), "expected to be able to search with the new embedding model but nucliadb didn't return resources"
 
 
 @backoff.on_exception(backoff.constant, (AssertionError, ClientError), max_tries=5, interval=5)

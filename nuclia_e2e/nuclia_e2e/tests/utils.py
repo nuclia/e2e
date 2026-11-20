@@ -37,7 +37,7 @@ async def lock(key: str) -> AsyncIterator[Lock]:
         yield
 
 
-async def root_request(  # noqa: PLR0917
+async def root_request(
     auth: AsyncNucliaAuth,
     method: str,
     path: str,
@@ -136,7 +136,7 @@ async def create_omelette_resource(ndb: AsyncNucliaDBClient):
     assert processed, "Resource not processed in time"
 
 
-async def create_ask_agent(  # noqa: PLR0917
+async def create_ask_agent(
     kb_id: str,
     zone: str,
     auth: AsyncNucliaAuth,
@@ -272,7 +272,7 @@ class DefaultModels:
             await self.delete(model["id"])
 
 
-async def run_resource_agents_test(  # noqa: PLR0917
+async def run_resource_agents_test(
     kb_id: str,
     zone: str,
     auth: AsyncNucliaAuth,

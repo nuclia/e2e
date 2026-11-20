@@ -120,7 +120,7 @@ class Timer:
         return self.end_time
 
 
-def push_timings_to_prometheus(  # noqa: PLR0917
+def push_timings_to_prometheus(
     timings: dict[str, Timer],
     job_name: str,
     instance: str,

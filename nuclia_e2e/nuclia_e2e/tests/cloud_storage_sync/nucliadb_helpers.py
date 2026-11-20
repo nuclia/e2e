@@ -37,7 +37,7 @@ async def delete_resource_by_slug(
         resp.raise_for_status()
 
 
-async def create_labelset(  # noqa: PLR0917
+async def create_labelset(
     session: aiohttp.ClientSession,
     zone_url: str,
     auth_headers: dict[str, str],
