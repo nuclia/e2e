@@ -29,6 +29,10 @@ SEED_FILES_DIR = Path(__file__).parent / "seed_files"
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skipif(
+    settings.test_env.lower() == "stage",
+    reason="Google OAuth app is in Testing; refresh tokens expire after 7 days",
+)
 @pytest.mark.asyncio_cooperative
 async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
     regional_api_config: ZoneConfig, kb_id: str, aiohttp_session: aiohttp.ClientSession
