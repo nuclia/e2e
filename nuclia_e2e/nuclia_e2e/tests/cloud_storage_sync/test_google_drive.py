@@ -29,10 +29,7 @@ SEED_FILES_DIR = Path(__file__).parent / "seed_files"
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.skipif(
-    settings.test_env.lower() == "stage",
-    reason="Google OAuth app is in Testing; refresh tokens expire after 7 days",
-)
+@pytest.mark.skipif(settings.test_env.lower() == "stage", reason="Google OAuth app is in Testing; refresh tokens expire after 7 days")
 @pytest.mark.asyncio_cooperative
 async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
     regional_api_config: ZoneConfig, kb_id: str, aiohttp_session: aiohttp.ClientSession
@@ -137,9 +134,9 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
             resource = await nucliadb_helpers.get_resource_by_slug(
                 session, zone_url, auth_headers, kb_id, file_id
             )
-            assert (
-                resource is not None
-            ), f"Resource with slug {file_id} not found in NucliaDB after initial sync"
+            assert resource is not None, (
+                f"Resource with slug {file_id} not found in NucliaDB after initial sync"
+            )
             classifications = resource.get("usermetadata", {}).get("classifications", [])
             assert any(
                 c.get("labelset") == expected_label["labelset"] and c.get("label") == expected_label["label"]
@@ -189,9 +186,9 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
         new_resource = await nucliadb_helpers.get_resource_by_slug(
             session, zone_url, auth_headers, kb_id, new_file_id
         )
-        assert (
-            new_resource is not None
-        ), f"New file {new_file_id} not found in NucliaDB after incremental sync"
+        assert new_resource is not None, (
+            f"New file {new_file_id} not found in NucliaDB after incremental sync"
+        )
         new_classifications = new_resource.get("usermetadata", {}).get("classifications", [])
         assert any(
             c.get("labelset") == expected_label["labelset"] and c.get("label") == expected_label["label"]
@@ -245,9 +242,9 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
         moved_out_resource = await nucliadb_helpers.get_resource_by_slug(
             session, zone_url, auth_headers, kb_id, dynamic_file_id
         )
-        assert (
-            moved_out_resource is None
-        ), f"Dynamic file {dynamic_file_id} still exists after folder moved outside sync root"
+        assert moved_out_resource is None, (
+            f"Dynamic file {dynamic_file_id} still exists after folder moved outside sync root"
+        )
 
         # Assert: job logs show 2 deletions
         logs3 = await css_helpers.get_job_logs(session, zone_url, auth_headers, kb_id, job3_id)
@@ -293,9 +290,9 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
         recreated_resource = await nucliadb_helpers.get_resource_by_slug(
             session, zone_url, auth_headers, kb_id, dynamic_file_id
         )
-        assert (
-            recreated_resource is not None
-        ), f"Dynamic file {dynamic_file_id} not re-created after moving folder back"
+        assert recreated_resource is not None, (
+            f"Dynamic file {dynamic_file_id} not re-created after moving folder back"
+        )
         recreated_classifications = recreated_resource.get("usermetadata", {}).get("classifications", [])
         assert any(
             c.get("labelset") == expected_label["labelset"] and c.get("label") == expected_label["label"]
@@ -304,9 +301,9 @@ async def test_google_drive_sync_lifecycle(  # noqa: C901, PLR0912
 
         # Assert: origin.path is correct
         origin_path = recreated_resource.get("origin", {}).get("path")
-        assert (
-            origin_path == expected_paths[dynamic_file_id]
-        ), f"origin.path mismatch: expected {expected_paths[dynamic_file_id]}, got {origin_path}"
+        assert origin_path == expected_paths[dynamic_file_id], (
+            f"origin.path mismatch: expected {expected_paths[dynamic_file_id]}, got {origin_path}"
+        )
 
         # Assert: job logs show 1 created file
         logs4 = await css_helpers.get_job_logs(session, zone_url, auth_headers, kb_id, job4_id)

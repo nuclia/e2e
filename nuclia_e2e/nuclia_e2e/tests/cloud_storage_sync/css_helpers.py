@@ -47,7 +47,7 @@ async def cleanup_sync_configs_for_connection(
             await delete_sync_config(session, zone_url, auth_headers, kb_id, config_id)
 
 
-async def create_sync_config(
+async def create_sync_config(  # noqa: PLR0917
     session: aiohttp.ClientSession,
     zone_url: str,
     auth_headers: dict[str, str],
@@ -121,7 +121,7 @@ async def get_latest_job(
     return items[0] if items else None
 
 
-async def get_job_logs(
+async def get_job_logs(  # noqa: PLR0917
     session: aiohttp.ClientSession,
     zone_url: str,
     auth_headers: dict[str, str],
